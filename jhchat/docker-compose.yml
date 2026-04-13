@@ -1,0 +1,50 @@
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    environment:
+      MYSQL_ROOT_PASSWORD: jhchat_root_pass
+      MYSQL_DATABASE: jhchat
+      MYSQL_CHARACTER_SET_SERVER: utf8mb4
+      MYSQL_COLLATION_SERVER: utf8mb4_unicode_ci
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: root
+      DB_PASSWORD: jhchat_root_pass
+      DB_NAME: jhchat
+      JWT_SECRET: change_this_to_a_random_secret_in_production
+      JWT_EXPIRES_IN: 7d
+      FRONTEND_URL: http://localhost:5173
+    depends_on:
+      mysql:
+        condition: service_healthy
+    volumes:
+      - uploads_data:/app/uploads
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  uploads_data:

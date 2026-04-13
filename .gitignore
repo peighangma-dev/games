@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+*.log
+.DS_Store
+jhchat1/
+jhchat/backend/uploads/avatars/*
+!jhchat/backend/uploads/avatars/.gitkeep

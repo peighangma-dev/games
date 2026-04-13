@@ -1,0 +1,633 @@
+SET NAMES utf8mb4;
+SET FOREIGN_KEY_CHECKS = 0;
+
+CREATE TABLE IF NOT EXISTS `users` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(20) NOT NULL COMMENT '用户名(原姓名)',
+  `password` VARCHAR(255) NOT NULL COMMENT '密码(bcrypt哈希)',
+  `password_answer` VARCHAR(255) DEFAULT NULL COMMENT '密保答案',
+  `gender` ENUM('male','female') NOT NULL DEFAULT 'male' COMMENT '性别',
+  `referrer` VARCHAR(20) DEFAULT NULL COMMENT '介绍人',
+  `email` VARCHAR(60) DEFAULT NULL COMMENT '信箱',
+  `avatar` VARCHAR(100) DEFAULT '1.gif' COMMENT '头像文件名',
+  `status` ENUM('normal','jailed','banned','dead','inn','sleeping','poisoned') NOT NULL DEFAULT 'normal' COMMENT '状态',
+  `room_id` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '当前房间编号',
+  `neili` INT NOT NULL DEFAULT 0 COMMENT '内力(MP)',
+  `wugong` INT NOT NULL DEFAULT 0 COMMENT '武功值',
+  `tili` INT NOT NULL DEFAULT 30 COMMENT '体力',
+  `attack` INT NOT NULL DEFAULT 10 COMMENT '攻击',
+  `defense` INT NOT NULL DEFAULT 10 COMMENT '防御',
+  `charm` INT NOT NULL DEFAULT 100 COMMENT '魅力',
+  `attack_power` INT NOT NULL DEFAULT 100 COMMENT '战斗攻击力',
+  `spouse` VARCHAR(20) DEFAULT '无' COMMENT '配偶',
+  `is_vip` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否会员',
+  `silver` BIGINT NOT NULL DEFAULT 0 COMMENT '银两',
+  `sect` VARCHAR(20) DEFAULT '无' COMMENT '门派',
+  `faction` VARCHAR(20) DEFAULT '无' COMMENT '帮派',
+  `sect_title` VARCHAR(20) DEFAULT '无' COMMENT '门派身份(掌门/弟子等)',
+  `salary_time` DATETIME DEFAULT NULL COMMENT '领薪时间(原金钱)',
+  `deposit` BIGINT NOT NULL DEFAULT 0 COMMENT '存款',
+  `grade` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '等级1-10',
+  `login_count` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '登录次数',
+  `registered_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
+  `register_ip` VARCHAR(45) DEFAULT NULL COMMENT '注册IP',
+  `last_login_at` DATETIME DEFAULT NULL COMMENT '最后登录时间',
+  `last_login_ip` VARCHAR(45) DEFAULT NULL COMMENT '最后登录IP',
+  `last_kick_at` DATETIME DEFAULT NULL COMMENT '最后被踢时间',
+  `all_value` INT NOT NULL DEFAULT 0 COMMENT '总经验值',
+  `month_value` INT NOT NULL DEFAULT 0 COMMENT '月经验值',
+  `join_sect_at` DATETIME DEFAULT NULL COMMENT '入派时间',
+  `jailed_at` DATETIME DEFAULT NULL COMMENT '入监日期',
+  `job` VARCHAR(20) DEFAULT NULL COMMENT '职业',
+  `bath_date` DATE DEFAULT NULL COMMENT '最后洗澡日期',
+  `master` VARCHAR(20) DEFAULT NULL COMMENT '师父',
+  `noodle_count` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '吃面数',
+  `pet_name` VARCHAR(20) DEFAULT NULL COMMENT '宠物名称',
+  `vip_expires_at` DATETIME DEFAULT NULL COMMENT '会员到期时间',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`),
+  KEY `idx_status` (`status`),
+  KEY `idx_sect` (`sect`),
+  KEY `idx_grade` (`grade`),
+  KEY `idx_all_value` (`all_value`),
+  KEY `idx_last_login` (`last_login_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+
+CREATE TABLE IF NOT EXISTS `system_config` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) NOT NULL COMMENT '配置键名',
+  `value` TEXT COMMENT '配置值',
+  `description` VARCHAR(200) DEFAULT NULL COMMENT '说明',
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置';
+
+CREATE TABLE IF NOT EXISTS `sects` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL COMMENT '门派名称',
+  `leader` VARCHAR(20) DEFAULT NULL COMMENT '掌门',
+  `slogan` VARCHAR(100) DEFAULT NULL COMMENT '口号',
+  `description` TEXT COMMENT '简介',
+  `rules` VARCHAR(100) DEFAULT NULL COMMENT '门规',
+  `member_count` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '人数',
+  `fit_gender` ENUM('male','female','both') NOT NULL DEFAULT 'both' COMMENT '适合性别',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='门派';
+
+CREATE TABLE IF NOT EXISTS `ip_locks` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ip` VARCHAR(45) NOT NULL,
+  `locked_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '锁定时间',
+  `locked_by` VARCHAR(20) NOT NULL COMMENT '操作者',
+  `expires_at` DATETIME NOT NULL COMMENT '自动解封时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_ip` (`ip`),
+  KEY `idx_expires` (`expires_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='IP临时锁定';
+
+CREATE TABLE IF NOT EXISTS `ip_bans` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `ip_pattern` VARCHAR(45) NOT NULL COMMENT 'IP或通配符(如10.%)',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='IP永久封锁';
+
+CREATE TABLE IF NOT EXISTS `operation_logs` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `log_time` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `operator` VARCHAR(20) NOT NULL,
+  `ip` VARCHAR(45) DEFAULT NULL,
+  `action` TEXT NOT NULL COMMENT '操作描述',
+  `is_expired` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_time` (`log_time`),
+  KEY `idx_operator` (`operator`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志';
+
+CREATE TABLE IF NOT EXISTS `messages` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `receiver` VARCHAR(20) NOT NULL COMMENT '收件人',
+  `sender` VARCHAR(20) NOT NULL COMMENT '发件人',
+  `title` VARCHAR(200) NOT NULL,
+  `content` TEXT,
+  `sent_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_read` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_receiver` (`receiver`, `is_read`),
+  KEY `idx_sender` (`sender`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='站内邮件';
+
+CREATE TABLE IF NOT EXISTS `news` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `topic` VARCHAR(200) NOT NULL,
+  `content` TEXT,
+  `author` VARCHAR(20) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `view_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_time` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='新闻公告';
+
+CREATE TABLE IF NOT EXISTS `marriages` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `proposer` VARCHAR(20) NOT NULL COMMENT '求婚方',
+  `target` VARCHAR(20) NOT NULL COMMENT '被求婚方',
+  `message` TEXT COMMENT '求婚说明',
+  `proposed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_expired` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='婚姻登记';
+
+CREATE TABLE IF NOT EXISTS `chat_actions` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `action_type` VARCHAR(10) NOT NULL DEFAULT '1' COMMENT '1=系统自动',
+  `name` VARCHAR(50) DEFAULT NULL COMMENT '动作名',
+  `template` TEXT NOT NULL COMMENT '动作模板(##=发言者,%%=对象)',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天动作库';
+
+CREATE TABLE IF NOT EXISTS `announcements` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `content` TEXT NOT NULL,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='公告置顶';
+
+CREATE TABLE IF NOT EXISTS `items` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) NOT NULL COMMENT '物品名',
+  `owner` VARCHAR(20) DEFAULT '无' COMMENT '拥有者',
+  `type` VARCHAR(20) DEFAULT NULL COMMENT '类型',
+  `attack` INT NOT NULL DEFAULT 0,
+  `defense` INT NOT NULL DEFAULT 0,
+  `sort_no` INT DEFAULT NULL COMMENT '编号',
+  `quantity` INT NOT NULL DEFAULT 1 COMMENT '数量/面值',
+  `amount` INT DEFAULT NULL COMMENT '物品数量',
+  `is_equipped` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否装备',
+  `neili_bonus` INT NOT NULL DEFAULT 0 COMMENT '内力加成',
+  `tili_bonus` INT NOT NULL DEFAULT 0 COMMENT '体力加成',
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`),
+  KEY `idx_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物品';
+
+CREATE TABLE IF NOT EXISTS `special_items` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) NOT NULL,
+  `effect_type` VARCHAR(30) DEFAULT NULL COMMENT '特效类型',
+  `effect_value` INT NOT NULL DEFAULT 0,
+  `exp_required` INT NOT NULL DEFAULT 0,
+  `owner` VARCHAR(20) DEFAULT '无',
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='特效物品';
+
+CREATE TABLE IF NOT EXISTS `card_templates` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL COMMENT '卡片名称',
+  `description` VARCHAR(200) DEFAULT NULL COMMENT '功能说明',
+  `price` INT NOT NULL DEFAULT 0 COMMENT '需要银两',
+  `card_type` ENUM('normal','vip') NOT NULL DEFAULT 'normal',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卡片商品';
+
+CREATE TABLE IF NOT EXISTS `user_cards` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `card_name` VARCHAR(30) NOT NULL,
+  `owner` VARCHAR(20) NOT NULL,
+  `quantity` TINYINT UNSIGNED NOT NULL DEFAULT 1 COMMENT '面值(上限99)',
+  `description` VARCHAR(200) DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卡片持有';
+
+CREATE TABLE IF NOT EXISTS `martial_arts` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL COMMENT '武功名称',
+  `sect` VARCHAR(20) DEFAULT NULL COMMENT '所属门派',
+  `neili_cost` INT NOT NULL DEFAULT 0 COMMENT '需要内力',
+  `is_timed` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '是否时效性',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='武功';
+
+CREATE TABLE IF NOT EXISTS `kill_logs` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `victim` VARCHAR(20) NOT NULL,
+  `killer` VARCHAR(20) NOT NULL,
+  `skill` VARCHAR(30) DEFAULT NULL COMMENT '使用的武功',
+  `killed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_expired` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  KEY `idx_time` (`killed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='击杀记录';
+
+CREATE TABLE IF NOT EXISTS `market_listings` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `seller` VARCHAR(20) NOT NULL,
+  `item_name` VARCHAR(50) NOT NULL,
+  `item_type` VARCHAR(20) DEFAULT NULL,
+  `power` INT NOT NULL DEFAULT 0,
+  `stamina` INT NOT NULL DEFAULT 0,
+  `level_req` INT NOT NULL DEFAULT 0,
+  `quantity` INT NOT NULL DEFAULT 1,
+  `original_price` INT NOT NULL DEFAULT 0,
+  `selling_price` INT NOT NULL DEFAULT 0,
+  `listed_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `idx_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='二手市场';
+
+CREATE TABLE IF NOT EXISTS `insurance_products` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL,
+  `description` VARCHAR(200) DEFAULT NULL,
+  `duration_days` INT NOT NULL DEFAULT 0,
+  `price` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='保险产品';
+
+CREATE TABLE IF NOT EXISTS `user_insurances` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `insurance_name` VARCHAR(30) NOT NULL,
+  `owner` VARCHAR(20) NOT NULL,
+  `duration_days` INT NOT NULL DEFAULT 0,
+  `expires_at` DATETIME NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户保险';
+
+CREATE TABLE IF NOT EXISTS `alchemy_items` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL,
+  `owner` VARCHAR(20) DEFAULT '无',
+  `quantity` INT NOT NULL DEFAULT 0,
+  `potency` INT NOT NULL DEFAULT 0 COMMENT '药效',
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='配药物品';
+
+CREATE TABLE IF NOT EXISTS `inn_records` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `registrant` VARCHAR(20) NOT NULL,
+  `partner` VARCHAR(20) NOT NULL,
+  `message` TEXT,
+  `registered_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客栈记录';
+
+CREATE TABLE IF NOT EXISTS `birth_records` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `partner` VARCHAR(20) NOT NULL,
+  `born_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='生育记录';
+
+CREATE TABLE IF NOT EXISTS `pregnancies` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `conceived_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='怀孕记录';
+
+CREATE TABLE IF NOT EXISTS `bounties` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `target` VARCHAR(20) NOT NULL,
+  `is_completed` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='悬赏';
+
+CREATE TABLE IF NOT EXISTS `fishing_states` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(20) NOT NULL,
+  `started_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` TINYINT(1) NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`),
+  KEY `idx_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='钓鱼状态';
+
+CREATE TABLE IF NOT EXISTS `noodle_ingredients` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL,
+  `nutrition` INT NOT NULL DEFAULT 0,
+  `flavor` INT NOT NULL DEFAULT 0,
+  `price` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='面菜食材';
+
+CREATE TABLE IF NOT EXISTS `noodle_bowls` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `owner` VARCHAR(20) NOT NULL,
+  `seasoning` VARCHAR(100) DEFAULT NULL COMMENT '调料组合',
+  `price` INT NOT NULL DEFAULT 0,
+  `is_done` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='做面记录';
+
+CREATE TABLE IF NOT EXISTS `diner_menu` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL,
+  `category` VARCHAR(20) DEFAULT '酒菜',
+  `power` INT NOT NULL DEFAULT 0,
+  `stamina` INT NOT NULL DEFAULT 0,
+  `level_req` INT NOT NULL DEFAULT 0,
+  `quantity` INT NOT NULL DEFAULT 0,
+  `price` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='酒菜菜单';
+
+CREATE TABLE IF NOT EXISTS `user_diner_items` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL,
+  `owner` VARCHAR(20) NOT NULL,
+  `category` VARCHAR(20) DEFAULT NULL,
+  `power` INT NOT NULL DEFAULT 0,
+  `stamina` INT NOT NULL DEFAULT 0,
+  `level_req` INT NOT NULL DEFAULT 0,
+  `quantity` INT NOT NULL DEFAULT 0,
+  `price` INT NOT NULL DEFAULT 0,
+  `purchased_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户酒菜';
+
+CREATE TABLE IF NOT EXISTS `learned_skills` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `skill_name` VARCHAR(30) NOT NULL,
+  `owner` VARCHAR(20) NOT NULL,
+  `neili_bonus` INT NOT NULL DEFAULT 0,
+  `speed_bonus` INT NOT NULL DEFAULT 0,
+  `level` INT NOT NULL DEFAULT 1,
+  `learned_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='已学武功';
+
+CREATE TABLE IF NOT EXISTS `star_pets` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `gender` VARCHAR(10) DEFAULT NULL,
+  `owner` VARCHAR(20) NOT NULL,
+  `hp` INT NOT NULL DEFAULT 500,
+  `mp` INT NOT NULL DEFAULT 100,
+  `attack` INT NOT NULL DEFAULT 0,
+  `defense` INT NOT NULL DEFAULT 0,
+  `max_hp` INT NOT NULL DEFAULT 500,
+  `max_mp` INT NOT NULL DEFAULT 100,
+  `max_attack` INT NOT NULL DEFAULT 0,
+  `max_defense` INT NOT NULL DEFAULT 0,
+  `level` INT NOT NULL DEFAULT 1,
+  `exp` INT NOT NULL DEFAULT 0,
+  `special_skill` VARCHAR(30) DEFAULT '无',
+  `rage` INT NOT NULL DEFAULT 0,
+  `status` VARCHAR(20) DEFAULT '正常',
+  `mother` VARCHAR(20) DEFAULT NULL,
+  `father` VARCHAR(20) DEFAULT NULL,
+  `stamina` INT NOT NULL DEFAULT 0,
+  `productivity` INT NOT NULL DEFAULT 0,
+  `affection` INT NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='星河宠物';
+
+CREATE TABLE IF NOT EXISTS `mini_pets` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `owner` VARCHAR(20) NOT NULL,
+  `attack` INT NOT NULL DEFAULT 0,
+  `defense` INT NOT NULL DEFAULT 0,
+  `level` INT NOT NULL DEFAULT 1,
+  `exp` INT NOT NULL DEFAULT 0,
+  `special_skill` VARCHAR(30) DEFAULT NULL,
+  `rage` INT NOT NULL DEFAULT 0,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='小型宠物';
+
+CREATE TABLE IF NOT EXISTS `sheep_pets` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `owner` VARCHAR(20) NOT NULL,
+  `happiness` INT NOT NULL DEFAULT 0,
+  `health` INT NOT NULL DEFAULT 0,
+  `life` INT NOT NULL DEFAULT 0,
+  `milk` INT NOT NULL DEFAULT 0,
+  `hunger` INT NOT NULL DEFAULT 0,
+  `workload` INT NOT NULL DEFAULT 0,
+  `cleanliness` INT NOT NULL DEFAULT 0,
+  `purchased_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_fed_at` DATETIME DEFAULT NULL,
+  `fed_days` INT NOT NULL DEFAULT 0,
+  `last_login_at` DATE DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='宠物羊';
+
+CREATE TABLE IF NOT EXISTS `pet_init_rules` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `init_clean` INT NOT NULL DEFAULT 0,
+  `init_happy` INT NOT NULL DEFAULT 0,
+  `init_health` INT NOT NULL DEFAULT 0,
+  `init_milk` INT NOT NULL DEFAULT 0,
+  `init_life` INT NOT NULL DEFAULT 0,
+  `init_hunger` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='宠物初始化参数';
+
+CREATE TABLE IF NOT EXISTS `wishes` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `gender` VARCHAR(10) DEFAULT NULL,
+  `email` VARCHAR(60) DEFAULT NULL,
+  `homepage` VARCHAR(100) DEFAULT NULL,
+  `wish_type` VARCHAR(20) DEFAULT NULL COMMENT '爱情/学业/健康/家庭/事业/前途/财运/生活',
+  `address` VARCHAR(100) DEFAULT NULL,
+  `content` TEXT,
+  `ip` VARCHAR(45) DEFAULT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `view_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='许愿墙';
+
+CREATE TABLE IF NOT EXISTS `photos` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `jh_name` VARCHAR(20) DEFAULT NULL COMMENT '江湖名',
+  `real_name` VARCHAR(30) DEFAULT NULL,
+  `gender` VARCHAR(10) DEFAULT NULL,
+  `age` INT DEFAULT NULL,
+  `address` VARCHAR(100) DEFAULT NULL,
+  `email` VARCHAR(60) DEFAULT NULL,
+  `bio` TEXT,
+  `is_approved` TINYINT(1) NOT NULL DEFAULT 0,
+  `image_data` LONGBLOB DEFAULT NULL COMMENT '照片二进制',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='照片';
+
+CREATE TABLE IF NOT EXISTS `blackjack_games` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(20) NOT NULL,
+  `dealer_cards` VARCHAR(30) DEFAULT NULL COMMENT 'z0~z5',
+  `dealer_points` INT DEFAULT NULL,
+  `player_cards` VARCHAR(30) DEFAULT NULL COMMENT 'u0~u5',
+  `player_points` INT DEFAULT NULL,
+  `bet` INT NOT NULL DEFAULT 0,
+  `wins` INT NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='21点游戏';
+
+CREATE TABLE IF NOT EXISTS `courtesans` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `beauty` INT NOT NULL DEFAULT 0 COMMENT '美貌度',
+  `registered_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='烟花院';
+
+CREATE TABLE IF NOT EXISTS `tang_poems` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `verse` TEXT COMMENT '诗句',
+  `question` VARCHAR(200) COMMENT '题目',
+  `answer` VARCHAR(100) COMMENT '答案',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='唐诗题库';
+
+CREATE TABLE IF NOT EXISTS `riddles` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `question` VARCHAR(200) NOT NULL,
+  `answer` VARCHAR(100) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='猜谜题库';
+
+CREATE TABLE IF NOT EXISTS `secret_skills` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL,
+  `speed_bonus` INT NOT NULL DEFAULT 0,
+  `neili_bonus` INT NOT NULL DEFAULT 0,
+  `price` INT NOT NULL DEFAULT 0,
+  `level` INT NOT NULL DEFAULT 1,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='藏经阁武功';
+
+CREATE TABLE IF NOT EXISTS `poll_candidates` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(20) NOT NULL,
+  `vote_count` INT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='投票候选人';
+
+CREATE TABLE IF NOT EXISTS `poll_votes` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `voter` VARCHAR(20) NOT NULL,
+  `candidate_id` INT UNSIGNED NOT NULL,
+  `voted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_voter` (`voter`),
+  KEY `idx_candidate` (`candidate_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='投票记录';
+
+CREATE TABLE IF NOT EXISTS `poll_config` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `start_time` DATETIME DEFAULT NULL,
+  `end_time` DATETIME DEFAULT NULL,
+  `min_exp` INT NOT NULL DEFAULT 300 COMMENT '经验值门槛',
+  `is_active` TINYINT(1) NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='投票配置';
+
+CREATE TABLE IF NOT EXISTS `chat_rooms` (
+  `id` TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL,
+  `min_grade` TINYINT UNSIGNED NOT NULL DEFAULT 0 COMMENT '最低等级',
+  `max_grade` TINYINT UNSIGNED NOT NULL DEFAULT 10 COMMENT '最高等级(0=不限)',
+  `fight_enabled` TINYINT(1) NOT NULL DEFAULT 1 COMMENT 'PK开关',
+  `sort_order` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天房间';
+
+CREATE TABLE IF NOT EXISTS `chat_messages` (
+  `id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `room_id` TINYINT UNSIGNED NOT NULL,
+  `line_no` BIGINT UNSIGNED NOT NULL COMMENT '行号',
+  `is_action` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '动作标志',
+  `is_private` TINYINT(1) NOT NULL DEFAULT 0 COMMENT '私聊标志',
+  `sender` VARCHAR(20) NOT NULL,
+  `receiver` VARCHAR(20) DEFAULT '所有人',
+  `sender_color` VARCHAR(7) DEFAULT '660099' COMMENT '名字颜色',
+  `msg_color` VARCHAR(7) DEFAULT '660099' COMMENT '消息颜色',
+  `action_word` VARCHAR(20) DEFAULT NULL COMMENT '动作词',
+  `content` TEXT NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_room_line` (`room_id`, `line_no`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息';
+
+CREATE TABLE IF NOT EXISTS `online_users` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT UNSIGNED NOT NULL,
+  `username` VARCHAR(20) NOT NULL,
+  `room_id` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `avatar` VARCHAR(100) DEFAULT NULL,
+  `gender` ENUM('male','female') NOT NULL DEFAULT 'male',
+  `sect` VARCHAR(20) DEFAULT '无',
+  `joined_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_active_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `socket_id` VARCHAR(50) DEFAULT NULL COMMENT 'Socket.IO连接ID',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user` (`user_id`),
+  KEY `idx_room` (`room_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='在线用户';
+
+CREATE TABLE IF NOT EXISTS `mute_list` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(20) NOT NULL,
+  `muted_by` VARCHAR(20) DEFAULT NULL,
+  `muted_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` DATETIME DEFAULT NULL COMMENT 'NULL=永久',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='禁言名单';
+
+CREATE TABLE IF NOT EXISTS `fight_bans` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(20) NOT NULL,
+  `room_id` TINYINT UNSIGNED NOT NULL DEFAULT 0,
+  `banned_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_username_room` (`username`, `room_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='禁打名单';
+
+CREATE TABLE IF NOT EXISTS `bank_accounts` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `user_id` INT UNSIGNED NOT NULL,
+  `deposit` BIGINT NOT NULL DEFAULT 0 COMMENT '存款',
+  `last_interest_at` DATETIME DEFAULT NULL COMMENT '最后计息时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='银行账户';
+
+CREATE TABLE IF NOT EXISTS `bad_words` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `word` VARCHAR(30) NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_word` (`word`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='脏词列表';
+
+CREATE TABLE IF NOT EXISTS `banned_usernames` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name_pattern` VARCHAR(30) NOT NULL COMMENT '用户名或模式',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='禁止登录名';
+
+SET FOREIGN_KEY_CHECKS = 1;
