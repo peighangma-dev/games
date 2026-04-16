@@ -12,6 +12,18 @@ const routes = [
     component: () => import('../views/Register.vue')
   },
   {
+    path: '/fortune',
+    name: 'Fortune',
+    component: () => import('../views/Fortune.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/fishing',
+    name: 'Fishing',
+    component: () => import('../views/Fishing.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/main',
     name: 'Main',
     component: () => import('../views/Main.vue'),
@@ -66,6 +78,12 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/shop',
+    name: 'Shop',
+    component: () => import('../views/Shop.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/games',
     name: 'Games',
     component: () => import('../views/Games.vue'),
@@ -110,7 +128,8 @@ const routes = [
       { path: 'ip-locks', name: 'AdminIpLocks', component: () => import('../views/admin/IpLocks.vue') },
       { path: 'logs', name: 'AdminLogs', component: () => import('../views/admin/Logs.vue') },
       { path: 'items', name: 'AdminItems', component: () => import('../views/admin/Items.vue') },
-      { path: 'statistics', name: 'AdminStatistics', component: () => import('../views/admin/Statistics.vue') }
+      { path: 'statistics', name: 'AdminStatistics', component: () => import('../views/admin/Statistics.vue') },
+      { path: 'random-events', name: 'AdminRandomEvents', component: () => import('../views/admin/RandomEvents.vue') }
     ]
   },
   {

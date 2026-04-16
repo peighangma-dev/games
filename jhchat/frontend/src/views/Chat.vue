@@ -12,7 +12,18 @@
       <div class="chat-main" ref="chatMainRef">
         <div class="chat-tabs">
           <span :class="['chat-tab', { active: chatTab === 'public' }]" @click="chatTab = 'public'">公聊</span>
-          <span :class="['chat-tab', { active: chatTab === 'private' }]" @click="chatTab = 'private'">私聊</span>
+          <span :class="['chat-tab', { active: chatTab === 'private' }]" @click="switchToPrivateTab">
+            私聊
+            <span v-if="privateUnreadCount > 0" class="unread-badge">{{ privateUnreadCount }}</span>
+          </span>
+        </div>
+        
+        <!-- 私聊对象筛选（仅在私聊 tab 显示） -->
+        <div v-if="chatTab === 'private'" class="private-filter">
+          <select v-model="privateFilterUser" class="private-filter-select" @change="filterPrivateMessages">
+            <option value="">所有私聊</option>
+            <option v-for="user in privateChatUsers" :key="user" :value="user">{{ user }}</option>
+          </select>
         </div>
         <div class="messages-area" ref="messagesRef">
           <div
@@ -27,13 +38,14 @@
               <span class="action-text" v-html="msg.content"></span>
             </template>
             <template v-else>
-              <span class="msg-sender" :style="{ color: '#' + msg.sender_color }" @click="selectReceiver(msg.sender)">{{ msg.sender }}</span>
+              <span class="msg-sender" :style="{ color: '#' + msg.sender_color }" @click="selectReceiver(msg.sender)" @dblclick="quickPrivateChat(msg.sender)">{{ msg.sender }}</span>
               <span class="msg-arrow" v-if="msg.is_private">悄悄对</span>
-              <span class="msg-receiver" v-if="msg.is_private && msg.receiver" @click="selectReceiver(msg.receiver)">{{ msg.receiver }}</span>
+              <span class="msg-receiver" v-if="msg.is_private && msg.receiver" @click="selectReceiver(msg.receiver)" @dblclick="quickPrivateChat(msg.receiver)">{{ msg.receiver }}</span>
               <span class="msg-arrow" v-if="msg.is_private">说：</span>
               <span class="msg-arrow" v-else>说：</span>
               <span class="msg-content" :style="{ color: '#' + msg.msg_color }" v-html="msg.content"></span>
             </template>
+            <span class="msg-timestamp">{{ formatMessageTime(msg.created_at) }}</span>
           </div>
           <div v-if="filteredMessages.length === 0" class="empty-msg">暂无消息</div>
         </div>
@@ -41,10 +53,18 @@
 
       <div class="chat-sidebar">
         <div class="sidebar-section">
-          <h4>在线用户 ({{ roomOnlineUsers.length }})</h4>
+          <div class="user-list-header">
+            <h4>在线用户 ({{ filteredOnlineUsers.length }})</h4>
+            <input 
+              v-model="userSearchQuery" 
+              type="text" 
+              placeholder="搜索用户..." 
+              class="user-search-input"
+            />
+          </div>
           <div class="user-list">
             <div
-              v-for="u in roomOnlineUsers"
+              v-for="u in filteredOnlineUsers"
               :key="u.user_id || u.username"
               :class="['user-item', { 'user-selected': receiver === u.username }]"
               @click="selectReceiver(u.username)"
@@ -53,6 +73,9 @@
               <span class="user-name">{{ u.username }}</span>
               <span class="user-sect" v-if="u.sect && u.sect !== '无'">{{ u.sect }}</span>
             </div>
+          </div>
+          <div v-if="filteredOnlineUsers.length === 0" class="empty-user-list">
+            暂无在线用户
           </div>
         </div>
       </div>
@@ -113,7 +136,7 @@
         <div class="input-field cmd-field" v-if="showSlashMenu">
           <label>命令</label>
           <select v-model="slashCommand" class="cmd-select" @change="onSlashCommand">
-            <option value="">/ 斜杠命令</option>
+            <option value="">选择命令...</option>
             <option v-for="cmd in commands" :key="cmd" :value="cmd">/{{ cmd }}</option>
           </select>
           <input v-model="cmdTarget" type="text" placeholder="目标" class="cmd-input" v-if="slashCommand" />
@@ -135,17 +158,19 @@
           </select>
         </label>
       </div>
-      <div class="input-row-main">
-        <input
-          v-model="inputText"
-          type="text"
-          placeholder="输入消息..."
-          class="msg-input"
-          @keydown.enter="sendMessage"
-        />
-        <button class="btn btn-primary send-btn" @click="sendMessage">发送</button>
-        <button class="btn btn-sm" @click="sendAction" :disabled="!actionWord">动作</button>
-      </div>
+<div class="input-row-main">
+  <input
+    v-model="inputText"
+    @input="onInputTextChanged"
+    type="text"
+    placeholder="输入消息..."
+    class="msg-input"
+    @keydown.enter="sendMessage"
+  />
+  <span class="char-count">{{ charCount }}/500</span>
+  <button class="btn btn-primary send-btn" @click="sendMessage">发送</button>
+  <button class="btn btn-sm" @click="sendAction" :disabled="!actionWord">动作</button>
+</div>
     </div>
   </div>
 </template>
@@ -170,6 +195,9 @@ const messages = ref([])
 const roomOnlineUsers = ref([])
 const messagesRef = ref(null)
 const chatMainRef = ref(null)
+const userSearchQuery = ref('')
+const privateUnreadCount = ref(0)
+const privateFilterUser = ref('')
 
 const colorOptions = [
   '660099', 'FF0000', 'FF6600', 'FFCC00', 'FFFF00',
@@ -186,6 +214,7 @@ const selectedEmoticon = ref(0)
 const isPrivate = ref(false)
 const filterMode = ref(0)
 const inputText = ref('')
+const charCount = ref(0)
 const showSlashMenu = ref(false)
 const slashCommand = ref('')
 const cmdTarget = ref('')
@@ -199,17 +228,64 @@ const actions = ref([
 
 const filteredMessages = computed(() => {
   let list = messages.value
+  
   if (chatTab.value === 'public') {
-    list = list.filter(m => !m.is_private)
+    // 公聊 tab：显示所有公聊消息 + 自己参与的私聊消息
+    list = list.filter(m => 
+      !m.is_private || // 公聊消息
+      (m.is_private && (m.sender === userStore.username || m.receiver === userStore.username)) // 自己参与的私聊
+    )
   } else {
-    list = list.filter(m => m.is_private || m.sender === '系统')
+    // 私聊 tab：只显示与自己相关的私聊消息 + 系统消息
+    list = list.filter(m => 
+      (m.is_private && (m.sender === userStore.username || m.receiver === userStore.username)) ||
+      m.sender === '系统'
+    )
+    
+    // 如果选择了特定私聊对象，进一步筛选
+    if (privateFilterUser.value) {
+      list = list.filter(m => 
+        m.sender === privateFilterUser.value || m.receiver === privateFilterUser.value
+      )
+    }
   }
+  
+  // 筛选条件（独立于 tab）
   if (filterMode.value === 1) {
+    // 只看公聊
     list = list.filter(m => !m.is_private)
   } else if (filterMode.value === 2) {
-    list = list.filter(m => m.is_private || m.sender === '系统')
+    // 只看私聊
+    list = list.filter(m => 
+      m.is_private && (m.sender === userStore.username || m.receiver === userStore.username)
+    )
   }
+  
   return list
+})
+
+const filteredOnlineUsers = computed(() => {
+  if (!userSearchQuery.value) return roomOnlineUsers.value
+  const query = userSearchQuery.value.toLowerCase()
+  return roomOnlineUsers.value.filter(u => 
+    u.username.toLowerCase().includes(query) ||
+    (u.sect && u.sect.toLowerCase().includes(query))
+  )
+})
+
+// 获取所有私聊过的用户列表
+const privateChatUsers = computed(() => {
+  const users = new Set()
+  messages.value.forEach(m => {
+    if (m.is_private) {
+      if (m.sender === userStore.username && m.receiver !== '所有人') {
+        users.add(m.receiver)
+      } else if (m.receiver === userStore.username) {
+        users.add(m.sender)
+      }
+    }
+  })
+  return Array.from(users).filter(u => u !== userStore.username && u !== '所有人')
 })
 
 function scrollToBottom() {
@@ -220,8 +296,40 @@ function scrollToBottom() {
   })
 }
 
+function filterPrivateMessages() {
+  scrollToBottom()
+}
+
+function formatMessageTime(timestamp) {
+  if (!timestamp) return ''
+  const date = new Date(timestamp)
+  const hours = date.getHours().toString().padStart(2, '0')
+  const minutes = date.getMinutes().toString().padStart(2, '0')
+  return `${hours}:${minutes}`
+}
+
+function onInputTextChanged() {
+  charCount.value = Math.min(inputText.value.length, 500)
+  inputText.value = inputText.value.slice(0, 500)
+}
+
 function selectReceiver(username) {
   receiver.value = username
+}
+
+function quickPrivateChat(username) {
+  receiver.value = username
+  isPrivate.value = true
+  inputText.value = ''
+  nextTick(() => {
+    const input = document.querySelector('.msg-input')
+    if (input) input.focus()
+  })
+}
+
+function switchToPrivateTab() {
+  chatTab.value = 'private'
+  privateUnreadCount.value = 0
 }
 
 function insertEmoticon(id) {
@@ -261,7 +369,11 @@ async function loadActions() {
 async function loadCommands() {
   try {
     const res = await api.get('/chat/commands')
-    if (res.success) commands.value = res.data || []
+    if (res.success) {
+      const cmdList = res.data || []
+      // 后端返回的是对象数组 { cmd, name, ... }, 提取 cmd 字段
+      commands.value = cmdList.map(c => c.cmd?.replace('/', '') || c)
+    }
   } catch (e) {}
 }
 
@@ -276,6 +388,11 @@ function setupSocket() {
       messages.value = messages.value.slice(-300)
     }
     scrollToBottom()
+    
+    // 收到私聊消息时，如果发送者不是自己且当前不在私聊 tab，增加未读计数
+    if (msg.is_private && msg.sender !== userStore.username && msg.sender !== '系统' && chatTab.value !== 'private') {
+      privateUnreadCount.value++
+    }
   })
 
   socket.on('chat:system', (msg) => {
@@ -323,6 +440,23 @@ function sendMessage() {
   const socket = getSocket()
   if (!socket) return
 
+  // 检查是否是命令输入
+  if (text.startsWith('/')) {
+    const parts = text.slice(1).split(' ')
+    const cmd = parts[0]
+    const target = parts.slice(1).join(' ')
+    if (commands.value.includes(cmd)) {
+      socket.emit('chat:command', {
+        command: cmd,
+        target: target,
+        args: {}
+      })
+      inputText.value = ''
+      charCount.value = 0
+      return
+    }
+  }
+
   if (showSlashMenu.value && slashCommand.value) {
     socket.emit('chat:command', {
       command: slashCommand.value,
@@ -332,6 +466,7 @@ function sendMessage() {
     slashCommand.value = ''
     cmdTarget.value = ''
     inputText.value = ''
+    charCount.value = 0
     return
   }
 
@@ -344,6 +479,7 @@ function sendMessage() {
     actionWord: actionWord.value
   })
   inputText.value = ''
+  charCount.value = 0
   selectedEmoticon.value = 0
 }
 
@@ -443,39 +579,120 @@ onUnmounted(() => {
 
 .chat-tabs {
   display: flex;
-  background: rgba(0, 0, 0, 0.3);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(15, 15, 30, 0.5);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .chat-tab {
-  padding: 8px 20px;
+  padding: 10px 24px;
   cursor: pointer;
   font-size: 14px;
   color: #888;
-  transition: all 0.2s;
+  transition: all 0.25s;
+  position: relative;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
 .chat-tab.active {
-  color: #7eb8da;
-  border-bottom: 2px solid #4B87C3;
+  color: #8ab8d6;
+  background: rgba(90, 139, 196, 0.1);
+}
+
+.chat-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 60%;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #5a8bc4, transparent);
+  animation: tabSlideIn 0.3s ease-out;
+}
+
+@keyframes tabSlideIn {
+  from { width: 0; }
+  to { width: 60%; }
 }
 
 .chat-tab:hover {
-  color: #ccc;
+  color: #bbb;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.unread-badge {
+  background: linear-gradient(135deg, #e74c3c, #c0392b);
+  color: #fff;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  box-shadow: 0 2px 6px rgba(231, 76, 60, 0.4);
+  animation: badgePulse 2s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
 }
 
 .messages-area {
   flex: 1;
   overflow-y: auto;
-  padding: 10px 14px;
-  background: rgba(0, 0, 0, 0.2);
+  padding: 12px 16px;
+  background: rgba(15, 15, 30, 0.4);
+  scrollbar-width: thin;
+  scrollbar-color: rgba(90, 139, 196, 0.4) rgba(15, 15, 30, 0.2);
+}
+
+.messages-area::-webkit-scrollbar {
+  width: 6px;
+}
+
+.messages-area::-webkit-scrollbar-track {
+  background: rgba(15, 15, 30, 0.2);
+}
+
+.messages-area::-webkit-scrollbar-thumb {
+  background: rgba(90, 139, 196, 0.4);
+  border-radius: 3px;
+}
+
+.messages-area::-webkit-scrollbar-thumb:hover {
+  background: rgba(90, 139, 196, 0.6);
+}
+
+.private-filter {
+  padding: 8px 16px;
+  background: rgba(15, 15, 30, 0.6);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .msg-item {
-  padding: 3px 0;
+  padding: 4px 0;
   font-size: 14px;
   line-height: 1.6;
   word-break: break-all;
+  animation: msgSlideIn 0.3s ease-out;
+}
+
+@keyframes msgSlideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .msg-system {
@@ -499,9 +716,11 @@ onUnmounted(() => {
 }
 
 .msg-private {
-  background: rgba(75, 135, 195, 0.05);
-  padding: 2px 6px;
-  border-radius: 3px;
+  background: rgba(90, 139, 196, 0.08);
+  padding: 4px 8px;
+  border-radius: 5px;
+  border-left: 2px solid rgba(90, 139, 196, 0.4);
+  margin: 0 -4px;
 }
 
 .msg-sender {
@@ -527,6 +746,21 @@ onUnmounted(() => {
   color: #888;
 }
 
+.msg-timestamp {
+  float: right;
+  color: #555;
+  font-size: 11px;
+  margin-left: 8px;
+  opacity: 0.7;
+  visibility: hidden;
+  transition: opacity 0.2s, visibility 0.2s;
+}
+
+.msg-item:hover .msg-timestamp {
+  opacity: 1;
+  visibility: visible;
+}
+
 .msg-content :deep(img) {
   vertical-align: middle;
   max-height: 22px;
@@ -550,11 +784,48 @@ onUnmounted(() => {
 }
 
 .sidebar-section h4 {
-  color: #7eb8da;
+  color: #8ab8d6;
   font-size: 14px;
   margin-bottom: 10px;
-  padding-bottom: 6px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.user-list-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.user-list-header h4 {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.user-search-input {
+  flex: 1;
+  padding: 4px 8px !important;
+  font-size: 12px !important;
+  border-radius: 4px;
+  background: rgba(15, 15, 30, 0.5);
+  border: 1px solid rgba(90, 139, 196, 0.2);
+  color: #ddd;
+}
+
+.user-search-input:focus {
+  border-color: #5a8bc4;
+  box-shadow: 0 0 6px rgba(90, 139, 196, 0.2);
+}
+
+.empty-user-list {
+  text-align: center;
+  color: #555;
+  font-size: 13px;
+  padding: 20px 0;
 }
 
 .user-list {
@@ -753,27 +1024,107 @@ onUnmounted(() => {
   font-size: 12px !important;
 }
 
+.private-filter-select {
+  width: 100%;
+  padding: 6px 10px !important;
+  font-size: 13px !important;
+  border-radius: 6px;
+  background: rgba(15, 15, 30, 0.6);
+  border: 1px solid rgba(90, 139, 196, 0.3);
+  color: #ddd;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.private-filter-select:hover {
+  border-color: rgba(90, 139, 196, 0.5);
+}
+
+.private-filter-select:focus {
+  border-color: #5a8bc4;
+  box-shadow: 0 0 10px rgba(90, 139, 196, 0.3);
+}
+
 .input-row-main {
   display: flex;
-  gap: 8px;
+  gap: 10px;
+  margin-top: 4px;
+  align-items: center;
 }
 
 .msg-input {
   flex: 1;
-  padding: 8px 12px !important;
+  padding: 10px 14px !important;
   font-size: 14px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s;
+}
+
+.char-count {
+  color: #666;
+  font-size: 12px;
+  white-space: nowrap;
+  font-weight: 500;
+  min-width: 50px;
+  text-align: right;
+}
+
+.char-count:hover {
+  color: #8ab8d6;
+}
+
+.msg-input:focus {
+  background: rgba(15, 15, 30, 0.8) !important;
+  box-shadow: 0 0 12px rgba(90, 139, 196, 0.3);
 }
 
 .send-btn {
-  padding: 8px 20px;
+  padding: 10px 24px;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(90, 139, 196, 0.3);
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(90, 139, 196, 0.5);
+}
+
+.btn-sm {
+  padding: 6px 16px;
+  font-size: 13px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(106, 172, 122, 0.3);
+}
+
+.btn-sm:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(106, 172, 122, 0.4);
+}
+
+@media (max-width: 1024px) {
+  .chat-sidebar {
+    width: 180px;
+  }
+  .color-swatches {
+    max-width: 200px;
+  }
 }
 
 @media (max-width: 768px) {
   .chat-sidebar {
-    width: 160px;
+    width: 150px;
   }
   .color-swatches {
-    max-width: 280px;
+    max-width: 150px;
+  }
+  .input-row-1 {
+    flex-wrap: wrap;
+  }
+  .color-picker-group {
+    margin-bottom: 6px;
   }
 }
 
@@ -783,6 +1134,12 @@ onUnmounted(() => {
   }
   .input-row-1, .input-row-2 {
     flex-wrap: wrap;
+  }
+  .color-swatches {
+    max-width: 100%;
+  }
+  .emoticon-grid {
+    max-width: 100%;
   }
 }
 </style>

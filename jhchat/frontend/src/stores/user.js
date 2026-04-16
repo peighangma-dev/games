@@ -11,6 +11,7 @@ export const useUserStore = defineStore('user', {
     isLoggedIn: (state) => !!state.user,
     username: (state) => state.user?.username || '',
     grade: (state) => state.user?.grade || 1,
+    silver: (state) => state.profile?.silver || 0,
     isAdmin: (state) => state.user?.grade >= 6 && state.user?.faction === '逍遥派',
     isSuperAdmin: (state) => state.user?.grade >= 10 && state.user?.faction === '逍遥派'
   },

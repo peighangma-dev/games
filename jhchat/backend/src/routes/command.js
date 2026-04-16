@@ -4,7 +4,7 @@ const { auth } = require('../middleware/auth');
 
 router.post('/:command', auth, async (req, res) => {
   try {
-    const handler = require('./commands');
+    const handler = require('../socket/commands');
     const result = await handler.handle(
       req.params.command,
       req.body.target,

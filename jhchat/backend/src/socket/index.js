@@ -26,12 +26,37 @@ async function broadcastMessage(io, roomId, msg) {
   const [rows] = await db.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
   const chatMsg = rows[0];
 
+  console.log(`[消息] 发送消息 - 私聊:${msg.is_private}, 发送者:${msg.sender}, 接收者:${msg.receiver}`);
+
   if (msg.is_private) {
+    // 私聊：发送给发送者和接收者，不论是否在同一个房间
     const senderSocket = await findUserSocket(io, msg.sender);
     const receiverSocket = await findUserSocket(io, msg.receiver);
-    if (senderSocket) io.to(senderSocket).emit('chat:say', chatMsg);
-    if (receiverSocket) io.to(receiverSocket).emit('chat:say', chatMsg);
+    
+    console.log(`[私聊] Sender socket: ${senderSocket}, Receiver socket: ${receiverSocket}`);
+    
+    if (senderSocket) {
+      io.to(senderSocket).emit('chat:say', chatMsg);
+      console.log(`[私聊] 已发送给发送者 ${msg.sender}`);
+    }
+    if (receiverSocket) {
+      io.to(receiverSocket).emit('chat:say', chatMsg);
+      console.log(`[私聊] 已发送给接收者 ${msg.receiver}`);
+    }
+    
+    // 如果接收者不在线，发送给发送者一个提示
+    if (!receiverSocket && msg.receiver !== '所有人') {
+      if (senderSocket) {
+        io.to(senderSocket).emit('chat:system', {
+          content: `<b>${msg.receiver}</b> 不在线，消息已发送但对方无法收到`,
+          type: 'private_message_offline'
+        });
+        console.log(`[私聊] 接收者 ${msg.receiver} 不在线，已通知发送者`);
+      }
+    }
   } else {
+    // 公聊：发送给房间内所有人
+    console.log(`[公聊] 发送给房间 ${roomId} 的所有人`);
     io.to(`room_${roomId}`).emit('chat:say', chatMsg);
   }
 
@@ -41,8 +66,12 @@ async function broadcastMessage(io, roomId, msg) {
 async function findUserSocket(io, username) {
   const sockets = await io.fetchSockets();
   for (const socket of sockets) {
-    if (socket.data.username === username) return socket.id;
+    if (socket.data.username === username) {
+      console.log(`[Socket] 找到用户 "${username}" 的 socket:`, socket.id);
+      return socket.id;
+    }
   }
+  console.log(`[Socket] 未找到用户 "${username}" 的 socket`);
   return null;
 }
 
@@ -136,7 +165,7 @@ module.exports = function(io) {
         content = content.replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
         content = content.replace(/\[tu\](\d+)\[\/tu\]/g, (match, id) => {
-          return `<img src="/assets/emoticons/${id}.gif" alt="表情${id}">`;
+          return `<img src="/assets/chat-images/${id}.gif" alt="表情${id}">`;
         });
 
         await broadcastMessage(io, roomId, {
@@ -271,3 +300,55 @@ module.exports = function(io) {
 
 module.exports.broadcastMessage = broadcastMessage;
 module.exports.sendSystemMessage = sendSystemMessage;
+
+// 随机事件定时器 - 每 2-5 分钟随机触发一次
+const randomEventCtrl = require('../controllers/randomEvent');
+
+function scheduleNextRandomEvent(io) {
+  const delay = Math.floor(Math.random() * 180000) + 120000; // 2-5 分钟随机
+  
+  setTimeout(async () => {
+    try {
+      // 获取所有房间的在线用户
+      const [rooms] = await db.execute('SELECT DISTINCT room_id FROM online_users');
+      
+      for (const room of rooms) {
+        const roomId = room.room_id;
+        const [onlineUsers] = await db.execute(
+          'SELECT user_id, username, grade FROM online_users WHERE room_id = ?',
+          [roomId]
+        );
+        
+        if (onlineUsers.length === 0) continue;
+        
+        // 触发随机事件
+        const result = await randomEventCtrl.triggerRandomEvent(io, onlineUsers);
+        
+        if (result && result.message) {
+          // 在聊天室广播随机事件消息
+          await sendSystemMessage(io, roomId, `🎲 ${result.message}`);
+          
+          // 通知所有客户端更新用户状态
+          io.to(`room_${roomId}`).emit('room:onlineUpdate', { roomId, users: onlineUsers });
+        }
+      }
+      
+      // 调度下一次随机事件
+      scheduleNextRandomEvent(io);
+    } catch (err) {
+      console.error('随机事件调度错误:', err);
+      // 即使出错也继续调度
+      scheduleNextRandomEvent(io);
+    }
+  }, delay);
+  
+  console.log(`下次随机事件将在 ${Math.round(delay/60000)} 分钟后触发`);
+}
+
+// 启动随机事件定时器
+function startRandomEventScheduler(io) {
+  console.log('启动随机事件定时器...');
+  scheduleNextRandomEvent(io);
+}
+
+module.exports.startRandomEventScheduler = startRandomEventScheduler;

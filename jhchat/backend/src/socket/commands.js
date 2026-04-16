@@ -293,10 +293,46 @@ const handlers = {
 
   'meditate': async (target, args, ctx) => {
     const user = await getUser(ctx.username);
-    if (user.silver < 1000) return { success: false, message: '银两不足1000' };
+    
+    // 等级门槛：需要等级≥2
+    if (user.grade < 2) return { success: false, message: '需要等级≥2 才能打坐练功' };
+    
+    // 银两检查
+    if (user.silver < 1000) return { success: false, message: '银两不足 1000' };
+    
+    // 冷却时间检查：5 分钟内不能重复打坐
+    const [coolDownList] = await db.execute(
+      'SELECT id, created_at FROM meditate_logs WHERE user_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE) ORDER BY created_at DESC LIMIT 1',
+      [ctx.userId]
+    );
+    if (coolDownList.length > 0) {
+      const lastTime = coolDownList[0].created_at;
+      const nextTime = new Date(lastTime.getTime() + 5 * 60 * 1000);
+      const minutes = Math.ceil((nextTime - new Date()) / 60000);
+      return { success: false, message: `打坐需要冷却 5 分钟，请${minutes}分钟后再试` };
+    }
+    
+    // 每日次数限制：每天最多 10 次
+    const [todayLogs] = await db.execute(
+      'SELECT COUNT(*) as count, SUM(silver_cost) as total_cost FROM meditate_logs WHERE user_id = ? AND DATE(created_at) = CURDATE()',
+      [ctx.userId]
+    );
+    if (todayLogs[0].count >= 10) {
+      return { success: false, message: '今日打坐次数已达上限（10 次/天）' };
+    }
+    
+    // 执行打坐
     const gain = Math.floor(Math.random() * 100) + 50;
-    await db.execute('UPDATE users SET silver = silver - 1000, neili = neili + ?, wugong = wugong + ? WHERE id = ?', [gain, Math.floor(gain / 10), ctx.userId]);
-    return { success: true, message: `打坐练功，内力+${gain}，武功+${Math.floor(gain / 10)}`, gain };
+    const wugongGain = Math.floor(gain / 10);
+    await db.execute('UPDATE users SET silver = silver - 1000, neili = neili + ?, wugong = wugong + ? WHERE id = ?', [gain, wugongGain, ctx.userId]);
+    
+    // 记录日志
+    await db.execute(
+      'INSERT INTO meditate_logs (user_id, username, neili_gain, wugong_gain, silver_cost) VALUES (?, ?, ?, ?, 1000)',
+      [ctx.userId, ctx.username, gain, wugongGain]
+    );
+    
+    return { success: true, message: `打坐练功，内力 +${gain}，武功+${wugongGain}，今日已打坐${todayLogs[0].count + 1}/10 次`, gain, wugongGain };
   },
 
   'kick': async (target, args, ctx) => {
@@ -457,8 +493,67 @@ const handlers = {
   }
 };
 
+// 中文命令到英文 handler 的映射
+const commandMap = {
+  '千金': 'announce',
+  '点穴': 'acupoint',
+  '逮捕': 'arrest',
+  '坐牢': 'jail',
+  '警告': 'warn',
+  '下毒': 'poison',
+  '驱逐': 'expel',
+  '偷钱': 'steal',
+  '吸星大法': 'absorb',
+  '投掷': 'throw',
+  '攻击': 'attack',
+  '传内力': 'transfer-neili',
+  '赠送': 'gift',
+  '给钱': 'give-money',
+  '罚款': 'fine',
+  '加入': 'join-sect',
+  '离开': 'leave-sect',
+  '查 ip': 'check-ip',
+  '查 ip': 'check-ip',
+  '篡位': 'usurp',
+  '册封': 'enfeoff',
+  '跟踪私毒': 'track',
+  '取消跟踪': 'untrack',
+  '卡片': 'use-card',
+  '公告': 'bulletin',
+  '禁言': 'mute',
+  '解禁': 'unmute',
+  '禁打': 'ban-fight',
+  '开打': 'allow-fight',
+  '打坐': 'meditate',
+  '踢人': 'kick',
+  '心跳': 'heartbeat',
+  '怒吼': 'roar',
+  '心动': 'heartbeat-skip',
+  '拜师': 'apprentice',
+  '收徒': 'accept-disciple',
+  '站长令': 'admin-order',
+  '放大': 'enlarge',
+  '帮派令': 'faction-order'
+};
+
 exports.handle = async function(command, target, args, ctx) {
-  const handler = handlers[command];
-  if (!handler) return { success: false, message: `未知命令: ${command}` };
-  return handler(target, args || {}, ctx);
+  // 支持带空格和不带空格的命令
+  const normalizedCommand = command.replace(/\s+/g, '') // 移除所有空格
+  
+  // 先直接匹配
+  let handlerName = commandMap[command] || command
+  
+  // 如果找不到，尝试移除空格后匹配
+  if (!handlers[handlerName]) {
+    for (const [key, value] of Object.entries(commandMap)) {
+      if (key.replace(/\s+/g, '') === normalizedCommand) {
+        handlerName = value
+        break
+      }
+    }
+  }
+  
+  const handler = handlers[handlerName]
+  if (!handler) return { success: false, message: `未知命令：${command}` }
+  return handler(target, args || {}, ctx)
 };

@@ -17,6 +17,7 @@
         <router-link to="/admin/logs">日志</router-link>
         <router-link to="/admin/items">物品管理</router-link>
         <router-link to="/admin/statistics">统计</router-link>
+        <router-link to="/admin/random-events">随机事件</router-link>
       </div>
       <div class="admin-content">
         <router-view />

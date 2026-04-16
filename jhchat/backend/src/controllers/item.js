@@ -3,11 +3,21 @@ const db = require('../config/db');
 exports.list = async (req, res) => {
   try {
     const [items] = await db.execute(
-      `SELECT id, name, type, attack, defense, quantity, is_equipped, neili_bonus, tili_bonus
-       FROM items WHERE owner = ? ORDER BY id`, [req.user.username]
+      `SELECT i.*, ii.image_file 
+       FROM items i 
+       LEFT JOIN item_images ii ON i.name = ii.item_name 
+       WHERE i.owner = ? 
+       ORDER BY i.is_equipped DESC, i.id`, 
+      [req.user.username]
     );
-    res.json({ success: true, data: items });
+    const result = items.map(item => ({
+      ...item,
+      image: item.image_file || 'KITTY.GIF',
+      imageType: item.type
+    }));
+    res.json({ success: true, data: result });
   } catch (err) {
+    console.error('Query items error:', err);
     res.status(500).json({ success: false, message: '查询物品失败' });
   }
 };
@@ -58,11 +68,19 @@ exports.drop = async (req, res) => {
 exports.getMarket = async (req, res) => {
   try {
     const [listings] = await db.execute(
-      `SELECT id, seller, item_name, item_type, power, stamina, quantity, selling_price, listed_at
-       FROM market_listings WHERE is_active = 1 ORDER BY listed_at DESC`
+      `SELECT m.*, ii.image_file 
+       FROM market_listings m 
+       LEFT JOIN item_images ii ON m.item_name = ii.item_name 
+       WHERE m.is_active = 1 
+       ORDER BY m.listed_at DESC`
     );
-    res.json({ success: true, data: listings });
+    const result = listings.map(item => ({
+      ...item,
+      image: item.image_file || 'KITTY.GIF'
+    }));
+    res.json({ success: true, data: result });
   } catch (err) {
+    console.error('Query market error:', err);
     res.status(500).json({ success: false, message: '查询市场失败' });
   }
 };
@@ -104,6 +122,44 @@ exports.buyFromMarket = async (req, res) => {
     res.json({ success: true, message: '购买成功' });
   } catch (err) {
     res.status(500).json({ success: false, message: '购买失败' });
+  }
+};
+
+exports.cancelListing = async (req, res) => {
+  try {
+    const [listings] = await db.execute('SELECT * FROM market_listings WHERE id = ? AND is_active = 1', [req.params.id]);
+    if (listings.length === 0) return res.status(404).json({ success: false, message: '商品不存在或已下架' });
+    const listing = listings[0];
+    if (listing.seller !== req.user.username) return res.status(403).json({ success: false, message: '不能下架他人的商品' });
+    await db.execute('UPDATE market_listings SET is_active = 0 WHERE id = ?', [listing.id]);
+    await db.execute(
+      `INSERT INTO items (name, owner, type, attack, defense, quantity) VALUES (?, ?, ?, ?, ?, ?)`,
+      [listing.item_name, req.user.username, listing.item_type, listing.power, listing.stamina, listing.quantity]
+    );
+    res.json({ success: true, message: '下架成功' });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '下架失败' });
+  }
+};
+
+exports.getMyListings = async (req, res) => {
+  try {
+    const [listings] = await db.execute(
+      `SELECT m.*, ii.image_file 
+       FROM market_listings m 
+       LEFT JOIN item_images ii ON m.item_name = ii.item_name 
+       WHERE m.is_active = 1 AND m.seller = ? 
+       ORDER BY m.listed_at DESC`,
+      [req.user.username]
+    );
+    const result = listings.map(item => ({
+      ...item,
+      image: item.image_file || 'KITTY.GIF'
+    }));
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error('Query my listings error:', err);
+    res.status(500).json({ success: false, message: '查询出售列表失败' });
   }
 };
 
@@ -174,38 +230,231 @@ exports.buyInsurance = async (req, res) => {
 
 exports.getJobs = async (req, res) => {
   try {
-    const jobs = [
-      { id: 1, name: '砍柴', reward: 100, stamina_cost: 5 },
-      { id: 2, name: '挑水', reward: 80, stamina_cost: 3 },
-      { id: 3, name: '种地', reward: 120, stamina_cost: 8 },
-      { id: 4, name: '砍柴（高级）', reward: 200, stamina_cost: 10 },
-      { id: 5, name: '采矿', reward: 300, stamina_cost: 15 }
-    ];
-    res.json({ success: true, data: jobs });
+    const [jobs] = await db.execute(
+      'SELECT * FROM work_jobs WHERE is_enabled = 1 ORDER BY sort_no'
+    );
+    
+    // 查询用户今日打工次数
+    const [todayLogs] = await db.execute(
+      `SELECT job_id, COUNT(*) as times FROM user_work_logs 
+       WHERE user_id = ? AND DATE(worked_at) = CURDATE() 
+       GROUP BY job_id`,
+      [req.user.id]
+    );
+    
+    const todayMap = {};
+    todayLogs.forEach(log => {
+      todayMap[log.job_id] = log.times;
+    });
+    
+    // 查询用户上次打工时间
+    const [lastWork] = await db.execute(
+      `SELECT job_id, worked_at FROM user_work_logs 
+       WHERE user_id = ? 
+       ORDER BY worked_at DESC`,
+      [req.user.id]
+    );
+    
+    const lastWorkMap = {};
+    lastWork.forEach(log => {
+      if (!lastWorkMap[log.job_id]) {
+        lastWorkMap[log.job_id] = log.worked_at;
+      }
+    });
+    
+    // 组装数据
+    const jobsWithLimits = jobs.map(job => {
+      const lastTime = lastWorkMap[job.id];
+      let cooldownRemaining = 0;
+      
+      if (lastTime && job.cooldown_minutes > 0) {
+        const lastDate = new Date(lastTime);
+        const now = new Date();
+        const diffMinutes = (now - lastDate) / 1000 / 60;
+        
+        if (diffMinutes < job.cooldown_minutes) {
+          cooldownRemaining = Math.ceil(job.cooldown_minutes - diffMinutes);
+        }
+      }
+      
+      const dailyTimes = todayMap[job.id] || 0;
+      const canWork = cooldownRemaining === 0 && (job.max_daily_times === 0 || dailyTimes < job.max_daily_times);
+      
+      return {
+        id: job.id,
+        name: job.job_name,
+        reward_min: job.reward_min,
+        reward_max: job.reward_max,
+        stamina_cost: job.stamina_cost,
+        cooldown_minutes: job.cooldown_minutes,
+        max_daily_times: job.max_daily_times,
+        min_grade: job.min_grade,
+        today_times: dailyTimes,
+        cooldown_remaining: cooldownRemaining,
+        can_work: canWork && req.user.grade >= job.min_grade
+      };
+    });
+    
+    res.json({ success: true, data: jobsWithLimits });
   } catch (err) {
+    console.error('Get jobs error:', err);
     res.status(500).json({ success: false, message: '查询打工列表失败' });
   }
 };
 
 exports.work = async (req, res) => {
   try {
-    const jobMap = {
-      1: { name: '砍柴', reward: 100, cost: 5 },
-      2: { name: '挑水', reward: 80, cost: 3 },
-      3: { name: '种地', reward: 120, cost: 8 },
-      4: { name: '砍柴（高级）', reward: 200, cost: 10 },
-      5: { name: '采矿', reward: 300, cost: 15 }
-    };
-    const job = jobMap[req.params.id];
-    if (!job) return res.status(404).json({ success: false, message: '工作不存在' });
+    const jobid = parseInt(req.params.id);
+    
+    // 获取工作配置
+    const [jobs] = await db.execute(
+      'SELECT * FROM work_jobs WHERE id = ? AND is_enabled = 1',
+      [jobid]
+    );
+    
+    if (jobs.length === 0) {
+      return res.status(404).json({ success: false, message: '工作不存在或已禁用' });
+    }
+    
+    const job = jobs[0];
+    
+    // 检查等级要求
+    if (req.user.grade < job.min_grade) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `等级不足，需要等级${job.min_grade}才能进行此项工作` 
+      });
+    }
+    
+    // 检查体力
     const [users] = await db.execute('SELECT id, tili FROM users WHERE id = ?', [req.user.id]);
-    if (users[0].tili < job.cost) return res.status(400).json({ success: false, message: '体力不足' });
+    if (users[0].tili < job.stamina_cost) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `体力不足，需要${job.stamina_cost}点体力` 
+      });
+    }
+    
+    // 检查冷却时间
+    const [lastWork] = await db.execute(
+      `SELECT worked_at FROM user_work_logs 
+       WHERE user_id = ? AND job_id = ? 
+       ORDER BY worked_at DESC LIMIT 1`,
+      [req.user.id, jobid]
+    );
+    
+    if (lastWork.length > 0 && job.cooldown_minutes > 0) {
+      const lastTime = new Date(lastWork[0].worked_at);
+      const now = new Date();
+      const diffMinutes = (now - lastTime) / 1000 / 60;
+      
+      if (diffMinutes < job.cooldown_minutes) {
+        const remainingMinutes = Math.ceil(job.cooldown_minutes - diffMinutes);
+        return res.status(400).json({ 
+          success: false, 
+          message: `工作正在冷却中，请${remainingMinutes}分钟后再试` 
+        });
+      }
+    }
+    
+    // 检查每日次数限制
+    if (job.max_daily_times > 0) {
+      const [todayLogs] = await db.execute(
+        `SELECT COUNT(*) as times FROM user_work_logs 
+         WHERE user_id = ? AND job_id = ? AND DATE(worked_at) = CURDATE()`,
+        [req.user.id, jobid]
+      );
+      
+      if (todayLogs[0].times >= job.max_daily_times) {
+        return res.status(400).json({ 
+          success: false, 
+          message: `今日打工次数已达上限（${job.max_daily_times}次）` 
+        });
+      }
+    }
+    
+    // 计算随机奖励
+    const reward = Math.floor(Math.random() * (job.reward_max - job.reward_min + 1)) + job.reward_min;
+    
+    // 更新用户状态
     await db.execute(
       'UPDATE users SET silver = silver + ?, tili = tili - ?, all_value = all_value + ? WHERE id = ?',
-      [job.reward, job.cost, Math.floor(job.reward / 10), req.user.id]
+      [reward, job.stamina_cost, Math.floor(reward / 10), req.user.id]
     );
-    res.json({ success: true, data: { jobName: job.name, reward: job.reward } });
+    
+    // 记录打工日志
+    await db.execute(
+      `INSERT INTO user_work_logs (user_id, username, job_id, job_name, reward, stamina_cost) 
+       VALUES (?, ?, ?, ?, ?, ?)`,
+      [req.user.id, req.user.username, jobid, job.job_name, reward, job.stamina_cost]
+    );
+    
+    // 生成打工效果描述
+    const effectDescriptions = [
+      `你辛勤地${job.job_name}，获得了 ${reward} 两银子！`,
+      `经过一番努力，你${job.job_name}赚了 ${reward} 两！`,
+      `${job.job_name}圆满结束，收入 ${reward} 两银子！`,
+      `你通过${job.job_name}获得了 ${reward} 两报酬！`
+    ];
+    
+    const effectText = effectDescriptions[Math.floor(Math.random() * effectDescriptions.length)];
+    
+    res.json({ 
+      success: true, 
+      message: effectText,
+      data: { 
+        jobName: job.job_name, 
+        reward: reward,
+        stamina_cost: job.stamina_cost
+      } 
+    });
   } catch (err) {
+    console.error('Work error:', err);
     res.status(500).json({ success: false, message: '打工失败' });
+  }
+};
+
+exports.getShopItems = async (req, res) => {
+  try {
+    const [items] = await db.execute(
+      `SELECT i.*, ii.image_file 
+       FROM items i 
+       LEFT JOIN item_images ii ON i.name = ii.item_name 
+       WHERE i.owner = '无' AND i.quantity > 0 
+       ORDER BY i.sort_no, i.attack + i.defense DESC`
+    );
+    res.json({ success: true, data: items });
+  } catch (err) {
+    console.error('Query shop items error:', err);
+    res.status(500).json({ success: false, message: '查询商店物品失败' });
+  }
+};
+
+exports.buyFromShop = async (req, res) => {
+  try {
+    const { itemName, price } = req.body;
+    const [items] = await db.execute(
+      `SELECT i.*, ii.image_file 
+       FROM items i 
+       LEFT JOIN item_images ii ON i.name = ii.item_name 
+       WHERE i.name = ? AND i.owner = '无' AND i.quantity > 0 
+       LIMIT 1`,
+      [itemName]
+    );
+    if (items.length === 0) return res.status(404).json({ success: false, message: '物品已售罄' });
+    const item = items[0];
+    const [users] = await db.execute('SELECT id, silver FROM users WHERE id = ?', [req.user.id]);
+    if (users[0].silver < price) return res.status(400).json({ success: false, message: '银两不足' });
+    await db.execute('UPDATE users SET silver = silver - ? WHERE id = ?', [price, req.user.id]);
+    await db.execute(
+      `INSERT INTO items (name, owner, type, attack, defense, sort_no, quantity, is_equipped, neili_bonus, tili_bonus) 
+       VALUES (?, ?, ?, ?, ?, ?, 1, 0, ?, ?)`,
+      [item.name, req.user.username, item.type, item.attack, item.defense, item.sort_no, item.neili_bonus, item.tili_bonus]
+    );
+    await db.execute('UPDATE items SET quantity = quantity - 1 WHERE id = ?', [item.id]);
+    res.json({ success: true, message: '购买成功' });
+  } catch (err) {
+    console.error('Buy from shop error:', err);
+    res.status(500).json({ success: false, message: '购买失败' });
   }
 };

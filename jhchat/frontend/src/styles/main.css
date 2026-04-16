@@ -5,14 +5,14 @@
 }
 
 body {
-  font-family: 'Microsoft YaHei', 'SimSun', serif;
-  background: #1a1a2e;
+  font-family: 'Microsoft YaHei', 'PingFang SC', 'SimSun', serif;
+  background: #0f0f1a;
   color: #eee;
   min-height: 100vh;
 }
 
 a {
-  color: #7eb8da;
+  color: #8ab8d6;
   text-decoration: none;
 }
 
@@ -22,6 +22,14 @@ a:hover {
 
 input, select, textarea, button {
   font-family: inherit;
+  background: rgba(15, 15, 30, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+input:focus, select:focus, textarea:focus {
+  outline: none;
+  border-color: #5a8bc4;
+  box-shadow: 0 0 8px rgba(90, 139, 196, 0.3);
 }
 
 .page-container {
@@ -31,37 +39,41 @@ input, select, textarea, button {
 }
 
 .card {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
   padding: 20px;
   margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 .btn {
   display: inline-block;
   padding: 8px 20px;
-  border: 1px solid #4a7c59;
-  background: linear-gradient(180deg, #5a9c6a, #3a6c49);
+  border: 1px solid #6aac7a;
+  background: linear-gradient(180deg, #6aac7a, #4a8c5a);
   color: #fff;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
   font-size: 14px;
   transition: all 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
 .btn:hover {
-  background: linear-gradient(180deg, #6aac7a, #4a7c59);
+  background: linear-gradient(180deg, #7abc8a, #5a9c6a);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.4);
 }
 
 .btn-primary {
-  background: linear-gradient(180deg, #4B87C3, #3a6c9e);
-  border-color: #4B87C3;
+  background: linear-gradient(135deg, #5a8bc4, #416994);
+  border-color: #5a8bc4;
 }
 
 .btn-danger {
-  background: linear-gradient(180deg, #c44, #a33);
-  border-color: #c44;
+  background: linear-gradient(135deg, #e05050, #c04040);
+  border-color: #e05050;
 }
 
 .btn-sm {
@@ -90,10 +102,17 @@ input:focus, select:focus, textarea:focus {
 
 .nav-bar {
   display: flex;
-  background: rgba(0, 0, 0, 0.4);
+  background: rgba(15, 15, 30, 0.7);
   padding: 0 20px;
-  border-bottom: 2px solid #4a7c59;
+  border-bottom: 2px solid #6aac7a;
   flex-wrap: wrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+}
+
+.nav-bar a:hover,
+.nav-bar a.active {
+  color: #fff;
+  background: rgba(106, 172, 122, 0.25);
 }
 
 .nav-bar a {
@@ -111,15 +130,16 @@ input:focus, select:focus, textarea:focus {
 
 .title-bar {
   text-align: center;
-  padding: 16px;
-  background: linear-gradient(180deg, rgba(75, 135, 195, 0.3), transparent);
-  border-bottom: 1px solid rgba(75, 135, 195, 0.3);
+  padding: 20px;
+  background: linear-gradient(180deg, rgba(90, 139, 196, 0.25), transparent);
+  border-bottom: 1px solid rgba(90, 139, 196, 0.2);
 }
 
 .title-bar h1 {
   font-size: 28px;
-  color: #7eb8da;
-  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+  color: #8ab8d6;
+  text-shadow: 2px 2px 6px rgba(0, 0, 0, 0.6);
+  font-weight: 600;
 }
 
 .status-bar {
@@ -157,7 +177,7 @@ input:focus, select:focus, textarea:focus {
   left: 50%;
   width: 200px;
   height: 200px;
-  background: radial-gradient(circle, rgba(75,135,195,0.1) 0%, transparent 70%);
+  background: radial-gradient(circle, rgba(90,139,196,0.15) 0%, transparent 70%);
   border-radius: 50%;
   transform: translate(-50%, -50%);
   animation: ripple 3s ease-out infinite;

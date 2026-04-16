@@ -1,3 +1,6 @@
+const path = require('path');
+require('dotenv').config({ path: path.join(__dirname, '..', '..', '.env') });
+
 const db = require('../config/db');
 const { encryptPassword } = require('../utils/helpers');
 

@@ -3,6 +3,8 @@
     <div class="nav-bar">
       <router-link to="/main" class="active">首页</router-link>
       <router-link to="/chat">聊天</router-link>
+      <router-link to="/fortune">求签</router-link>
+      <router-link to="/fishing">钓鱼</router-link>
       <router-link to="/messages">邮件</router-link>
       <router-link to="/sect">门派</router-link>
       <router-link to="/skills">武功</router-link>

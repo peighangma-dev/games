@@ -1,0 +1,60 @@
+{
+  "env": {
+    "node": true,
+    "es2021": true,
+    "commonjs": true
+  },
+  "extends": [
+    "eslint:recommended",
+    "plugin:node/recommended",
+    "prettier"
+  ],
+  "parserOptions": {
+    "ecmaVersion": "latest",
+    "sourceType": "module"
+  },
+  "rules": {
+    "no-console": "off",
+    "node/no-missing-require": "off",
+    "node/no-unpublished-require": "off",
+    "node/no-unsupported-features/es-syntax": "off",
+    "node/process-exit-as-throw": "error",
+    "node/no-extraneous-require": "error",
+    "no-unused-vars": ["warn", { "argsIgnorePattern": "^_" }],
+    "no-undef": "error",
+    "no-const-assign": "error",
+    "no-debugger": "warn",
+    "prefer-const": "warn",
+    "no-var": "error",
+    "eqeqeq": ["error", "always", { "null": "ignore" }],
+    "curly": ["warn", "all"],
+    "quotes": ["warn", "single", { "avoidEscape": true }],
+    "semi": ["error", "always"],
+    "comma-dangle": ["warn", "never"],
+    "indent": ["warn", 2, { "SwitchCase": 1 }],
+    "no-multiple-empty-lines": ["warn", { "max": 2 }],
+    "no-trailing-spaces": "warn",
+    "eol-last": "warn",
+    "space-in-parens": ["warn", "never"],
+    "space-infix-ops": "warn",
+    "no-multi-spaces": "warn",
+    "key-spacing": ["warn", { "beforeColon": false, "afterColon": true }],
+    "object-curly-spacing": ["warn", "always"],
+    "array-bracket-spacing": ["warn", "never"],
+    "space-before-blocks": "warn",
+    "keyword-spacing": "warn",
+    "space-before-function-paren": ["warn", {
+      "anonymous": "never",
+      "named": "never",
+      "asyncArrow": "always"
+    }]
+  },
+  "ignorePatterns": [
+    "node_modules/",
+    "dist/",
+    "build/",
+    "uploads/",
+    "logs/",
+    "*.log"
+  ]
+}
