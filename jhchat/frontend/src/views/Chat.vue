@@ -28,6 +28,8 @@
       </div>
       <router-link to="/rankings" class="nav-btn">排行</router-link>
       <router-link to="/wishes" class="nav-btn">许愿</router-link>
+      <!-- 后台管理入口（管理员可见） -->
+      <router-link v-if="userStore.grade >= 6" to="/admin" class="nav-btn nav-admin">⚙️ 后台</router-link>
       <span class="nav-spacer"></span>
       <span class="nav-user-info">
         <span class="user-silver">💰 {{ userStore.silver }}两</span>
@@ -880,6 +882,17 @@ onUnmounted(() => {
 
 .nav-profile {
   background: rgba(126, 184, 218, 0.1);
+}
+
+.nav-admin {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  color: #ffc107;
+}
+
+.nav-admin:hover {
+  background: rgba(255, 193, 7, 0.25);
+  border-color: rgba(255, 193, 7, 0.5);
 }
 
 .nav-logout {

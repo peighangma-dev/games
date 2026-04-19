@@ -57,6 +57,11 @@
         <span class="nav-icon">🌟</span>
         <span class="nav-label">许愿</span>
       </router-link>
+      <!-- 后台管理入口（管理员可见） -->
+      <router-link v-if="userStore.grade >= 6" to="/admin" class="nav-item nav-admin">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">后台</span>
+      </router-link>
     </div>
     
     <div class="nav-right">
@@ -242,6 +247,21 @@ async function handleLogout() {
 
 .nav-profile {
   background: rgba(126, 184, 218, 0.1);
+}
+
+.nav-admin {
+  background: rgba(255, 193, 7, 0.15);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+}
+
+.nav-admin:hover {
+  background: rgba(255, 193, 7, 0.25);
+  border-color: rgba(255, 193, 7, 0.5);
+}
+
+.nav-admin .nav-icon {
+  filter: brightness(1.2);
 }
 
 .nav-logout:hover {
