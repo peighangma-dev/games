@@ -113,9 +113,80 @@
               <div v-for="m in sectMembers" :key="m.username" class="member-item">
                 <span class="member-name">{{ m.username }}</span>
                 <span class="member-title">{{ m.sect_title }}</span>
-                <span class="member-grade">等级{{ m.grade }}</span>
+                <span class="member-grade">Lv.{{ m.grade }}</span>
+                <!-- 掌门管理操作 -->
+                <div v-if="isLeader" class="member-actions">
+                  <button 
+                    v-if="m.username !== userStore.username && m.sect_title !== '掌门'" 
+                    class="btn-xs" 
+                    @click="showAbdicate(m.username)"
+                    title="禅让掌门"
+                  >
+                    禅让
+                  </button>
+                  <button 
+                    v-if="m.username !== userStore.username" 
+                    class="btn-xs btn-danger" 
+                    @click="expelMember(m.username)"
+                    title="开除弟子"
+                  >
+                    开除
+                  </button>
+                </div>
               </div>
               <div v-if="sectMembers.length === 0" class="empty-text">暂无成员</div>
+            </div>
+            
+            <!-- 掌门管理面板 -->
+            <div v-if="isLeader" class="leader-panel">
+              <h4 class="panel-title">👑 掌门管理</h4>
+              <div class="panel-actions">
+                <button class="btn btn-sm" @click="showRecruitModal = true">📢 招收弟子</button>
+                <button class="btn btn-sm btn-danger" @click="showDissolveConfirm = true">💥 解散门派</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 招收弟子弹窗 -->
+          <div v-if="showRecruitModal" class="modal-overlay" @click="showRecruitModal = false">
+            <div class="modal-dialog" @click.stop>
+              <h3 class="modal-title">招收弟子</h3>
+              <div class="form-group">
+                <label>用户名</label>
+                <input v-model="recruitForm.username" type="text" class="form-input" placeholder="输入要招收的用户名" />
+              </div>
+              <div class="modal-actions">
+                <button class="btn" @click="showRecruitModal = false">取消</button>
+                <button class="btn btn-primary" @click="recruitMember" :disabled="recruiting">招收</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 禅让确认弹窗 -->
+          <div v-if="showAbdicateModal" class="modal-overlay" @click="showAbdicateModal = false">
+            <div class="modal-dialog" @click.stop>
+              <h3 class="modal-title">禅让掌门</h3>
+              <p class="modal-text">确定要将掌门之位禅让给 <strong>{{ abdicateTarget }}</strong> 吗？禅让后您将成为长老。</p>
+              <div class="modal-actions">
+                <button class="btn" @click="showAbdicateModal = false">取消</button>
+                <button class="btn btn-primary" @click="confirmAbdicate" :disabled="abdicating">确认禅让</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 解散确认弹窗 -->
+          <div v-if="showDissolveConfirm" class="modal-overlay" @click="showDissolveConfirm = false">
+            <div class="modal-dialog" @click.stop>
+              <h3 class="modal-title">⚠️ 解散门派确认</h3>
+              <p class="modal-text">确定要解散 <strong>{{ mySectInfo?.sect?.name }}</strong> 吗？解散后所有成员将被除名！</p>
+              <div class="form-group">
+                <label>请输入门派名称确认</label>
+                <input v-model="dissolveConfirm" type="text" class="form-input" placeholder="输入门派名称" />
+              </div>
+              <div class="modal-actions">
+                <button class="btn" @click="showDissolveConfirm = false">取消</button>
+                <button class="btn btn-danger" @click="dissolveSect" :disabled="dissolving || dissolveConfirm !== mySectInfo?.sect?.name">确认解散</button>
+              </div>
             </div>
           </div>
         </div>
@@ -177,6 +248,25 @@ const sectMembers = ref([])
 const showCreateModal = ref(false)
 const creating = ref(false)
 const mySectInfo = ref(null)
+
+// 掌门管理相关状态
+const showRecruitModal = ref(false)
+const showAbdicateModal = ref(false)
+const showDissolveConfirm = ref(false)
+const abdicateTarget = ref('')
+const dissolveConfirm = ref('')
+const recruiting = ref(false)
+const abdicating = ref(false)
+const dissolving = ref(false)
+
+const recruitForm = ref({
+  username: ''
+})
+
+// 判断当前用户是否为掌门
+const isLeader = computed(() => {
+  return mySectInfo.value?.sect?.title === '掌门'
+})
 
 const createForm = ref({
   name: '',
@@ -267,6 +357,115 @@ async function leaveSect() {
     }
   } catch (err) {
     alert(err.message || '离开失败')
+  }
+}
+
+// 招收弟子
+function showRecruit(username) {
+  recruitForm.value.username = username
+  showRecruitModal.value = true
+}
+
+async function recruitMember() {
+  if (!recruitForm.value.username) {
+    alert('请输入用户名')
+    return
+  }
+  
+  recruiting.value = true
+  try {
+    const res = await api.post('/sects/recruit', recruitForm.value)
+    if (res.success) {
+      alert(res.message || '招收成功')
+      showRecruitModal.value = false
+      recruitForm.value.username = ''
+      // 刷新成员列表
+      if (selectedSect.value) {
+        viewSect(selectedSect.value)
+      }
+    } else {
+      alert(res.message || '招收失败')
+    }
+  } catch (err) {
+    alert(err.message || '招收失败')
+  } finally {
+    recruiting.value = false
+  }
+}
+
+// 禅让掌门
+function showAbdicate(username) {
+  abdicateTarget.value = username
+  showAbdicateModal.value = true
+}
+
+async function confirmAbdicate() {
+  if (!abdicateTarget.value) return
+  
+  abdicating.value = true
+  try {
+    const res = await api.post('/sects/abdicate', { newLeader: abdicateTarget.value })
+    if (res.success) {
+      alert(res.message || '禅让成功')
+      showAbdicateModal.value = false
+      abdicateTarget.value = ''
+      await userStore.fetchProfile()
+      loadMySectInfo()
+    } else {
+      alert(res.message || '禅让失败')
+    }
+  } catch (err) {
+    alert(err.message || '禅让失败')
+  } finally {
+    abdicating.value = false
+  }
+}
+
+// 开除弟子
+async function expelMember(username) {
+  if (!confirm(`确定要将${username}逐出师门吗？`)) return
+  
+  try {
+    const res = await api.post('/sects/expel', { username })
+    if (res.success) {
+      alert(res.message || '开除成功')
+      // 刷新成员列表
+      if (selectedSect.value) {
+        viewSect(selectedSect.value)
+      }
+    } else {
+      alert(res.message || '开除失败')
+    }
+  } catch (err) {
+    alert(err.message || '开除失败')
+  }
+}
+
+// 解散门派
+async function dissolveSect() {
+  if (dissolveConfirm.value !== mySectInfo.value?.sect?.name) {
+    alert('门派名称输入不正确')
+    return
+  }
+  
+  dissolving.value = true
+  try {
+    const res = await api.post('/sects/dissolve', { name: mySectInfo.value.sect.name })
+    if (res.success) {
+      alert(res.message || '门派已解散')
+      showDissolveConfirm.value = false
+      dissolveConfirm.value = ''
+      await userStore.fetchProfile()
+      loadMySectInfo()
+      loadSects()
+      selectedSect.value = null
+    } else {
+      alert(res.message || '解散失败')
+    }
+  } catch (err) {
+    alert(err.message || '解散失败')
+  } finally {
+    dissolving.value = false
   }
 }
 
@@ -555,6 +754,120 @@ onMounted(() => {
   text-align: center;
   color: #666;
   padding: 20px;
+}
+
+/* 成员列表 */
+.member-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(75, 135, 195, 0.1);
+}
+
+.member-item:last-child {
+  border-bottom: none;
+}
+
+.member-name {
+  color: #ccc;
+  font-weight: 500;
+  min-width: 100px;
+}
+
+.member-title {
+  color: #999;
+  font-size: 12px;
+  padding: 2px 8px;
+  background: rgba(75, 135, 195, 0.1);
+  border-radius: 8px;
+  min-width: 70px;
+  text-align: center;
+}
+
+.member-grade {
+  color: #7eb8da;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.member-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: 12px;
+}
+
+.btn-xs {
+  padding: 3px 8px;
+  font-size: 11px;
+  border-radius: 4px;
+  border: 1px solid rgba(126, 184, 218, 0.3);
+  background: rgba(126, 184, 218, 0.1);
+  color: #7eb8da;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-xs:hover {
+  background: rgba(126, 184, 218, 0.2);
+  border-color: #7eb8da;
+}
+
+.btn-xs.btn-danger {
+  border-color: rgba(231, 76, 60, 0.3);
+  background: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+.btn-xs.btn-danger:hover {
+  background: rgba(231, 76, 60, 0.2);
+  border-color: #e74c3c;
+}
+
+/* 掌门管理面板 */
+.leader-panel {
+  margin-top: 20px;
+  padding: 16px;
+  background: rgba(255, 193, 7, 0.05);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  border-radius: 8px;
+}
+
+.panel-title {
+  color: #ffc107;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.panel-actions {
+  display: flex;
+  gap: 10px;
+}
+
+/* 弹窗文本 */
+.modal-text {
+  color: #ccc;
+  margin-bottom: 20px;
+  line-height: 1.6;
+}
+
+.modal-text strong {
+  color: #ffc107;
+}
+
+.create-cost-hint {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.2);
+  padding: 12px;
+  border-radius: 8px;
+  text-align: center;
+  margin-bottom: 16px;
+  color: #ffc107;
+  font-size: 13px;
+}
+
+.create-cost-hint strong {
+  font-size: 16px;
 }
 
 /* 创建门派弹窗 */

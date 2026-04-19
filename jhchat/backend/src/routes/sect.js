@@ -12,6 +12,9 @@ router.get('/info', auth, sectCtrl.sectInfo);
 router.post('/checkin', auth, sectCtrl.checkIn);
 router.post('/salary', auth, sectCtrl.salary);
 router.post('/create', auth, sectCtrl.create);
-router.post('/dissolve', auth, adminAuth, sectCtrl.dissolve);
+router.post('/dissolve', auth, sectCtrl.dissolve);
+router.post('/abdicate', auth, sectCtrl.abdicate);  // 掌门禅让
+router.post('/recruit', auth, sectCtrl.recruit);    // 招收弟子
+router.post('/expel', auth, sectCtrl.expel);        // 开除弟子
 
 module.exports = router;
