@@ -26,6 +26,19 @@ async function broadcastMessage(io, roomId, msg) {
   const [rows] = await db.execute('SELECT * FROM chat_messages WHERE id = ?', [result.insertId]);
   const chatMsg = rows[0];
 
+  // 添加发送者和接收者的门派信息
+  const [senderRows] = await db.execute('SELECT sect FROM users WHERE username = ?', [msg.sender]);
+  if (senderRows && senderRows[0]) {
+    chatMsg.sender_sect = senderRows[0].sect;
+  }
+
+  if (msg.receiver && msg.receiver !== '所有人') {
+    const [receiverRows] = await db.execute('SELECT sect FROM users WHERE username = ?', [msg.receiver]);
+    if (receiverRows && receiverRows[0]) {
+      chatMsg.receiver_sect = receiverRows[0].sect;
+    }
+  }
+
   console.log(`[消息] 发送消息 - 私聊:${msg.is_private}, 发送者:${msg.sender}, 接收者:${msg.receiver}`);
 
   if (msg.is_private) {

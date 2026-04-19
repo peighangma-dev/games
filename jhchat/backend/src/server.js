@@ -28,10 +28,17 @@ logger.info('服务器启动中...');
 
 // 速率限制配置
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000, // 15 分钟
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100, // 每个 IP 最多 100 请求
+  windowMs: 15 * 60 * 1000, // 15 分钟
+  max: 300, // 每个 IP 最多 300 请求（提升限制）
   standardHeaders: true,
   legacyHeaders: false,
+  skip: (req) => {
+    // 跳过已认证的 API 请求
+    if (req.headers.authorization) {
+      return true;
+    }
+    return false;
+  },
   message: {
     success: false,
     message: '请求过于频繁，请稍后重试'
@@ -54,6 +61,8 @@ const loginLimiter = rateLimit({
   },
   skipSuccessfulRequests: true // 只统计失败的请求
 });
+
+app.set('trust proxy', 1);
 
 // 应用速率限制
 app.use('/api/', limiter);
@@ -98,11 +107,18 @@ const fishingRoutes = require('./routes/fishing');
 const encounterRoutes = require('./routes/encounter');
 const randomEventRoutes = require('./routes/randomEvent');
 const healthRoutes = require('./routes/health');
+const miningRoutes = require('./routes/mining');
+const huntingRoutes = require('./routes/hunting');
+const rankingRoutes = require('./routes/ranking');
+const achievementRoutes = require('./routes/achievement');
+const questRoutes = require('./routes/quest');
+const gardenRoutes = require('./routes/garden');
 
+// 注册 API 路由
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/messages', messageRoutes);
-app.use('/api/sects', sectRoutes);
+app.use('/api/sect', sectRoutes);
 app.use('/api/marriage', marriageRoutes);
 app.use('/api/skills', skillRoutes);
 app.use('/api/items', itemRoutes);
@@ -116,34 +132,16 @@ app.use('/api/commands', commandRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/fortune', fortuneRoutes);
 app.use('/api/fishing', fishingRoutes);
-app.use('/api/encounter', encounterRoutes);
+app.use('/api/encounters', encounterRoutes);
 app.use('/api/random-events', randomEventRoutes);
 app.use('/api/health', healthRoutes);
+app.use('/api/mining', miningRoutes);
+app.use('/api/hunting', huntingRoutes);
+app.use('/api/rankings', rankingRoutes);
+app.use('/api/achievements', achievementRoutes);
+app.use('/api/quests', questRoutes);
+app.use('/api/garden', gardenRoutes);
 
-// 请求日志中间件
-app.use((req, res, next) => {
-  const { logger } = require('./utils/logger');
-  const { recordRequest } = require('./utils/monitor');
-  const start = Date.now();
-  
-  res.on('finish', () => {
-    const duration = Date.now() - start;
-    const { method, url, ip } = req;
-    const { statusCode } = res;
-    
-    logger.info(`${method} ${url}`, {
-      status: statusCode,
-      duration: `${duration}ms`,
-      ip: ip || req.socket.remoteAddress
-    });
-    
-    recordRequest(statusCode, duration);
-  });
-  
-  next();
-});
-
-// 监控系统端点
 const { setupMetricsRoutes } = require('./utils/monitor');
 setupMetricsRoutes(app);
 

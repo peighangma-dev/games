@@ -1,16 +1,39 @@
 <template>
   <div class="items-page">
     <div class="nav-bar">
+      <router-link to="/main" class="nav-logo">
+        <span class="logo-icon">⚔️</span>
+        <span class="logo-text">笑傲江湖</span>
+      </router-link>
       <router-link to="/main" class="nav-btn">首页</router-link>
       <router-link to="/chat" class="nav-btn">聊天</router-link>
-      <router-link to="/items" class="nav-btn active">物品</router-link>
-      <router-link to="/shop" class="nav-btn">商店</router-link>
-      <router-link to="/market" class="nav-btn">商城</router-link>
-      <span class="nav-spacer"></span>
-      <div class="user-info">
-        <span class="silver-badge">💰 {{ userStore.silver }}两</span>
-        <router-link to="/profile" class="nav-btn">{{ userStore.username }}</router-link>
+      <router-link to="/messages" class="nav-btn">邮件</router-link>
+      <router-link to="/sect" class="nav-btn">门派</router-link>
+      <router-link to="/marriage" class="nav-btn">婚姻</router-link>
+      <router-link to="/skills" class="nav-btn">武功</router-link>
+      <div class="nav-dropdown">
+        <button class="nav-btn dropdown-toggle">
+          游乐 <span class="dropdown-arrow">▼</span>
+        </button>
+        <div class="dropdown-menu">
+          <router-link to="/items" class="dropdown-item">🎒 物品</router-link>
+          <router-link to="/shop" class="dropdown-item">🏪 商店</router-link>
+          <router-link to="/market" class="dropdown-item">💰 商城</router-link>
+          <router-link to="/games" class="dropdown-item">🎲 游戏</router-link>
+          <router-link to="/pets" class="dropdown-item">🐾 宠物</router-link>
+          <router-link to="/alchemy" class="dropdown-item">🧪 配药</router-link>
+          <router-link to="/fishing" class="dropdown-item">🎣 钓鱼</router-link>
+          <router-link to="/fortune" class="dropdown-item">🔮 求签</router-link>
+        </div>
       </div>
+      <router-link to="/rankings" class="nav-btn">排行</router-link>
+      <router-link to="/wishes" class="nav-btn">许愿</router-link>
+      <span class="nav-spacer"></span>
+      <span class="nav-user-info">
+        <span class="user-silver">💰 {{ userStore.silver }}两</span>
+      </span>
+      <router-link to="/profile" class="nav-btn nav-profile">{{ userStore.username }}</router-link>
+      <button @click="handleLogout" class="nav-btn nav-logout">退出</button>
     </div>
 
     <div class="page-container">
@@ -39,7 +62,7 @@
           <div v-for="item in items" :key="item.id" class="item-card" :class="{ 'equipped': item.is_equipped }">
             <div class="card-badge" v-if="item.is_equipped">已装备</div>
             <div class="image-wrapper">
-              <img :src="`/assets/item-images/${item.image || 'KITTY.GIF'}`" :alt="item.name" class="item-image" />
+              <img :src="`/assets/items/${item.image || '1.gif'}`" :alt="item.name" class="item-image" />
               <div class="type-badge" :class="`type-${item.type}`">{{ getTypeName(item.type) }}</div>
             </div>
             <div class="card-body">
@@ -73,7 +96,41 @@
 
       <!-- 卡片 -->
       <div v-if="itemTab === 'cards'" class="tab-content">
-        <div class="card-grid">
+        <div class="card-tabs">
+          <button :class="['card-subtab', { active: cardSubtab === 'my' }]" @click="cardSubtab = 'my'; loadMyCards()">
+            📖 我的卡片
+          </button>
+          <button :class="['card-subtab', { active: cardSubtab === 'shop' }]" @click="cardSubtab = 'shop'; loadCards()">
+            🛒 卡片商店
+          </button>
+        </div>
+        
+        <!-- 我的卡片 -->
+        <div v-if="cardSubtab === 'my'" class="card-grid">
+          <div v-for="card in myCards" :key="card.id" class="collect-card">
+            <div class="card-image-wrapper">
+              <img :src="`/assets/cards/pc${getCardIndex(card.card_name)}.gif`" :alt="card.card_name" class="card-img" />
+              <div class="card-rarity" :class="card.card_type">
+                {{ card.card_type === 'vip' ? '👑 VIP' : '⭐ 普通' }}
+              </div>
+            </div>
+            <div class="card-body">
+              <h3 class="card-name">{{ card.card_name }}</h3>
+              <p class="card-desc">{{ card.description }}</p>
+              <div class="card-footer">
+                <span class="card-qty">数量：×{{ card.quantity }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div v-if="cardSubtab === 'my' && myCards.length === 0" class="empty-state">
+          <div class="empty-icon">🃏</div>
+          <p>暂无卡片，去商店购买吧！</p>
+          <button class="btn-shop-card" @click="cardSubtab = 'shop'; loadCards()">🛒 去商店</button>
+        </div>
+        
+        <!-- 卡片商店 -->
+        <div v-if="cardSubtab === 'shop'" class="card-grid">
           <div v-for="(card, index) in cards" :key="card.id" class="collect-card">
             <div class="card-image-wrapper">
               <img :src="`/assets/cards/pc${index}.gif`" :alt="card.name" class="card-img" />
@@ -91,7 +148,7 @@
             </div>
           </div>
         </div>
-        <div v-if="cards.length === 0" class="empty-state">
+        <div v-if="cardSubtab === 'shop' && cards.length === 0" class="empty-state">
           <div class="empty-icon">🃏</div>
           <p>暂无卡片</p>
         </div>
@@ -169,13 +226,22 @@
 
 <script setup>
 import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
 
+const router = useRouter()
 const userStore = useUserStore()
 
+async function handleLogout() {
+  await userStore.logout()
+  router.push('/login')
+}
+
 const itemTab = ref('bag')
+const cardSubtab = ref('my')
 const items = ref([])
+const myCards = ref([])
 const cards = ref([])
 const insurances = ref([])
 const jobs = ref([])
@@ -191,12 +257,27 @@ function getTypeName(type) {
   return names[type] || type
 }
 
+function getCardIndex(cardName) {
+  const cardOrder = ['变性卡', '踢人卡', '大牢卡', '财神卡', '强盗花', '催眠卡', '情人卡', '升级卡', '免罪卡', '复仇卡']
+  const idx = cardOrder.indexOf(cardName)
+  return idx >= 0 ? idx : 0
+}
+
 async function loadItems() {
   try {
     const res = await api.get('/items')
     if (res.success) items.value = res.data || []
   } catch (e) {
     console.error('Load items failed:', e)
+  }
+}
+
+async function loadMyCards() {
+  try {
+    const res = await api.get('/items/my-cards')
+    if (res.success) myCards.value = res.data || []
+  } catch (e) {
+    console.error('Load my cards failed:', e)
   }
 }
 
@@ -254,17 +335,19 @@ async function dropItem(id) {
 }
 
 async function buyCard(card) {
+  if (!confirm(`确定要购买 ${card.name} 吗？`)) return
   try {
     const res = await api.post('/items/cards/buy', { cardId: card.id })
     if (res.success) {
+      alert('🎉 购买成功')
       await userStore.fetchProfile()
       loadCards()
-      alert('🎉 购买成功')
+      loadMyCards()
     } else {
       alert('❌ ' + (res.message || '购买失败'))
     }
-  } catch (err) {
-    alert('❌ ' + (err.message || '购买失败'))
+  } catch (e) {
+    alert('❌ ' + (e.response?.data?.message || '购买失败'))
   }
 }
 
@@ -315,65 +398,78 @@ function getWorkButtonText(job) {
 
 onMounted(() => {
   loadItems()
+  loadMyCards()
 })
 </script>
 
 <style scoped>
 .items-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
-  padding: 0 0 20px 0;
 }
 
-.nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.4);
-  border-bottom: 1px solid rgba(75, 135, 195, 0.3);
-  backdrop-filter: blur(10px);
+.nav-profile {
+  background: rgba(126, 184, 218, 0.1);
 }
 
-.nav-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: #a0aec0;
-  font-size: 14px;
-  transition: all 0.2s;
-  background: transparent;
+.nav-logout {
   border: none;
-  cursor: pointer;
+  background: transparent;
 }
 
-.nav-btn:hover {
-  background: rgba(75, 135, 195, 0.2);
-  color: #7eb8da;
+.nav-logout:hover {
+  background: rgba(231, 76, 60, 0.2);
+  color: #ff6b6b;
 }
 
-.nav-btn.active {
-  background: #4a90e2;
-  color: white;
+.nav-dropdown {
+  position: relative;
 }
 
-.nav-spacer {
-  flex: 1;
+.dropdown-toggle {
+  position: relative;
 }
 
-.user-info {
+.dropdown-arrow {
+  font-size: 10px;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #1a3a5c;
+  border: 1px solid rgba(126, 184, 218, 0.3);
+  border-radius: 8px;
+  padding: 8px 0;
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s;
+}
+
+.nav-dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: #c0d8e8;
+  transition: all 0.2s;
 }
 
-.silver-badge {
-  background: linear-gradient(135deg, #f0c040, #d4a840);
-  color: #1a1f24;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
+.dropdown-item:hover {
+  background: rgba(126, 184, 218, 0.15);
+  color: #fff;
 }
 
 .page-container {
@@ -656,6 +752,50 @@ onMounted(() => {
   gap: 20px;
 }
 
+.card-tabs {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.card-subtab {
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  color: #e5e7eb;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.card-subtab:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.card-subtab.active {
+  background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+  color: white;
+  border-color: transparent;
+}
+
+.btn-shop-card {
+  margin-top: 15px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-shop-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.4);
+}
+
 .collect-card {
   background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
   border-radius: 16px;
@@ -738,6 +878,12 @@ onMounted(() => {
 .card-price {
   color: #f0c040;
   font-size: 16px;
+  font-weight: bold;
+}
+
+.card-qty {
+  color: #6ee7b7;
+  font-size: 14px;
   font-weight: bold;
 }
 
@@ -1032,16 +1178,6 @@ onMounted(() => {
   
   .card-grid {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  }
-  
-  .nav-bar {
-    flex-wrap: wrap;
-  }
-  
-  .user-info {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: 8px;
   }
 }
 </style>

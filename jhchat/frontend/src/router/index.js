@@ -24,6 +24,30 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/mining',
+    name: 'Mining',
+    component: () => import('../views/Mining.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/hunting',
+    name: 'Hunting',
+    component: () => import('../views/Hunting.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/herb-market',
+    name: 'HerbMarket',
+    component: () => import('../views/HerbMarket.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/achievements',
+    name: 'Achievements',
+    component: () => import('../views/Achievements.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/main',
     name: 'Main',
     component: () => import('../views/Main.vue'),
@@ -102,9 +126,21 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
+    path: '/garden',
+    name: 'Garden',
+    component: () => import('../views/Garden.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
     path: '/rankings',
     name: 'Rankings',
     component: () => import('../views/Rankings.vue'),
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/quests',
+    name: 'Quests',
+    component: () => import('../views/Quests.vue'),
     meta: { requiresAuth: true }
   },
   {
@@ -128,6 +164,7 @@ const routes = [
       { path: 'ip-locks', name: 'AdminIpLocks', component: () => import('../views/admin/IpLocks.vue') },
       { path: 'logs', name: 'AdminLogs', component: () => import('../views/admin/Logs.vue') },
       { path: 'items', name: 'AdminItems', component: () => import('../views/admin/Items.vue') },
+      { path: 'shop-items', name: 'AdminShopItems', component: () => import('../views/admin/ShopItems.vue') },
       { path: 'statistics', name: 'AdminStatistics', component: () => import('../views/admin/Statistics.vue') },
       { path: 'random-events', name: 'AdminRandomEvents', component: () => import('../views/admin/RandomEvents.vue') }
     ]

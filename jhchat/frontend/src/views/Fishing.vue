@@ -1,24 +1,13 @@
 <template>
-  <div class="fishing-page">
-    <div class="nav-bar">
-      <router-link to="/main" class="nav-btn">首页</router-link>
-      <router-link to="/chat" class="nav-btn">聊天</router-link>
-      <router-link to="/fortune" class="nav-btn">求签</router-link>
-      <router-link to="/fishing" class="nav-btn active">钓鱼</router-link>
-      <span class="nav-spacer"></span>
-      <div class="user-info">
-        <span class="silver-badge">💰 {{ userStore.silver }}两</span>
-        <router-link to="/profile" class="nav-btn">{{ userStore.username }}</router-link>
-      </div>
-    </div>
+  <PageLayout>
+    <div class="fishing-page">
+      <div class="page-container">
+        <div class="fishing-header">
+          <h1 class="page-title">🎣 江湖钓鱼</h1>
+          <p class="fishing-desc">垂钓江湖，惊喜无限</p>
+        </div>
 
-    <div class="page-container">
-      <div class="fishing-header">
-        <h1 class="page-title">🎣 江湖钓鱼</h1>
-        <p class="fishing-desc">垂钓江湖，惊喜无限</p>
-      </div>
-
-      <!-- 钓鱼状态 -->
+        <!-- 钓鱼状态 -->
       <div v-if="status" class="fishing-status">
         <!-- 可以钓鱼 -->
         <div v-if="!status.isFishing && status.cooldownRemaining === 0" class="can-fish">
@@ -31,14 +20,17 @@
         <!-- 钓鱼中 -->
         <div v-else-if="status.isFishing" class="is-fishing">
           <div class="fishing-animation">
-            <div class="bobber">🎣</div>
+            <div class="bobber" :class="{ 'biting': canFinish }">🎣</div>
             <div class="water">
               <div class="wave wave1"></div>
               <div class="wave wave2"></div>
               <div class="wave wave3"></div>
             </div>
+            <div v-if="canFinish" class="ready-indicator">
+              <span class="pulse-text">✨ 鱼儿上钩了！✨</span>
+            </div>
           </div>
-          <p class="fishing-message">正在等待鱼儿上钩...</p>
+          <p class="fishing-message">{{ canFinish ? '快收杆！' : '正在等待鱼儿上钩...' }}</p>
           <button class="btn-finish" @click="finishFishing" :disabled="!canFinish">
             🐟 收杆
           </button>
@@ -75,13 +67,15 @@
         </div>
       </div>
     </div>
-  </div>
+    </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, onMounted, computed } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import PageLayout from '../components/PageLayout.vue'
 
 const userStore = useUserStore()
 const status = ref(null)
@@ -196,56 +190,6 @@ onMounted(() => {
   padding: 0 0 20px 0;
 }
 
-.nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.4);
-  border-bottom: 1px solid rgba(75, 135, 195, 0.3);
-}
-
-.nav-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: #a0aec0;
-  font-size: 14px;
-  transition: all 0.2s;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.nav-btn:hover {
-  background: rgba(75, 135, 195, 0.2);
-  color: #7eb8da;
-}
-
-.nav-btn.active {
-  background: #4a90e2;
-  color: white;
-}
-
-.nav-spacer {
-  flex: 1;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.silver-badge {
-  background: linear-gradient(135deg, #f0c040, #d4a840);
-  color: #1a1f24;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
-}
-
 .page-container {
   max-width: 800px;
   margin: 0 auto;
@@ -312,11 +256,48 @@ onMounted(() => {
 .bobber {
   font-size: 60px;
   animation: bob 2s ease-in-out infinite;
+  display: inline-block;
 }
 
 @keyframes bob {
   0%, 100% { transform: translateY(0); }
   50% { transform: translateY(20px); }
+}
+
+.bobber.biting {
+  animation: bite 0.3s ease-in-out infinite;
+}
+
+@keyframes bite {
+  0%, 100% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.2) rotate(-10deg); }
+  75% { transform: scale(1.2) rotate(10deg); }
+}
+
+.ready-indicator {
+  margin-top: 20px;
+  padding: 15px 30px;
+  background: linear-gradient(135deg, #fbbf24, #f59e0b);
+  border-radius: 20px;
+  display: inline-block;
+  animation: pulse-bg 1s ease-in-out infinite;
+}
+
+.pulse-text {
+  color: white;
+  font-size: 18px;
+  font-weight: bold;
+  animation: pulse-text 0.5s ease-in-out infinite;
+}
+
+@keyframes pulse-bg {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+@keyframes pulse-text {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.8; }
 }
 
 .water {
@@ -475,16 +456,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .nav-bar {
-    flex-wrap: wrap;
-  }
-  
-  .user-info {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: 8px;
-  }
-  
   .page-title {
     font-size: 24px;
   }

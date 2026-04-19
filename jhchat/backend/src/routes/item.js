@@ -21,6 +21,7 @@ router.post('/market', auth, itemCtrl.sellOnMarket);
 router.post('/market/:id/buy', auth, itemCtrl.buyFromMarket);
 router.delete('/market/:id', auth, itemCtrl.cancelListing);
 router.get('/market/list', auth, itemCtrl.getMyListings);
+router.get('/my-cards', auth, itemCtrl.getMyCards);
 router.get('/cards', auth, itemCtrl.getCards);
 router.post('/cards/buy', auth, itemCtrl.buyCard);
 router.get('/insurances', auth, itemCtrl.getInsurances);

@@ -195,13 +195,15 @@ const handlers = {
   },
 
   'join-sect': async (target, args, ctx) => {
-    if (ctx.grade < 2) return { success: false, message: '需要等级2以上' };
+    if (ctx.grade < 2) return { success: false, message: '需要等级 2 以上' };
     if (!target) return { success: false, message: '请指定门派' };
     const user = await getUser(ctx.username);
     if (user.sect !== '无') return { success: false, message: '你已有门派' };
     const [sects] = await db.execute('SELECT * FROM sects WHERE name = ?', [target]);
     if (sects.length === 0) return { success: false, message: '门派不存在' };
     const sect = sects[0];
+    // 六扇门只招收管理员
+    if (sect.name === '六扇门' && ctx.grade < 10) return { success: false, message: '六扇门只招收朝廷命官' };
     if (sect.fit_gender === 'male' && user.gender !== 'male') return { success: false, message: '该门派只收男性' };
     if (sect.fit_gender === 'female' && user.gender !== 'female') return { success: false, message: '该门派只收女性' };
     await db.execute("UPDATE users SET sect = ?, sect_title = '弟子', join_sect_at = NOW() WHERE id = ?", [target, ctx.userId]);

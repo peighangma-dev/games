@@ -565,3 +565,110 @@ exports.changePassword = async (req, res) => {
     res.status(500).json({ success: false, message: '修改密码失败' });
   }
 };
+
+// ==================== 商店物品管理 ====================
+
+// 获取商店物品列表
+exports.getShopItems = async (req, res) => {
+  try {
+    const [items] = await db.execute(
+      'SELECT * FROM shop_items ORDER BY sort_no, id'
+    );
+    res.json({ success: true, data: items });
+  } catch (err) {
+    console.error('Get shop items error:', err);
+    res.status(500).json({ success: false, message: '查询商店物品失败' });
+  }
+};
+
+// 添加商店物品
+exports.createShopItem = async (req, res) => {
+  try {
+    const { name, type, attack, defense, neili_bonus, tili_bonus, price, image_file, description, stock_quantity, sort_no } = req.body;
+    if (!name) return res.status(400).json({ success: false, message: '请输入物品名称' });
+    if (!type) return res.status(400).json({ success: false, message: '请选择物品类型' });
+    
+    await db.execute(
+      `INSERT INTO shop_items (name, type, attack, defense, neili_bonus, tili_bonus, price, image_file, description, stock_quantity, sort_no)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [name, type, attack || 0, defense || 0, neili_bonus || 0, tili_bonus || 0, price || 0, image_file || '', description || '', stock_quantity || 999, sort_no || 0]
+    );
+    res.json({ success: true, message: '物品已添加到商店' });
+  } catch (err) {
+    console.error('Create shop item error:', err);
+    res.status(500).json({ success: false, message: '添加物品失败' });
+  }
+};
+
+// 更新商店物品
+exports.updateShopItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { name, type, attack, defense, neili_bonus, tili_bonus, price, image_file, description, is_enabled, stock_quantity, sort_no } = req.body;
+    
+    const fields = [];
+    const params = [];
+    if (name !== undefined) { fields.push('name = ?'); params.push(name); }
+    if (type !== undefined) { fields.push('type = ?'); params.push(type); }
+    if (attack !== undefined) { fields.push('attack = ?'); params.push(attack); }
+    if (defense !== undefined) { fields.push('defense = ?'); params.push(defense); }
+    if (neili_bonus !== undefined) { fields.push('neili_bonus = ?'); params.push(neili_bonus); }
+    if (tili_bonus !== undefined) { fields.push('tili_bonus = ?'); params.push(tili_bonus); }
+    if (price !== undefined) { fields.push('price = ?'); params.push(price); }
+    if (image_file !== undefined) { fields.push('image_file = ?'); params.push(image_file); }
+    if (description !== undefined) { fields.push('description = ?'); params.push(description); }
+    if (is_enabled !== undefined) { fields.push('is_enabled = ?'); params.push(is_enabled); }
+    if (stock_quantity !== undefined) { fields.push('stock_quantity = ?'); params.push(stock_quantity); }
+    if (sort_no !== undefined) { fields.push('sort_no = ?'); params.push(sort_no); }
+    
+    if (fields.length === 0) return res.status(400).json({ success: false, message: '没有要更新的字段' });
+    
+    params.push(id);
+    const sql = `UPDATE shop_items SET ${fields.join(', ')} WHERE id = ?`;
+    
+    await db.execute(sql, params);
+    res.json({ success: true, message: '物品信息已更新' });
+  } catch (err) {
+    console.error('Update shop item error:', err);
+    res.status(500).json({ success: false, message: '更新物品失败' });
+  }
+};
+
+// 删除商店物品
+exports.deleteShopItem = async (req, res) => {
+  try {
+    const [items] = await db.execute('SELECT * FROM shop_items WHERE id = ?', [req.params.id]);
+    if (items.length === 0) return res.status(404).json({ success: false, message: '物品不存在' });
+    
+    const item = items[0];
+    if (item.stock_quantity < 999) {
+      await db.execute('UPDATE shop_items SET is_enabled = 0 WHERE id = ?', [req.params.id]);
+      res.json({ success: true, message: '物品已下架（该物品已有销售记录，无法彻底删除）' });
+    } else {
+      await db.execute('DELETE FROM shop_items WHERE id = ?', [req.params.id]);
+      res.json({ success: true, message: '物品已删除' });
+    }
+  } catch (err) {
+    console.error('Delete shop item error:', err);
+    res.status(500).json({ success: false, message: '删除物品失败' });
+  }
+};
+
+// 补充库存
+exports.restockShopItem = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { quantity } = req.body;
+    
+    if (!quantity || quantity < 1) return res.status(400).json({ success: false, message: '请输入有效的补货数量' });
+    
+    await db.execute(
+      'UPDATE shop_items SET stock_quantity = stock_quantity + ? WHERE id = ?',
+      [quantity, id]
+    );
+    res.json({ success: true, message: '补货成功' });
+  } catch (err) {
+    console.error('Restock shop item error:', err);
+    res.status(500).json({ success: false, message: '补货失败' });
+  }
+};

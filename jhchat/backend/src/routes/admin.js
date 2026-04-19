@@ -64,3 +64,11 @@ router.get('/statistics/economy', adminAuth, adminCtrl.statsEconomy);
 router.put('/password', adminAuth, adminCtrl.changePassword);
 
 module.exports = router;
+
+// 商店物品管理
+router.get('/shop-items', adminAuth, adminCtrl.getShopItems);
+router.post('/shop-items', adminAuth, adminCtrl.createShopItem);
+router.put('/shop-items/:id', adminAuth, adminCtrl.updateShopItem);
+router.delete('/shop-items/:id', adminAuth, adminCtrl.deleteShopItem);
+router.post('/shop-items/:id/restock', adminAuth, adminCtrl.restockShopItem);
+

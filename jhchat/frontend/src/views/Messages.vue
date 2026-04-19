@@ -1,14 +1,8 @@
 <template>
-  <div class="messages-page">
-    <div class="nav-bar">
-      <router-link to="/main">首页</router-link>
-      <router-link to="/chat">聊天</router-link>
-      <span class="nav-spacer"></span>
-      <router-link to="/profile">{{ userStore.username }}</router-link>
-    </div>
-
-    <div class="page-container">
-      <div class="title-bar">
+  <PageLayout>
+    <div class="messages-page">
+      <div class="page-container">
+        <div class="title-bar">
         <h1>飞鸽传书</h1>
       </div>
 
@@ -72,12 +66,14 @@
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import PageLayout from '../components/PageLayout.vue'
 
 const userStore = useUserStore()
 
@@ -343,9 +339,5 @@ onMounted(() => {
   line-height: 1.6;
   min-height: 80px;
   white-space: pre-wrap;
-}
-
-.nav-spacer {
-  flex: 1;
 }
 </style>

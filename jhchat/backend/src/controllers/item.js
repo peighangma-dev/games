@@ -3,16 +3,15 @@ const db = require('../config/db');
 exports.list = async (req, res) => {
   try {
     const [items] = await db.execute(
-      `SELECT i.*, ii.image_file 
+      `SELECT i.* 
        FROM items i 
-       LEFT JOIN item_images ii ON i.name = ii.item_name 
        WHERE i.owner = ? 
        ORDER BY i.is_equipped DESC, i.id`, 
       [req.user.username]
     );
     const result = items.map(item => ({
       ...item,
-      image: item.image_file || 'KITTY.GIF',
+      image: `${Math.floor(Math.random() * 129) + 1}.gif`,
       imageType: item.type
     }));
     res.json({ success: true, data: result });
@@ -68,17 +67,12 @@ exports.drop = async (req, res) => {
 exports.getMarket = async (req, res) => {
   try {
     const [listings] = await db.execute(
-      `SELECT m.*, ii.image_file 
+      `SELECT m.* 
        FROM market_listings m 
-       LEFT JOIN item_images ii ON m.item_name = ii.item_name 
        WHERE m.is_active = 1 
        ORDER BY m.listed_at DESC`
     );
-    const result = listings.map(item => ({
-      ...item,
-      image: item.image_file || 'KITTY.GIF'
-    }));
-    res.json({ success: true, data: result });
+    res.json({ success: true, data: listings });
   } catch (err) {
     console.error('Query market error:', err);
     res.status(500).json({ success: false, message: '查询市场失败' });
@@ -145,21 +139,32 @@ exports.cancelListing = async (req, res) => {
 exports.getMyListings = async (req, res) => {
   try {
     const [listings] = await db.execute(
-      `SELECT m.*, ii.image_file 
-       FROM market_listings m 
-       LEFT JOIN item_images ii ON m.item_name = ii.item_name 
-       WHERE m.is_active = 1 AND m.seller = ? 
-       ORDER BY m.listed_at DESC`,
+      `SELECT * 
+       FROM market_listings 
+       WHERE is_active = 1 AND seller = ? 
+       ORDER BY listed_at DESC`,
       [req.user.username]
     );
     const result = listings.map(item => ({
       ...item,
-      image: item.image_file || 'KITTY.GIF'
+      image: `${Math.floor(Math.random() * 129) + 1}.gif`
     }));
     res.json({ success: true, data: result });
   } catch (err) {
     console.error('Query my listings error:', err);
     res.status(500).json({ success: false, message: '查询出售列表失败' });
+  }
+};
+
+exports.getMyCards = async (req, res) => {
+  try {
+    const [cards] = await db.execute(
+      'SELECT uc.*, ct.card_type, ct.price FROM user_cards uc LEFT JOIN card_templates ct ON uc.card_name = ct.name WHERE uc.owner = ? ORDER BY uc.card_name',
+      [req.user.username]
+    );
+    res.json({ success: true, data: cards });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '查询我的卡片失败' });
   }
 };
 
@@ -417,11 +422,9 @@ exports.work = async (req, res) => {
 exports.getShopItems = async (req, res) => {
   try {
     const [items] = await db.execute(
-      `SELECT i.*, ii.image_file 
-       FROM items i 
-       LEFT JOIN item_images ii ON i.name = ii.item_name 
-       WHERE i.owner = '无' AND i.quantity > 0 
-       ORDER BY i.sort_no, i.attack + i.defense DESC`
+      `SELECT * FROM shop_items 
+       WHERE is_enabled = 1 AND stock_quantity > 0
+       ORDER BY sort_no, price DESC`
     );
     res.json({ success: true, data: items });
   } catch (err) {
@@ -434,24 +437,33 @@ exports.buyFromShop = async (req, res) => {
   try {
     const { itemName, price } = req.body;
     const [items] = await db.execute(
-      `SELECT i.*, ii.image_file 
-       FROM items i 
-       LEFT JOIN item_images ii ON i.name = ii.item_name 
-       WHERE i.name = ? AND i.owner = '无' AND i.quantity > 0 
+      `SELECT * FROM shop_items 
+       WHERE name = ? AND is_enabled = 1 AND stock_quantity > 0
        LIMIT 1`,
       [itemName]
     );
     if (items.length === 0) return res.status(404).json({ success: false, message: '物品已售罄' });
     const item = items[0];
+    
+    // 后端也同步计算价格
+    const calculatedPrice = item.price;
+    
+    if (Math.abs(calculatedPrice - price) > 1) {
+      return res.status(400).json({ success: false, message: '价格验证失败' });
+    }
+    
     const [users] = await db.execute('SELECT id, silver FROM users WHERE id = ?', [req.user.id]);
     if (users[0].silver < price) return res.status(400).json({ success: false, message: '银两不足' });
     await db.execute('UPDATE users SET silver = silver - ? WHERE id = ?', [price, req.user.id]);
     await db.execute(
-      `INSERT INTO items (name, owner, type, attack, defense, sort_no, quantity, is_equipped, neili_bonus, tili_bonus) 
-       VALUES (?, ?, ?, ?, ?, ?, 1, 0, ?, ?)`,
-      [item.name, req.user.username, item.type, item.attack, item.defense, item.sort_no, item.neili_bonus, item.tili_bonus]
+      `UPDATE shop_items SET stock_quantity = stock_quantity - 1 WHERE id = ?`,
+      [item.id]
     );
-    await db.execute('UPDATE items SET quantity = quantity - 1 WHERE id = ?', [item.id]);
+    await db.execute(
+      `INSERT INTO items (name, owner, type, attack, defense, neili_bonus, tili_bonus, quantity, is_equipped) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, 1, 0)`,
+      [item.name, req.user.username, item.type, item.attack, item.defense, item.neili_bonus, item.tili_bonus]
+    );
     res.json({ success: true, message: '购买成功' });
   } catch (err) {
     console.error('Buy from shop error:', err);

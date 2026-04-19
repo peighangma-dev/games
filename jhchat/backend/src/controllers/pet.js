@@ -206,13 +206,57 @@ exports.adventureStar = async (req, res) => {
   }
 };
 
-exports.getMini = async (req, res) => {
+exports.healStar = async (req, res) => {
   try {
-    const [pets] = await db.execute('SELECT * FROM mini_pets WHERE owner = ?', [req.user.username]);
-    if (pets.length === 0) return res.json({ success: true, data: null });
-    res.json({ success: true, data: pets[0] });
+    const [pets] = await db.execute('SELECT id, hp, max_hp FROM star_pets WHERE owner = ?', [req.user.username]);
+    if (pets.length === 0) return res.status(404).json({ success: false, message: '没有星河宠物' });
+    
+    const healCost = 500;
+    const [users] = await db.execute('SELECT id, silver FROM users WHERE id = ?', [req.user.id]);
+    if (users[0].silver < healCost) {
+      return res.status(400).json({ success: false, message: '银两不足，需要 500 两' });
+    }
+    
+    await db.execute('UPDATE users SET silver = silver - ? WHERE id = ?', [healCost, req.user.id]);
+    await db.execute(
+      'UPDATE star_pets SET hp = max_hp WHERE id = ?',
+      [pets[0].id]
+    );
+    
+    res.json({ success: true, message: '治疗成功！宠物已完全恢复' });
   } catch (err) {
-    res.status(500).json({ success: false, message: '查询小宠失败' });
+    res.status(500).json({ success: false, message: '治疗失败' });
+  }
+};
+
+exports.trainMini = async (req, res) => {
+  try {
+    const [pets] = await db.execute('SELECT id, attack, defense, level, exp FROM mini_pets WHERE owner = ?', [req.user.username]);
+    if (pets.length === 0) return res.status(404).json({ success: false, message: '没有小宠' });
+    
+    const trainCost = 200;
+    const [users] = await db.execute('SELECT id, silver FROM users WHERE id = ?', [req.user.id]);
+    if (users[0].silver < trainCost) {
+      return res.status(400).json({ success: false, message: '银两不足，需要 200 两' });
+    }
+    
+    const atkGain = Math.floor(Math.random() * 3) + 1;
+    const defGain = Math.floor(Math.random() * 2) + 1;
+    const expGain = 10;
+    
+    await db.execute('UPDATE users SET silver = silver - ? WHERE id = ?', [trainCost, req.user.id]);
+    await db.execute(
+      'UPDATE mini_pets SET attack = attack + ?, defense = defense + ?, exp = exp + ? WHERE id = ?',
+      [atkGain, defGain, expGain, pets[0].id]
+    );
+    
+    res.json({ 
+      success: true, 
+      message: `训练成功！攻击 +${atkGain}，防御 +${defGain}，经验 +${expGain}`,
+      data: { atkGain, defGain, expGain }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '训练失败' });
   }
 };
 
@@ -234,3 +278,18 @@ exports.adoptMini = async (req, res) => {
     res.status(500).json({ success: false, message: '领养失败' });
   }
 };
+
+exports.getMini = async (req, res) => {
+  try {
+    const [pets] = await db.execute('SELECT * FROM mini_pets WHERE owner = ?', [req.user.username]);
+    if (pets.length === 0) return res.json({ success: true, data: null });
+    res.json({ success: true, data: pets[0] });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '查询小宠失败' });
+  }
+};
+
+// 导出新增的功能
+module.exports.healStar = exports.healStar;
+module.exports.trainMini = exports.trainMini;
+module.exports.getMini = exports.getMini;

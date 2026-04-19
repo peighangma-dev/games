@@ -1,17 +1,7 @@
 <template>
-  <div class="market-page">
-    <div class="nav-bar">
-      <router-link to="/main" class="nav-btn">首页</router-link>
-      <router-link to="/chat" class="nav-btn">聊天</router-link>
-      <router-link to="/market" class="nav-btn active">商城</router-link>
-      <span class="nav-spacer"></span>
-      <div class="user-info">
-        <span class="silver-badge">💰 {{ userStore.silver }}两</span>
-        <router-link to="/profile" class="nav-btn">{{ userStore.username }}</router-link>
-      </div>
-    </div>
-
-    <div class="page-container">
+  <PageLayout>
+    <div class="market-page">
+      <div class="page-container">
       <div class="market-header">
         <h1 class="page-title">🏪 江湖商城</h1>
       </div>
@@ -41,7 +31,7 @@
           <div v-for="item in marketItems" :key="item.id" class="item-card" :class="{ 'own-item': item.seller === userStore.username }">
             <div class="card-badge" v-if="item.seller === userStore.username">自己的</div>
             <div class="card-image-wrapper">
-              <img :src="`/assets/item-images/${item.image}`" :alt="item.item_name" class="card-image" />
+              <img :src="`/assets/items/${item.image || '1.gif'}`" :alt="item.item_name" class="card-image" />
               <div class="image-overlay">
                 <div class="item-type-badge" :class="getItemTypeClass(item.item_type)">{{ item.item_type }}</div>
               </div>
@@ -113,7 +103,7 @@
         <div class="item-grid">
           <div v-for="item in myMarketListings" :key="item.id" class="item-card">
             <div class="card-image-wrapper">
-              <img :src="`/assets/item-images/${item.image}`" :alt="item.item_name" class="card-image" />
+              <img :src="`/assets/items/${item.image || '1.gif'}`" :alt="item.item_name" class="card-image" />
               <div class="image-overlay">
                 <div class="item-type-badge" :class="getItemTypeClass(item.item_type)">{{ item.item_type }}</div>
               </div>
@@ -171,12 +161,14 @@
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import PageLayout from '../components/PageLayout.vue'
 
 const userStore = useUserStore()
 
@@ -328,57 +320,6 @@ onMounted(() => {
   min-height: 100vh;
   background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
   padding: 0 0 20px 0;
-}
-
-.nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.4);
-  border-bottom: 1px solid rgba(75, 135, 195, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-.nav-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: #a0aec0;
-  font-size: 14px;
-  transition: all 0.2s;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.nav-btn:hover {
-  background: rgba(75, 135, 195, 0.2);
-  color: #7eb8da;
-}
-
-.nav-btn.active {
-  background: #4a90e2;
-  color: white;
-}
-
-.nav-spacer {
-  flex: 1;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.silver-badge {
-  background: linear-gradient(135deg, #f0c040, #d4a840);
-  color: #1a1f24;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
 }
 
 .page-container {
@@ -879,14 +820,5 @@ onMounted(() => {
     grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
   }
   
-  .nav-bar {
-    flex-wrap: wrap;
-  }
-  
-  .user-info {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: 8px;
-  }
 }
 </style>

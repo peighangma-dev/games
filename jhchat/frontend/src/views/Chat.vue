@@ -1,13 +1,54 @@
 <template>
   <div class="chat-page">
-    <div class="chat-header">
-      <span class="room-name">{{ currentRoomName }}</span>
-      <select v-model="currentRoomId" @change="changeRoom" class="room-select">
-        <option v-for="r in rooms" :key="r.id" :value="r.id">{{ r.name }}</option>
-      </select>
-      <router-link to="/main" class="back-link">返回大厅</router-link>
+    <div class="nav-bar">
+      <router-link to="/main" class="nav-logo">
+        <span class="logo-icon">⚔️</span>
+        <span class="logo-text">笑傲江湖</span>
+      </router-link>
+      <router-link to="/main" class="nav-btn">首页</router-link>
+      <router-link to="/chat" class="nav-btn active">聊天</router-link>
+      <router-link to="/messages" class="nav-btn">邮件</router-link>
+      <router-link to="/sect" class="nav-btn">门派</router-link>
+      <router-link to="/marriage" class="nav-btn">婚姻</router-link>
+      <router-link to="/skills" class="nav-btn">武功</router-link>
+      <div class="nav-dropdown">
+        <button class="nav-btn dropdown-toggle">
+          游乐 <span class="dropdown-arrow">▼</span>
+        </button>
+        <div class="dropdown-menu">
+          <router-link to="/items" class="dropdown-item">🎒 物品</router-link>
+          <router-link to="/shop" class="dropdown-item">🏪 商店</router-link>
+          <router-link to="/market" class="dropdown-item">💰 商城</router-link>
+          <router-link to="/games" class="dropdown-item">🎲 游戏</router-link>
+          <router-link to="/pets" class="dropdown-item">🐾 宠物</router-link>
+          <router-link to="/alchemy" class="dropdown-item">🧪 配药</router-link>
+          <router-link to="/fishing" class="dropdown-item">🎣 钓鱼</router-link>
+          <router-link to="/fortune" class="dropdown-item">🔮 求签</router-link>
+        </div>
+      </div>
+      <router-link to="/rankings" class="nav-btn">排行</router-link>
+      <router-link to="/wishes" class="nav-btn">许愿</router-link>
+      <span class="nav-spacer"></span>
+      <span class="nav-user-info">
+        <span class="user-silver">💰 {{ userStore.silver }}两</span>
+      </span>
+      <router-link to="/profile" class="nav-btn nav-profile">{{ userStore.username }}</router-link>
+      <!-- 背景音乐控制 -->
+      <div class="nav-music-control">
+        <button @click="toggleMusic" class="nav-btn nav-music" :class="{ playing: isMusicPlaying }" :title="isMusicPlaying ? '暂停音乐' : '播放音乐'">
+          🎵 {{ isMusicPlaying ? currentMusicName : '音乐' }}
+        </button>
+        <select v-model="currentMusicId" @change="changeMusic" class="music-select" v-if="isMusicPlaying">
+          <option v-for="music in musicList" :key="music.id" :value="music.id">{{ music.name }}</option>
+        </select>
+      </div>
+      <button @click="handleLogout" class="nav-btn nav-logout">退出</button>
     </div>
-
+    
+    <!-- 隐藏的音乐播放器 -->
+    <!-- 注意：MIDI 文件需要浏览器支持或外部播放器 -->
+    <audio ref="musicPlayer" :src="currentMusicUrl" loop @play="onMusicPlay" @pause="onMusicPause" @error="onMusicError"></audio>
+    
     <div class="chat-body">
       <div class="chat-main" ref="chatMainRef">
         <div class="chat-tabs">
@@ -38,9 +79,15 @@
               <span class="action-text" v-html="msg.content"></span>
             </template>
             <template v-else>
-              <span class="msg-sender" :style="{ color: '#' + msg.sender_color }" @click="selectReceiver(msg.sender)" @dblclick="quickPrivateChat(msg.sender)">{{ msg.sender }}</span>
+              <span class="msg-sender" :style="{ color: '#' + msg.sender_color }" @click="selectReceiver(msg.sender)" @dblclick="quickPrivateChat(msg.sender)">
+                <span v-if="msg.sender_sect && msg.sender_sect !== '无'" class="msg-sect">[{{ msg.sender_sect }}]</span>
+                <span class="msg-sender-name">{{ msg.sender }}</span>
+              </span>
               <span class="msg-arrow" v-if="msg.is_private">悄悄对</span>
-              <span class="msg-receiver" v-if="msg.is_private && msg.receiver" @click="selectReceiver(msg.receiver)" @dblclick="quickPrivateChat(msg.receiver)">{{ msg.receiver }}</span>
+              <span class="msg-receiver" v-if="msg.is_private && msg.receiver" @click="selectReceiver(msg.receiver)" @dblclick="quickPrivateChat(msg.receiver)">
+                <span v-if="msg.receiver_sect && msg.receiver_sect !== '无'" class="msg-sect">[{{ msg.receiver_sect }}]</span>
+                <span class="msg-receiver-name">{{ msg.receiver }}</span>
+              </span>
               <span class="msg-arrow" v-if="msg.is_private">说：</span>
               <span class="msg-arrow" v-else>说：</span>
               <span class="msg-content" :style="{ color: '#' + msg.msg_color }" v-html="msg.content"></span>
@@ -68,10 +115,16 @@
               :key="u.user_id || u.username"
               :class="['user-item', { 'user-selected': receiver === u.username }]"
               @click="selectReceiver(u.username)"
+              :title="`${u.sect || '无门派'} | Lv.${u.grade || 1}`"
             >
-              <span :class="['gender-icon', u.gender]">{{ u.gender === 'female' ? '♀' : '♂' }}</span>
-              <span class="user-name">{{ u.username }}</span>
-              <span class="user-sect" v-if="u.sect && u.sect !== '无'">{{ u.sect }}</span>
+              <span :class="['gender-icon', u.gender]" :title="u.gender === 'female' ? '女' : '男'">
+                {{ u.gender === 'female' ? '♀' : '♂' }}
+              </span>
+              <span class="user-grade">Lv.{{ u.grade || 1 }}</span>
+              <span class="user-name">
+                <span v-if="u.sect && u.sect !== '无'" class="user-sect-tag">[{{ u.sect }}]</span>
+                {{ u.username }}
+              </span>
             </div>
           </div>
           <div v-if="filteredOnlineUsers.length === 0" class="empty-user-list">
@@ -81,107 +134,172 @@
       </div>
     </div>
 
+    <!-- 输入控制区 - 优化版 -->
     <div class="chat-input-area">
-      <div class="input-row-1">
-        <div class="color-picker-group">
-          <label>字色</label>
-          <div class="color-swatches">
-            <span
-              v-for="c in colorOptions"
-              :key="c"
-              :class="['color-swatch', { active: senderColor === c }]"
-              :style="{ background: '#' + c }"
-              @click="senderColor = c"
-            ></span>
+      <!-- 工具栏 -->
+      <div class="toolbar-row">
+          <div class="toolbar-group">
+            <button class="toolbar-btn" @click="togglePanel('colors')" :class="{ active: activePanel === 'colors' }" title="颜色选择">
+              🎨 颜色
+            </button>
+            <button class="toolbar-btn" @click="togglePanel('emoticons')" :class="{ active: activePanel === 'emoticons' }" title="表情选择">
+              😊 表情
+            </button>
+            <button class="toolbar-btn" @click="togglePanel('actions')" :class="{ active: activePanel === 'actions' }" title="动作选择">
+              🎭 动作
+            </button>
+            <button class="toolbar-btn" @click="togglePanel('commands')" :class="{ active: activePanel === 'commands' }" title="游戏命令">
+              ⚡ 命令
+            </button>
+          </div>
+          <div class="toolbar-group">
+            <label class="toggle-checkbox">
+              <input type="checkbox" v-model="isPrivate" />
+              <span class="toggle-label">💌 私聊</span>
+            </label>
+            <select v-model="filterMode" class="filter-select-small">
+              <option :value="0">全部</option>
+              <option :value="1">公聊</option>
+              <option :value="2">私聊</option>
+            </select>
           </div>
         </div>
-        <div class="color-picker-group">
-          <label>言色</label>
-          <div class="color-swatches">
-            <span
-              v-for="c in colorOptions"
-              :key="c"
-              :class="['color-swatch', { active: msgColor === c }]"
-              :style="{ background: '#' + c }"
-              @click="msgColor = c"
-            ></span>
+        
+        <!-- 折叠面板区域 -->
+        <div class="panel-container">
+          <!-- 颜色选择面板 -->
+          <div v-show="activePanel === 'colors'" class="panel panel-colors">
+            <div class="color-picker-group">
+              <label>字色：</label>
+              <div class="color-swatches">
+                <span
+                  v-for="c in colorOptions"
+                  :key="'sender-'+c"
+                  :class="['color-swatch', { active: senderColor === c }]"
+                  :style="{ background: '#' + c }"
+                  @click="senderColor = c"
+                  :title="c"
+                ></span>
+              </div>
+            </div>
+            <div class="color-picker-group">
+              <label>言色：</label>
+              <div class="color-swatches">
+                <span
+                  v-for="c in colorOptions"
+                  :key="'msg-'+c"
+                  :class="['color-swatch', { active: msgColor === c }]"
+                  :style="{ background: '#' + c }"
+                  @click="msgColor = c"
+                  :title="c"
+                ></span>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 表情选择面板 -->
+          <div v-show="activePanel === 'emoticons'" class="panel panel-emoticons">
+            <div class="emoticon-tabs">
+              <button 
+                v-for="tab in emoticonTabs" 
+                :key="tab.key"
+                :class="['emoticon-tab', { active: currentEmoticonTab === tab.key }]"
+                @click="currentEmoticonTab = tab.key"
+              >
+                {{ tab.label }}
+              </button>
+            </div>
+            <div class="emoticon-grid">
+              <button
+                v-for="i in currentEmoticonRange"
+                :key="i"
+                :class="['emoticon-btn', { active: selectedEmoticon === i }]"
+                @click="insertEmoticon(i)"
+                :title="`表情${i}`"
+              >
+                <img :src="`/assets/emoticons/${i}.gif`" :alt="`表情${i}`" loading="lazy" />
+              </button>
+            </div>
+          </div>
+          
+          <!-- 动作选择面板 -->
+          <div v-show="activePanel === 'actions'" class="panel panel-actions">
+            <div class="action-buttons">
+              <button
+                v-for="action in actions"
+                :key="action"
+                :class="['action-btn', { active: actionWord === action }]"
+                @click="actionWord = action"
+              >
+                {{ action }}
+              </button>
+            </div>
+          </div>
+          
+          <!-- 命令面板 -->
+          <div v-show="activePanel === 'commands'" class="panel panel-commands">
+            <div class="command-input-row">
+              <select v-model="slashCommand" class="cmd-select-large" @change="onSlashCommand">
+                <option value="">—— 选择命令 ——</option>
+                <optgroup v-for="(group, groupName) in groupedCommands" :key="groupName" :label="groupName">
+                  <option v-for="cmd in group" :key="cmd.cmd" :value="cmd.cmd">
+                    {{ cmd.cmd }} - {{ cmd.name }}
+                  </option>
+                </optgroup>
+              </select>
+              <input 
+                v-model="cmdTarget" 
+                type="text" 
+                placeholder="目标/参数" 
+                class="cmd-target-input"
+              />
+            </div>
+            <div class="command-tips">
+              <span class="tip-icon">💡</span>
+              <span>选择命令后输入目标，再次点击执行</span>
+            </div>
           </div>
         </div>
-      </div>
-      <div class="input-row-2">
-        <div class="input-field">
-          <label>对话</label>
-          <input v-model="receiver" type="text" placeholder="所有人" class="receiver-input" />
-        </div>
-        <div class="input-field">
-          <label>动作</label>
-          <select v-model="actionWord" class="action-select">
-            <option value="">无</option>
-            <option v-for="a in actions" :key="a" :value="a">{{ a }}</option>
-          </select>
-        </div>
-        <div class="input-field">
-          <label>表情</label>
-          <div class="emoticon-grid">
-            <span
-              v-for="i in 16"
-              :key="i"
-              :class="['emoticon-btn', { active: selectedEmoticon === i }]"
-              @click="insertEmoticon(i)"
-            >[tu]{{ i }}[/tu]</span>
+        
+        <!-- 主输入行 -->
+        <div class="input-row-main">
+          <div class="input-with-receiver">
+            <input v-model="receiver" type="text" placeholder="对话对象 (留空为公聊)" class="receiver-input-main" />
+            <input
+              v-model="inputText"
+              @input="onInputTextChanged"
+              type="text"
+              placeholder="输入消息... (Enter 发送)"
+              class="msg-input"
+              @keydown.enter="sendMessage"
+            />
           </div>
+          <span class="char-count">{{ charCount }}/500</span>
+          <button class="btn btn-primary send-btn" @click="sendMessage">
+            📤 发送
+          </button>
+          <button class="btn btn-action" @click="sendAction" :disabled="!actionWord">
+            🎬 动作
+          </button>
         </div>
       </div>
-      <div class="input-row-3">
-        <div class="input-field cmd-field" v-if="showSlashMenu">
-          <label>命令</label>
-          <select v-model="slashCommand" class="cmd-select" @change="onSlashCommand">
-            <option value="">选择命令...</option>
-            <option v-for="cmd in commands" :key="cmd" :value="cmd">/{{ cmd }}</option>
-          </select>
-          <input v-model="cmdTarget" type="text" placeholder="目标" class="cmd-input" v-if="slashCommand" />
-        </div>
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="isPrivate" />
-          私聊
-        </label>
-        <label class="checkbox-label">
-          <input type="checkbox" v-model="showSlashMenu" />
-          命令
-        </label>
-        <label class="filter-label">
-          筛选:
-          <select v-model="filterMode" class="filter-select">
-            <option :value="0">全部</option>
-            <option :value="1">公聊</option>
-            <option :value="2">私聊</option>
-          </select>
-        </label>
-      </div>
-<div class="input-row-main">
-  <input
-    v-model="inputText"
-    @input="onInputTextChanged"
-    type="text"
-    placeholder="输入消息..."
-    class="msg-input"
-    @keydown.enter="sendMessage"
-  />
-  <span class="char-count">{{ charCount }}/500</span>
-  <button class="btn btn-primary send-btn" @click="sendMessage">发送</button>
-  <button class="btn btn-sm" @click="sendAction" :disabled="!actionWord">动作</button>
-</div>
     </div>
-  </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import { connectSocket, getSocket, disconnectSocket } from '../utils/socket'
 import api from '../utils/api'
 
+const router = useRouter()
 const userStore = useUserStore()
+
+async function handleLogout() {
+  await userStore.logout()
+  router.push('/login')
+}
 
 const rooms = ref([])
 const currentRoomId = ref(1)
@@ -206,6 +324,18 @@ const colorOptions = [
   'FFFFFF', 'CCCCCC'
 ]
 
+// 表情分类配置 (共 320 个表情，分 8 页)
+const emoticonTabs = [
+  { key: 'basic', label: '常用', range: { start: 1, end: 40 } },
+  { key: 'emotion', label: '表情', range: { start: 41, end: 80 } },
+  { key: 'action', label: '动作', range: { start: 81, end: 120 } },
+  { key: 'cute', label: '可爱', range: { start: 121, end: 160 } },
+  { key: 'funny', label: '搞笑', range: { start: 161, end: 200 } },
+  { key: 'classic', label: '经典', range: { start: 201, end: 240 } },
+  { key: 'special', label: '特效', range: { start: 241, end: 280 } },
+  { key: 'more', label: '更多', range: { start: 281, end: 320 } }
+]
+
 const senderColor = ref('660099')
 const msgColor = ref('660099')
 const receiver = ref('')
@@ -219,12 +349,214 @@ const showSlashMenu = ref(false)
 const slashCommand = ref('')
 const cmdTarget = ref('')
 const commands = ref([])
-const actions = ref([
-  '拱手', '作揖', '微笑', '大笑', '哭泣', '愤怒', '惊讶',
-  '害羞', '亲吻', '拥抱', '挥手', '点头', '摇头', '鞠躬',
-  '拍手', '跳舞', '唱歌', '喝酒', '睡觉', '发呆',
-  '比武', '切磋', '疗伤', '送礼', '跪拜', '仰望', '叹息', '沉思'
-])
+const actions = ref([])
+
+// 新增：面板控制
+const activePanel = ref('')
+const currentEmoticonTab = ref('basic')
+
+// 背景音乐配置
+const musicList = [
+  { id: 39, name: '笑傲江湖' },
+  { id: 1, name: '爱的奉献' },
+  { id: 2, name: '爱之初体验' },
+  { id: 3, name: '把悲伤留给自己' },
+  { id: 4, name: '博基上校进行曲' },
+  { id: 5, name: '不要分离' },
+  { id: 6, name: '不知不觉想起你' },
+  { id: 7, name: '不装饰你的梦' },
+  { id: 8, name: '长江之歌' },
+  { id: 9, name: '迟来的爱' },
+  { id: 10, name: '春节' },
+  { id: 11, name: '春节序曲' },
+  { id: 12, name: '单身情歌' },
+  { id: 13, name: '独钓一江秋' },
+  { id: 14, name: '对你太在乎' },
+  { id: 15, name: '飞船即将坠毁' },
+  { id: 16, name: '奉献' },
+  { id: 17, name: '敢去承担爱' },
+  { id: 18, name: '给你一份惊喜' },
+  { id: 19, name: '国歌' },
+  { id: 20, name: '好日子' },
+  { id: 21, name: '洪湖水 2' },
+  { id: 22, name: '呼吸我' },
+  { id: 23, name: '加尔各答的天使' },
+  { id: 24, name: '将自己给你' },
+  { id: 25, name: '今宵多珍重' },
+  { id: 26, name: '京腔京韵' },
+  { id: 27, name: '九月九的酒' },
+  { id: 28, name: '辣妹子' },
+  { id: 29, name: '流浪歌手的情人' },
+  { id: 30, name: '路边的野花不要采' },
+  { id: 31, name: '没有恋爱的日子' },
+  { id: 32, name: '没有雨的夜里' },
+  { id: 33, name: '每一句说话' },
+  { id: 34, name: '梦回故园' },
+  { id: 35, name: '梦驼铃' },
+  { id: 36, name: '秘密情人' },
+  { id: 37, name: '呢喃' },
+  { id: 38, name: '你怎么舍得我难过' },
+  { id: 40, name: '千千阙歌' },
+  { id: 41, name: '如果可以再见你' },
+  { id: 42, name: '山丹丹' },
+  { id: 43, name: '伤了三个心' },
+  { id: 44, name: '伤心太平洋' },
+  { id: 45, name: '死不了' },
+  { id: 46, name: '天涯' },
+  { id: 47, name: '天意' },
+  { id: 48, name: '同桌的你' },
+  { id: 49, name: '童年' },
+  { id: 50, name: '弯弯的月亮' }
+]
+const currentMusicId = ref(39) // 默认播放笑傲江湖
+const isMusicPlaying = ref(false)
+const musicPlayer = ref(null)
+
+function getEmoticonCount() {
+  const tab = emoticonTabs.find(t => t.key === currentEmoticonTab.value)
+  return tab ? tab.range.end - tab.range.start + 1 : 40
+}
+
+// 背景音乐控制方法
+const currentMusicName = computed(() => {
+  const music = musicList.find(m => m.id === currentMusicId.value)
+  return music ? music.name : '音乐'
+})
+
+const currentMusicUrl = computed(() => {
+  return `/assets/music/${currentMusicId.value}.mp3`
+})
+
+function toggleMusic() {
+  if (!musicPlayer.value) return
+  if (isMusicPlaying.value) {
+    musicPlayer.value.pause()
+  } else {
+    musicPlayer.value.play().catch(err => {
+      console.warn('音乐播放失败:', err)
+      alert('🎵 请点击页面任意位置后再试（浏览器自动播放策略限制）')
+    })
+  }
+}
+
+function changeMusic() {
+  if (!musicPlayer.value || !isMusicPlaying.value) return
+  musicPlayer.value.pause()
+  nextTick(() => {
+    musicPlayer.value.play()
+  })
+}
+
+function onMusicPlay() {
+  isMusicPlaying.value = true
+}
+
+function onMusicPause() {
+  isMusicPlaying.value = false
+}
+
+function onMusicError(e) {
+  console.warn('音乐播放失败:', e)
+  isMusicPlaying.value = false
+  // MIDI 文件在某些浏览器可能无法播放
+  console.log('提示：MIDI 文件格式，部分浏览器可能需要插件才能播放')
+}
+
+const currentEmoticonRange = computed(() => {
+  const tab = emoticonTabs.find(t => t.key === currentEmoticonTab.value)
+  if (!tab) return []
+  return Array.from({ length: tab.range.end - tab.range.start + 1 }, (_, i) => tab.range.start + i)
+})
+
+// 命令分组 (基于原 ASP 版本和现有功能)
+const groupedCommands = computed(() => {
+  const cmdList = commands.value.map(cmd => {
+    const cmdStr = typeof cmd === 'string' ? cmd : cmd.cmd
+    // 查找完整命令信息
+    if (typeof cmd === 'object' && cmd.cmd) {
+      return cmd
+    }
+    return { cmd: cmdStr, name: getCommandName(cmdStr) }
+  })
+  
+  // 按功能分类
+  const groups = {
+    '社交互动': [],
+    '门派管理': [],
+    '游戏功能': [],
+    '管理员': []
+  }
+  
+  cmdList.forEach(cmd => {
+    const cmdName = cmd.cmd?.replace('/', '') || cmd
+    if (['加入', '离开', '拜师', '收徒', '册封', '篡位', '帮派令'].some(c => cmdName.includes(c))) {
+      groups['门派管理'].push(cmd)
+    } else if (['罚款', '驱逐', '踢人', '禁言', '解禁', '禁打', '开打', '查 ip', '站长令'].some(c => cmdName.includes(c))) {
+      groups['管理员'].push(cmd)
+    } else if (['千里', '点穴', '逮捕', '坐牢', '警告', '下毒', '吸星', '投掷', '攻击', '传内力', '赠送', '给钱', '跟踪', '取消跟踪', '卡片', '公告'].some(c => cmdName.includes(c))) {
+      groups['游戏功能'].push(cmd)
+    } else {
+      groups['社交互动'].push(cmd)
+    }
+  })
+  
+  // 移除空组
+  Object.keys(groups).forEach(key => {
+    if (groups[key].length === 0) delete groups[key]
+  })
+  
+  return groups
+})
+
+function getCommandName(cmd) {
+  // 根据命令推断名称
+  const names = {
+    '千里': '千里传音',
+    '点穴': '点穴定身',
+    '逮捕': '逮捕犯人',
+    '坐牢': '判坐牢',
+    '警告': '警告用户',
+    '下毒': '暗中下毒',
+    '驱逐': '驱逐出门派',
+    '偷钱': '偷窃银两',
+    '吸星大法': '吸星大法',
+    '投掷': '投掷暗器',
+    '攻击': '攻击/比武',
+    '传内力': '传送内力',
+    '赠送': '赠送物品',
+    '给钱': '给予银两',
+    '罚款': '处以罚款',
+    '加入': '加入门派',
+    '离开': '离开门派',
+    '查 ip': '查看 IP',
+    '篡位': '篡位夺权',
+    '册封': '册封弟子',
+    '跟踪私毒': '跟踪私聊',
+    '取消跟踪': '取消跟踪',
+    '卡片': '使用卡片',
+    '公告': '发布公告',
+    '禁言': '禁言处理',
+    '解禁': '解除禁言',
+    '禁打': '禁止打架',
+    '开打': '允许打架',
+    '打坐': '打坐练功',
+    '踢人': '踢出房间',
+    '心跳': '心跳特效',
+    '怒吼': '怒吼特效',
+    '心动': '心动特效',
+    '拜师': '拜师学艺',
+    '收徒': '招收徒弟',
+    '站长令': '站长命令',
+    '放大': '放大文字',
+    '帮派令': '帮派命令'
+  }
+  const key = cmd.replace('/', '')
+  return names[key] || key
+}
+
+function togglePanel(panelName) {
+  activePanel.value = activePanel.value === panelName ? '' : panelName
+}
 
 const filteredMessages = computed(() => {
   let list = messages.value
@@ -265,12 +597,23 @@ const filteredMessages = computed(() => {
 })
 
 const filteredOnlineUsers = computed(() => {
-  if (!userSearchQuery.value) return roomOnlineUsers.value
-  const query = userSearchQuery.value.toLowerCase()
-  return roomOnlineUsers.value.filter(u => 
-    u.username.toLowerCase().includes(query) ||
-    (u.sect && u.sect.toLowerCase().includes(query))
-  )
+  let list = roomOnlineUsers.value
+  
+  if (userSearchQuery.value) {
+    const query = userSearchQuery.value.toLowerCase()
+    list = list.filter(u => 
+      u.username?.toLowerCase().includes(query) ||
+      u.sect?.toLowerCase().includes(query)
+    )
+  }
+  
+  // 确保每个用户都有 grade 和 sect 字段
+  return list.map(u => ({
+    ...u,
+    grade: u.grade || 1,
+    sect: u.sect || '无',
+    gender: u.gender || 'male'
+  }))
 })
 
 // 获取所有私聊过的用户列表
@@ -361,9 +704,13 @@ async function loadActions() {
   try {
     const res = await api.get('/chat/actions')
     if (res.success && res.data?.length) {
-      actions.value = res.data.map(a => a.name || a)
+      // 去重并排序
+      const uniqueActions = [...new Set(res.data.map(a => a.name || a))]
+      actions.value = uniqueActions.sort()
     }
-  } catch (e) {}
+  } catch (e) {
+    console.error('Load actions error:', e)
+  }
 }
 
 async function loadCommands() {
@@ -529,22 +876,133 @@ onUnmounted(() => {
   display: flex;
   flex-direction: column;
   height: 100vh;
-  overflow: hidden;
 }
 
-.chat-header {
+.nav-profile {
+  background: rgba(126, 184, 218, 0.1);
+}
+
+.nav-logout {
+  border: none;
+  background: transparent;
+}
+
+.nav-logout:hover {
+  background: rgba(255, 100, 100, 0.1);
+}
+
+/* 背景音乐控制 */
+.nav-music-control {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 16px;
-  background: rgba(0, 0, 0, 0.5);
-  border-bottom: 1px solid rgba(75, 135, 195, 0.3);
+  gap: 8px;
+  margin: 0 8px;
 }
 
-.room-name {
+.nav-music {
+  background: rgba(126, 184, 218, 0.15);
+  border: 1px solid rgba(126, 184, 218, 0.3);
   color: #7eb8da;
-  font-weight: bold;
-  font-size: 16px;
+  padding: 6px 12px;
+  border-radius: 16px;
+  font-size: 13px;
+  transition: all 0.3s;
+  white-space: nowrap;
+}
+
+.nav-music:hover {
+  background: rgba(126, 184, 218, 0.25);
+  border-color: rgba(126, 184, 218, 0.5);
+  transform: translateY(-1px);
+}
+
+.nav-music.playing {
+  background: rgba(106, 172, 122, 0.3);
+  border-color: rgba(106, 172, 122, 0.6);
+  color: #6aac7a;
+  animation: musicPulse 2s ease-in-out infinite;
+}
+
+@keyframes musicPulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(106, 172, 122, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(106, 172, 122, 0);
+  }
+}
+
+.music-select {
+  background: rgba(10, 10, 20, 0.9);
+  border: 1px solid rgba(126, 184, 218, 0.3);
+  color: #ccc;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 12px;
+  max-width: 120px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.music-select:hover {
+  border-color: rgba(126, 184, 218, 0.6);
+}
+
+.music-select:focus {
+  outline: none;
+  border-color: #7eb8da;
+  box-shadow: 0 0 8px rgba(126, 184, 218, 0.3);
+}
+
+.nav-dropdown {
+  position: relative;
+}
+
+.dropdown-toggle {
+  position: relative;
+}
+
+.dropdown-arrow {
+  font-size: 10px;
+  margin-left: 4px;
+  opacity: 0.7;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background: #1a3a5c;
+  border: 1px solid rgba(126, 184, 218, 0.3);
+  border-radius: 8px;
+  padding: 8px 0;
+  min-width: 160px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all 0.2s;
+}
+
+.nav-dropdown:hover .dropdown-menu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.dropdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  text-decoration: none;
+  color: #c0d8e8;
+  transition: all 0.2s;
+}
+
+.dropdown-item:hover {
+  background: rgba(126, 184, 218, 0.15);
+  color: #fff;
 }
 
 .room-select {
@@ -726,24 +1184,58 @@ onUnmounted(() => {
 .msg-sender {
   cursor: pointer;
   font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
 }
 
 .msg-sender:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.msg-sect {
+  font-size: 11px;
+  font-weight: 500;
+  color: #8ab8d6;
+  background: rgba(138, 184, 214, 0.12);
+  padding: 1px 5px;
+  border-radius: 6px;
+  border: 1px solid rgba(138, 184, 214, 0.2);
+}
+
+.msg-sender-name {
+  font-size: 13px;
 }
 
 .msg-receiver {
   color: #e8a0bf;
   cursor: pointer;
   font-weight: bold;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 6px;
+  border-radius: 4px;
+  transition: all 0.15s;
 }
 
 .msg-receiver:hover {
-  text-decoration: underline;
+  text-decoration: none;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.msg-receiver-name {
+  font-size: 13px;
 }
 
 .msg-arrow {
-  color: #888;
+  color: #666;
+  font-size: 12px;
+  padding: 0 2px;
 }
 
 .msg-timestamp {
@@ -788,37 +1280,45 @@ onUnmounted(() => {
   font-size: 14px;
   margin-bottom: 10px;
   padding-bottom: 8px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(138, 184, 214, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .user-list-header {
   display: flex;
-  align-items: center;
-  gap: 10px;
+  flex-direction: column;
+  gap: 8px;
   margin-bottom: 10px;
 }
 
 .user-list-header h4 {
+  border: none;
+  padding: 0;
   margin-bottom: 0;
-  padding-bottom: 0;
-  border-bottom: none;
-  white-space: nowrap;
-  flex-shrink: 0;
+  color: #8ab8d6;
 }
 
 .user-search-input {
-  flex: 1;
-  padding: 4px 8px !important;
+  width: 100%;
+  padding: 6px 10px !important;
   font-size: 12px !important;
-  border-radius: 4px;
-  background: rgba(15, 15, 30, 0.5);
-  border: 1px solid rgba(90, 139, 196, 0.2);
-  color: #ddd;
+  border-radius: 6px;
+  background: rgba(15, 15, 30, 0.6);
+  border: 1px solid rgba(138, 184, 214, 0.2) !important;
+  color: #eee;
+  transition: all 0.2s;
 }
 
 .user-search-input:focus {
-  border-color: #5a8bc4;
-  box-shadow: 0 0 6px rgba(90, 139, 196, 0.2);
+  border-color: #8ab8d6 !important;
+  box-shadow: 0 0 8px rgba(138, 184, 214, 0.3);
+  background: rgba(15, 15, 30, 0.8);
+}
+
+.user-search-input::placeholder {
+  color: #666;
 }
 
 .empty-user-list {
@@ -829,9 +1329,131 @@ onUnmounted(() => {
 }
 
 .user-list {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 280px);
+  padding: 4px;
+}
+
+.user-item {
+  display: grid;
+  grid-template-columns: 20px 42px 1fr auto;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 8px;
+  margin-bottom: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s;
+  border: 1px solid transparent;
+}
+
+.user-item:hover {
+  background: rgba(74, 124, 89, 0.15);
+  border-color: rgba(74, 124, 89, 0.3);
+  transform: translateX(2px);
+}
+
+.user-selected {
+  background: rgba(74, 124, 89, 0.25);
+  border-color: rgba(74, 124, 89, 0.5);
+}
+
+.gender-icon {
+  font-size: 15px;
+  font-weight: bold;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.gender-icon.male {
+  color: #4B87C3;
+  text-shadow: 0 0 4px rgba(75, 135, 195, 0.4);
+}
+
+.gender-icon.female {
+  color: #e8a0bf;
+  text-shadow: 0 0 4px rgba(232, 160, 191, 0.4);
+}
+
+.user-grade {
+  font-size: 11px;
+  color: #ffd700;
+  font-weight: 600;
+  background: rgba(255, 215, 0, 0.1);
+  padding: 2px 4px;
+  border-radius: 4px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.user-name {
+  color: #eee;
+  font-weight: 500;
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  align-items: center;
+  gap: 4px;
+}
+
+.user-sect-tag {
+  font-size: 10px;
+  color: #8ab8d6;
+  background: rgba(138, 184, 214, 0.15);
+  padding: 1px 5px;
+  border-radius: 6px;
+  white-space: nowrap;
+  font-weight: normal;
+}
+
+.user-sect {
+  font-size: 11px;
+  color: #8ab8d6;
+  background: rgba(138, 184, 214, 0.1);
+  padding: 2px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+  max-width: 100px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.user-sect-empty {
+  font-size: 11px;
+  color: #666;
+  background: rgba(102, 102, 102, 0.1);
+  padding: 2px 6px;
+  border-radius: 8px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.scrollbar-wrapper {
+  overflow-y: auto;
+}
+
+.scrollbar-wrapper::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-wrapper::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+.scrollbar-wrapper::-webkit-scrollbar-thumb {
+  background: rgba(75, 135, 195, 0.3);
+  border-radius: 3px;
+}
+
+.scrollbar-wrapper::-webkit-scrollbar-thumb:hover {
+  background: rgba(75, 135, 195, 0.5);
 }
 
 .user-item {
@@ -878,7 +1500,630 @@ onUnmounted(() => {
 .chat-input-area {
   background: rgba(0, 0, 0, 0.5);
   border-top: 1px solid rgba(255, 255, 255, 0.15);
+  padding: 10px 14px;
+}
+
+/* 工具栏 */
+.toolbar-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+  gap: 10px;
+}
+
+.toolbar-group {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.toolbar-btn {
+  padding: 6px 12px;
+  background: rgba(75, 135, 195, 0.15);
+  border: 1px solid rgba(75, 135, 195, 0.3);
+  border-radius: 6px;
+  color: #7eb8da;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.toolbar-btn:hover {
+  background: rgba(75, 135, 195, 0.25);
+  transform: translateY(-1px);
+}
+
+.toolbar-btn.active {
+  background: rgba(75, 135, 195, 0.35);
+  border-color: #4B87C3;
+  box-shadow: 0 0 8px rgba(75, 135, 195, 0.4);
+}
+
+.toggle-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggle-checkbox input {
+  width: auto;
+  cursor: pointer;
+}
+
+.toggle-label {
+  color: #ccc;
+}
+
+.filter-select-small {
+  padding: 6px 12px;
+  background: linear-gradient(135deg, rgba(15, 15, 30, 0.8), rgba(20, 20, 40, 0.9));
+  border: 1px solid rgba(90, 139, 196, 0.4);
+  border-radius: 6px;
+  color: #ddd;
+  font-size: 13px;
+  cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237eb8da' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  padding-right: 32px;
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.filter-select-small:hover {
+  border-color: rgba(90, 139, 196, 0.6);
+}
+
+.filter-select-small:focus {
+  border-color: #5a8bc4;
+  outline: none;
+  box-shadow: 0 0 10px rgba(90, 139, 196, 0.4);
+}
+
+.filter-select-small option {
+  background: rgba(10, 10, 25, 0.98);
+  color: #ddd;
   padding: 8px 12px;
+}
+
+/* 面板容器 */
+.panel-container {
+  margin-bottom: 12px;
+}
+
+.panel {
+  background: rgba(15, 15, 30, 0.5);
+  border: 1px solid rgba(75, 135, 195, 0.2);
+  border-radius: 8px;
+  padding: 12px;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* 颜色面板 */
+.panel-colors {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.panel-colors .color-picker-group {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.panel-colors .color-picker-group label {
+  color: #888;
+  font-size: 13px;
+  padding-top: 2px;
+  min-width: 40px;
+}
+
+.panel-colors .color-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.panel-colors .color-swatch {
+  width: 20px;
+  height: 20px;
+  border-radius: 3px;
+  cursor: pointer;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  transition: all 0.15s;
+}
+
+.panel-colors .color-swatch:hover {
+  transform: scale(1.25);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.panel-colors .color-swatch.active {
+  border-color: #fff;
+  transform: scale(1.25);
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.6);
+}
+
+/* 表情面板 */
+.panel-emoticons {
+  padding: 10px;
+}
+
+.emoticon-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.emoticon-tab {
+  padding: 5px 12px;
+  background: rgba(15, 15, 30, 0.6);
+  border: 1px solid rgba(75, 135, 195, 0.2);
+  border-radius: 5px;
+  color: #888;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.emoticon-tab:hover {
+  background: rgba(75, 135, 195, 0.2);
+  color: #7eb8da;
+}
+
+.emoticon-tab.active {
+  background: rgba(75, 135, 195, 0.3);
+  border-color: #4B87C3;
+  color: #fff;
+}
+
+.emoticon-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+.emoticon-grid::-webkit-scrollbar {
+  width: 8px;
+}
+
+.emoticon-grid::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+.emoticon-grid::-webkit-scrollbar-thumb {
+  background: rgba(75, 135, 195, 0.4);
+  border-radius: 4px;
+}
+
+.emoticon-btn {
+  width: 42px;
+  height: 42px;
+  padding: 0;
+  background: rgba(0, 0, 0, 0.3);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.emoticon-btn:hover {
+  background: rgba(75, 135, 195, 0.25);
+  border-color: rgba(75, 135, 195, 0.5);
+  transform: scale(1.1);
+}
+
+.emoticon-btn.active {
+  background: rgba(75, 135, 195, 0.35);
+  border-color: #4B87C3;
+  box-shadow: 0 0 10px rgba(75, 135, 195, 0.5);
+}
+
+.emoticon-btn img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+/* 动作面板 */
+.panel-actions {
+  padding: 10px;
+}
+
+.action-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 8px 16px;
+  background: rgba(75, 135, 195, 0.15);
+  border: 1px solid rgba(75, 135, 195, 0.25);
+  border-radius: 6px;
+  color: #aaa;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn:hover {
+  background: rgba(75, 135, 195, 0.25);
+  color: #7eb8da;
+  transform: translateY(-1px);
+}
+
+.action-btn.active {
+  background: rgba(75, 135, 195, 0.35);
+  border-color: #4B87C3;
+  color: #fff;
+  box-shadow: 0 0 8px rgba(75, 135, 195, 0.4);
+}
+
+/* 命令面板 */
+.panel-commands {
+  padding: 12px;
+}
+
+.command-input-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cmd-select-large {
+  flex: 1;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(15, 15, 30, 0.8), rgba(20, 20, 40, 0.9));
+  border: 1px solid rgba(75, 135, 195, 0.4);
+  border-radius: 8px;
+  color: #ddd;
+  font-size: 14px;
+  cursor: pointer;
+  min-width: 180px;
+  max-width: 400px;
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%237eb8da' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 40px;
+  transition: all 0.2s;
+}
+
+.cmd-select-large:hover {
+  border-color: rgba(75, 135, 195, 0.6);
+  background-color: rgba(20, 20, 40, 0.9);
+}
+
+.cmd-select-large:focus {
+  border-color: #4B87C3;
+  outline: none;
+  box-shadow: 0 0 12px rgba(75, 135, 195, 0.4);
+}
+
+.cmd-select-large option {
+  background: rgba(10, 10, 25, 0.98);
+  color: #ddd;
+  padding: 10px 14px;
+}
+
+.cmd-target-input {
+  flex: 1;
+  max-width: 160px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(15, 15, 30, 0.8), rgba(20, 20, 40, 0.9));
+  border: 1px solid rgba(75, 135, 195, 0.4);
+  border-radius: 8px;
+  color: #ddd;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.cmd-target-input:focus {
+  border-color: #4B87C3;
+  outline: none;
+  box-shadow: 0 0 12px rgba(75, 135, 195, 0.4);
+}
+
+.command-tips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #666;
+  font-size: 12px;
+  padding-top: 8px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tip-icon {
+  font-size: 14px;
+}
+
+/* 主输入行 */
+.input-row-main {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+}
+
+.input-with-receiver {
+  flex: 1;
+  display: flex;
+  gap: 8px;
+}
+
+.receiver-input-main {
+  width: 140px;
+  min-width: 140px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, rgba(15, 15, 30, 0.8), rgba(20, 20, 40, 0.9));
+  border: 1px solid rgba(75, 135, 195, 0.4);
+  border-radius: 8px;
+  color: #ddd;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.receiver-input-main::placeholder {
+  color: #666;
+}
+
+.receiver-input-main:focus {
+  border-color: #4B87C3;
+  outline: none;
+  box-shadow: 0 0 12px rgba(75, 135, 195, 0.4);
+}
+
+.msg-input {
+  flex: 1;
+  padding: 10px 14px !important;
+  font-size: 14px !important;
+  border-radius: 8px !important;
+  transition: all 0.2s;
+}
+
+.char-count {
+  color: #666;
+  font-size: 12px;
+  white-space: nowrap;
+  font-weight: 500;
+  min-width: 50px;
+  text-align: right;
+}
+
+.char-count:hover {
+  color: #8ab8d6;
+}
+
+.send-btn {
+  padding: 10px 24px;
+  font-weight: 600;
+  border-radius: 8px;
+  box-shadow: 0 2px 6px rgba(90, 139, 196, 0.3);
+  transition: all 0.2s;
+  min-width: 80px;
+}
+
+.send-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(90, 139, 196, 0.5);
+}
+
+.btn-action {
+  padding: 10px 20px;
+  font-size: 14px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(106, 172, 122, 0.3);
+  transition: all 0.2s;
+}
+
+.btn-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(106, 172, 122, 0.4);
+}
+
+.btn-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 响应式设计 */
+@media (max-width: 1024px) {
+  .toolbar-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .toolbar-group {
+    justify-content: space-between;
+  }
+  
+  .receiver-input-main {
+    width: 120px;
+  }
+  
+  .emoticon-btn {
+    width: 38px;
+    height: 38px;
+  }
+  
+  .emoticon-btn img {
+    width: 28px;
+    height: 28px;
+  }
+}
+
+@media (max-width: 768px) {
+  .chat-input-area {
+    padding: 10px 12px;
+  }
+  
+  .toolbar-btn {
+    padding: 8px 12px;
+    font-size: 12px;
+    flex: 1;
+    text-align: center;
+  }
+  
+  .toolbar-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .toggle-checkbox {
+    padding: 8px 12px;
+    background: rgba(75, 135, 195, 0.15);
+    border: 1px solid rgba(75, 135, 195, 0.3);
+    border-radius: 6px;
+  }
+  
+  .filter-select-small {
+    flex: 1;
+  }
+  
+  .input-row-main {
+    flex-wrap: nowrap;
+    gap: 8px;
+  }
+  
+  .input-with-receiver {
+    order: 1;
+    width: auto;
+    flex: 1;
+    display: flex;
+    gap: 6px;
+  }
+  
+  .receiver-input-main {
+    width: 80px;
+    min-width: 80px;
+    padding: 8px 10px !important;
+    font-size: 13px !important;
+  }
+  
+  .msg-input {
+    flex: 1;
+    padding: 8px 12px !important;
+    font-size: 14px !important;
+  }
+  
+  .char-count {
+    order: 2;
+    min-width: 40px;
+    font-size: 11px;
+  }
+  
+  .send-btn {
+    order: 3;
+    padding: 8px 14px;
+    min-width: 60px;
+    font-size: 13px;
+  }
+  
+  .btn-action {
+    order: 4;
+    padding: 8px 14px;
+    font-size: 13px;
+    min-width: 60px;
+  }
+  
+  /* 命令面板优化 */
+  .cmd-select-large {
+    font-size: 13px;
+    padding: 8px 12px;
+  }
+  
+  .cmd-target-input {
+    flex: 1;
+    max-width: none;
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+  
+  .emoticon-grid {
+    max-height: 200px;
+  }
+  
+  .emoticon-btn {
+    width: 34px;
+    height: 34px;
+  }
+  
+  .emoticon-btn img {
+    width: 24px;
+    height: 24px;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-input-area {
+    padding: 8px 10px;
+  }
+  
+  .toolbar-btn {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .receiver-input-main {
+    width: 70px;
+    min-width: 70px;
+  }
+  
+  .msg-input {
+    font-size: 13px;
+  }
+  
+  .send-btn,
+  .btn-action {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-width: 50px;
+  }
+  
+  .cmd-select-large {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  
+  .emoticon-btn {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .emoticon-btn img {
+    width: 22px;
+    height: 22px;
+  }
 }
 
 .input-row-1, .input-row-2, .input-row-3 {

@@ -1,14 +1,8 @@
 <template>
-  <div class="profile-page">
-    <div class="nav-bar">
-      <router-link to="/main">首页</router-link>
-      <router-link to="/chat">聊天</router-link>
-      <span class="nav-spacer"></span>
-      <span class="nav-user">{{ userStore.username }}</span>
-    </div>
-
-    <div class="page-container">
-      <div class="title-bar">
+  <PageLayout>
+    <div class="profile-page">
+      <div class="page-container">
+        <div class="title-bar">
         <h1>侠客状态</h1>
       </div>
 
@@ -127,12 +121,14 @@
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import PageLayout from '../components/PageLayout.vue'
 
 const userStore = useUserStore()
 const profile = ref(null)
@@ -376,20 +372,5 @@ onMounted(() => {
   text-align: center;
   color: #666;
   padding: 40px;
-}
-
-.nav-spacer {
-  flex: 1;
-}
-
-.nav-user {
-  color: #7eb8da;
-  padding: 10px 12px;
-}
-
-@media (max-width: 600px) {
-  .attrs-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
 }
 </style>

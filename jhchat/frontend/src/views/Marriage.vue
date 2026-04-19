@@ -1,14 +1,8 @@
 <template>
-  <div class="marriage-page">
-    <div class="nav-bar">
-      <router-link to="/main">首页</router-link>
-      <router-link to="/chat">聊天</router-link>
-      <span class="nav-spacer"></span>
-      <router-link to="/profile">{{ userStore.username }}</router-link>
-    </div>
-
-    <div class="page-container">
-      <div class="title-bar">
+  <PageLayout>
+    <div class="marriage-page">
+      <div class="page-container">
+        <div class="title-bar">
         <h1>月老祠</h1>
       </div>
 
@@ -76,12 +70,14 @@
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import PageLayout from '../components/PageLayout.vue'
 
 const userStore = useUserStore()
 
@@ -324,9 +320,5 @@ onMounted(() => {
   display: flex;
   gap: 10px;
   margin-top: 10px;
-}
-
-.nav-spacer {
-  flex: 1;
 }
 </style>

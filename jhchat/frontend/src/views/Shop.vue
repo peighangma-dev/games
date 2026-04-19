@@ -39,7 +39,7 @@
       <div class="item-grid">
         <div v-for="item in filteredItems" :key="item.id" class="shop-item">
           <div class="item-image-wrapper">
-            <img :src="`/assets/item-images/${item.image_file || 'KITTY.GIF'}`" :alt="item.name" class="item-image" />
+            <img :src="`/assets/items/${item.image_file || '1.gif'}`" :alt="item.name" class="item-image" />
             <div class="type-badge" :class="`type-${item.type}`">{{ getTypeName(item.type) }}</div>
           </div>
           <div class="item-body">
@@ -92,6 +92,17 @@ function getTypeName(type) {
 }
 
 function getPrice(item) {
+  // 使用数据库中的 price 字段
+  if (item.price && item.price > 0) {
+    return item.price
+  }
+  // 兼容旧数据：毒药价格基于伤害值计算
+  if (item.type === 'poison') {
+    const damage = Math.abs(item.neili_bonus) + Math.abs(item.tili_bonus)
+    if (damage === 0) return 50
+    return damage * 5
+  }
+  // 其他物品价格基于属性加成计算
   const basePrice = item.attack + item.defense + Math.abs(item.neili_bonus) + Math.abs(item.tili_bonus)
   if (basePrice === 0) return 50
   return basePrice * 10
@@ -152,57 +163,6 @@ onMounted(() => {
   min-height: 100vh;
   background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
   padding: 0 0 20px 0;
-}
-
-.nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.4);
-  border-bottom: 1px solid rgba(75, 135, 195, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-.nav-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: #a0aec0;
-  font-size: 14px;
-  transition: all 0.2s;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.nav-btn:hover {
-  background: rgba(75, 135, 195, 0.2);
-  color: #7eb8da;
-}
-
-.nav-btn.active {
-  background: #4a90e2;
-  color: white;
-}
-
-.nav-spacer {
-  flex: 1;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.silver-badge {
-  background: linear-gradient(135deg, #f0c040, #d4a840);
-  color: #1a1f24;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
 }
 
 .page-container {
@@ -425,16 +385,6 @@ onMounted(() => {
 @media (max-width: 768px) {
   .item-grid {
     grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-  }
-  
-  .nav-bar {
-    flex-wrap: wrap;
-  }
-  
-  .user-info {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: 8px;
   }
 }
 </style>

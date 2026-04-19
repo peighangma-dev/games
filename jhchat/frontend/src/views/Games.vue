@@ -1,14 +1,8 @@
 <template>
-  <div class="games-page">
-    <div class="nav-bar">
-      <router-link to="/main">首页</router-link>
-      <router-link to="/chat">聊天</router-link>
-      <span class="nav-spacer"></span>
-      <router-link to="/profile">{{ userStore.username }}</router-link>
-    </div>
-
-    <div class="page-container">
-      <div class="title-bar">
+  <PageLayout>
+    <div class="games-page">
+      <div class="page-container">
+        <div class="title-bar">
         <h1>游戏大厅</h1>
       </div>
 
@@ -116,12 +110,14 @@
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, reactive, computed } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import PageLayout from '../components/PageLayout.vue'
 
 const userStore = useUserStore()
 
@@ -375,9 +371,5 @@ async function doHunt() {
   display: flex;
   justify-content: center;
   margin-top: 12px;
-}
-
-.nav-spacer {
-  flex: 1;
 }
 </style>

@@ -16,6 +16,7 @@
         <router-link to="/admin/ip-locks">IP锁定</router-link>
         <router-link to="/admin/logs">日志</router-link>
         <router-link to="/admin/items">物品管理</router-link>
+        <router-link to="/admin/shop-items">商店管理</router-link>
         <router-link to="/admin/statistics">统计</router-link>
         <router-link to="/admin/random-events">随机事件</router-link>
       </div>
@@ -64,14 +65,5 @@ const userStore = useUserStore()
   flex: 1;
   padding: 20px;
   overflow-y: auto;
-}
-
-.nav-spacer {
-  flex: 1;
-}
-
-.nav-user {
-  color: #7eb8da;
-  padding: 10px 12px;
 }
 </style>

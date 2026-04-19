@@ -1,4 +1,7 @@
 const db = require('../config/db');
+const achievement = require('./achievement');
+const quest = require('./quest');
+const ranking = require('./ranking');
 
 // 钓鱼配置
 const FISHING_CONFIG = {
@@ -147,6 +150,20 @@ exports.finishFishing = async (req, res) => {
        VALUES (?, ?, ?, ?, ?, ?, ?)`,
       [userId, username, item.item_name, item.item_type, item.effect_neili || item.silver_value, item.silver_value, item.rarities]
     );
+    
+    // 更新成就进度
+    await achievement.updateProgress(username, 'fishing', 1);
+    if (item.rarities === 'legendary') {
+      await achievement.updateProgress(username, 'legendary', 1);
+    }
+    
+    // 更新钓鱼排行榜
+    await ranking.updateFishingRecord(username, item.item_name, 0, item.silver_value, item.rarities);
+    
+    // 更新任务进度（钓鱼类任务）
+    if (item.item_type === '药材') {
+      await quest.updateQuestProgress(username, 'gather', item.item_name, 1);
+    }
     
     // 根据物品类型添加效果
     let message = `恭喜！您钓到了【${item.item_name}】！`;

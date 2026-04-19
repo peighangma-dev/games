@@ -15,7 +15,9 @@ router.get('/star', auth, petCtrl.getStar);
 router.post('/star/adopt', auth, petCtrl.adoptStar);
 router.post('/star/fight', auth, petCtrl.fightStar);
 router.post('/star/adventure', auth, petCtrl.adventureStar);
+router.post('/star/heal', auth, petCtrl.healStar);
 router.get('/mini', auth, petCtrl.getMini);
 router.post('/mini/adopt', auth, petCtrl.adoptMini);
+router.post('/mini/train', auth, petCtrl.trainMini);
 
 module.exports = router;

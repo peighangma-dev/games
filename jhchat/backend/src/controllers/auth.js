@@ -127,13 +127,25 @@ exports.login = async (req, res) => {
 
     await checkLevelUp(user);
 
+    // 恢复内力和体力（但不超过上限）
+    const maxNeili = user.max_neili || 500;
+    const maxTili = 100;
     if (user.neili < 0) user.neili = 0;
     if (user.tili < 0) user.tili = 0;
-    if (user.wugong < 0) user.wugong = 0;
+    // 离线时自动恢复部分内力和体力（10%）
+    if (user.last_login_at) {
+      const offlineMinutes = (Date.now() - new Date(user.last_login_at).getTime()) / 60000;
+      if (offlineMinutes > 0) {
+        const neiliRecover = Math.min(maxNeili - user.neili, Math.floor(offlineMinutes * 0.5));
+        const tiliRecover = Math.min(maxTili - user.tili, Math.floor(offlineMinutes * 0.1));
+        user.neili += neiliRecover;
+        user.tili += tiliRecover;
+      }
+    }
 
     await db.execute(
-      `UPDATE users SET login_count = login_count + 1, last_login_at = NOW(), last_login_ip = ?, neili = ?, tili = ?, wugong = GREATEST(0, (neili + tili) / 1000) WHERE id = ?`,
-      [ip, user.neili, user.tili, user.id]
+      `UPDATE users SET login_count = login_count + 1, last_login_at = NOW(), last_login_ip = ?, neili = ?, tili = ?, wugong = GREATEST(0, wugong) WHERE id = ?`,
+      [ip, Math.min(user.neili, maxNeili), Math.min(user.tili, maxTili), user.id]
     );
 
     const [online] = await db.execute('SELECT id FROM online_users WHERE user_id = ?', [user.id]);

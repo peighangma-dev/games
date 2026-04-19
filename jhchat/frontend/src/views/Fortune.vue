@@ -1,19 +1,8 @@
 <template>
-  <div class="fortune-page">
-    <div class="nav-bar">
-      <router-link to="/main" class="nav-btn">首页</router-link>
-      <router-link to="/chat" class="nav-btn">聊天</router-link>
-      <router-link to="/fortune" class="nav-btn active">求签</router-link>
-      <router-link to="/fishing" class="nav-btn">钓鱼</router-link>
-      <span class="nav-spacer"></span>
-      <div class="user-info">
-        <span class="silver-badge">💰 {{ userStore.silver }}两</span>
-        <router-link to="/profile" class="nav-btn">{{ userStore.username }}</router-link>
-      </div>
-    </div>
-
-    <div class="page-container">
-      <div class="fortune-header">
+  <PageLayout>
+    <div class="fortune-page">
+      <div class="page-container">
+        <div class="fortune-header">
         <h1 class="page-title">🙏 每日求签</h1>
         <p class="fortune-desc">每日一签，预知今日运势</p>
       </div>
@@ -49,12 +38,14 @@
       </div>
     </div>
   </div>
+  </PageLayout>
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import PageLayout from '../components/PageLayout.vue'
 
 const userStore = useUserStore()
 const fortune = ref({
@@ -99,57 +90,6 @@ onMounted(() => {
   min-height: 100vh;
   background: linear-gradient(135deg, #1a1f2e 0%, #2d3748 100%);
   padding: 0 0 20px 0;
-}
-
-.nav-bar {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 20px;
-  background: rgba(0, 0, 0, 0.4);
-  border-bottom: 1px solid rgba(75, 135, 195, 0.3);
-  backdrop-filter: blur(10px);
-}
-
-.nav-btn {
-  padding: 8px 16px;
-  border-radius: 6px;
-  text-decoration: none;
-  color: #a0aec0;
-  font-size: 14px;
-  transition: all 0.2s;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-}
-
-.nav-btn:hover {
-  background: rgba(75, 135, 195, 0.2);
-  color: #7eb8da;
-}
-
-.nav-btn.active {
-  background: #4a90e2;
-  color: white;
-}
-
-.nav-spacer {
-  flex: 1;
-}
-
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-.silver-badge {
-  background: linear-gradient(135deg, #f0c040, #d4a840);
-  color: #1a1f24;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: bold;
 }
 
 .page-container {
@@ -280,16 +220,6 @@ onMounted(() => {
 }
 
 @media (max-width: 768px) {
-  .nav-bar {
-    flex-wrap: wrap;
-  }
-  
-  .user-info {
-    width: 100%;
-    justify-content: flex-end;
-    margin-top: 8px;
-  }
-  
   .page-title {
     font-size: 28px;
   }
