@@ -1,8 +1,11 @@
 const db = require('../config/db');
 
 function drawCard() {
-  const cards = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
-  return cards[Math.floor(Math.random() * cards.length)];
+  const suits = ['H', 'D', 'C', 'S']; // Hearts, Diamonds, Clubs, Spades
+  const values = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
+  const suit = suits[Math.floor(Math.random() * suits.length)];
+  const value = values[Math.floor(Math.random() * values.length)];
+  return suit + value; // 返回如 "H10", "SA", "D3" 等格式
 }
 
 function calcPoints(cardStr) {
@@ -11,9 +14,11 @@ function calcPoints(cardStr) {
   let points = 0;
   let aces = 0;
   for (const c of cards) {
-    if (c === 'A') { points += 11; aces++; }
-    else if (['J', 'Q', 'K'].includes(c)) points += 10;
-    else points += parseInt(c) || 0;
+    // 提取点数部分（去掉花色）
+    const value = c.substring(1);
+    if (value === 'A') { points += 11; aces++; }
+    else if (['J', 'Q', 'K'].includes(value)) points += 10;
+    else points += parseInt(value) || 0;
   }
   while (points > 21 && aces > 0) { points -= 10; aces--; }
   return points;
@@ -128,20 +133,67 @@ exports.dice = async (req, res) => {
   try {
     const { bet, guess } = req.body;
     if (!bet || bet <= 0) return res.status(400).json({ success: false, message: '下注无效' });
-    if (!['big', 'small'].includes(guess)) return res.status(400).json({ success: false, message: '请选择大或小' });
+    if (!['big', 'small', 'baozi'].includes(guess)) return res.status(400).json({ success: false, message: '请选择大、小或豹子' });
+    
     const [users] = await db.execute('SELECT id, silver FROM users WHERE id = ?', [req.user.id]);
     if (users[0].silver < bet) return res.status(400).json({ success: false, message: '银两不足' });
+    
+    // 3 个骰子
     const d1 = Math.floor(Math.random() * 6) + 1;
     const d2 = Math.floor(Math.random() * 6) + 1;
-    const total = d1 + d2;
-    const isBig = total >= 7;
-    const won = (guess === 'big' && isBig) || (guess === 'small' && !isBig);
-    if (won) {
-      await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [bet, req.user.id]);
+    const d3 = Math.floor(Math.random() * 6) + 1;
+    const total = d1 + d2 + d3;
+    
+    // 判断豹子（3 同）
+    const isBaozi = d1 === d2 && d2 === d3;
+    
+    // 大小判断（3-10 为小，11-18 为大）
+    const isBig = total >= 11;
+    
+    let won = false;
+    let winAmount = 0;
+    
+    if (guess === 'baozi') {
+      // 押豹子
+      if (isBaozi) {
+        won = true;
+        winAmount = bet * 30; // 豹子 1:30 赔率
+      }
     } else {
-      await db.execute('UPDATE users SET silver = silver - ? WHERE id = ?', [bet, req.user.id]);
+      // 押大小
+      if (isBaozi) {
+        // 围骰通杀大小注
+        won = false;
+        winAmount = -bet;
+      } else if (guess === 'big' && isBig) {
+        won = true;
+        winAmount = bet;
+      } else if (guess === 'small' && !isBig) {
+        won = true;
+        winAmount = bet;
+      } else {
+        won = false;
+        winAmount = -bet;
+      }
     }
-    res.json({ success: true, data: { d1, d2, total, result: isBig ? 'big' : 'small', won, amount: won ? bet : -bet } });
+    
+    if (winAmount > 0) {
+      await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [winAmount, req.user.id]);
+    } else if (winAmount < 0) {
+      await db.execute('UPDATE users SET silver = silver - ? WHERE id = ?', [Math.abs(winAmount), req.user.id]);
+    }
+    
+    res.json({ 
+      success: true, 
+      data: { 
+        d1, d2, d3, 
+        total, 
+        isBaozi,
+        result: isBig ? 'big' : 'small', 
+        won, 
+        amount: winAmount 
+      } 
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: '掷骰子失败' });
   }
@@ -213,27 +265,58 @@ exports.fishReel = async (req, res) => {
       'SELECT id, started_at FROM fishing_states WHERE username = ? AND is_active = 1', [req.user.username]
     );
     if (fish.length === 0) return res.status(400).json({ success: false, message: '没有在钓鱼' });
+    
     const elapsed = (Date.now() - new Date(fish[0].started_at).getTime()) / 1000;
     await db.execute('UPDATE fishing_states SET is_active = 0 WHERE id = ?', [fish[0].id]);
+    await db.execute('DELETE FROM fishing_states WHERE id = ?', [fish[0].id]);
+    
     const catches = [
-      { name: '小鲫鱼', value: 50 },
-      { name: '鲤鱼', value: 100 },
-      { name: '大草鱼', value: 200 },
-      { name: '金龙鱼', value: 500 },
-      { name: '什么也没钓到', value: 0 }
+      { name: '草鞋板', value: 10, weight: 30, rarity: 'common' },
+      { name: '小鲫鱼', value: 50, weight: 25, rarity: 'common' },
+      { name: '鲤鱼', value: 100, weight: 15, rarity: 'rare' },
+      { name: '大草鱼', value: 200, weight: 10, rarity: 'rare' },
+      { name: '金龙鱼', value: 500, weight: 5, rarity: 'epic' },
+      { name: '锦鲤', value: 1000, weight: 1, rarity: 'legendary' },
+      { name: '什么也没钓到', value: 0, weight: 14, rarity: 'common' }
     ];
+    
+    // 时间影响概率
     let catchItem;
     if (elapsed < 3) {
-      catchItem = catches[4];
-    } else if (elapsed < 10) {
-      catchItem = catches[Math.floor(Math.random() * 3)];
+      // 过早收竿：必空
+      catchItem = catches[6];
     } else {
-      catchItem = catches[Math.floor(Math.random() * 4)];
+      // 权重随机
+      const totalWeight = catches.reduce((sum, item) => sum + item.weight, 0);
+      let rand = Math.random() * totalWeight;
+      
+      // 时间>12 秒提升稀有鱼类概率
+      if (elapsed > 12) {
+        rand *= 0.7; // 偏向稀有
+      }
+      
+      for (const item of catches) {
+        if (rand < item.weight) {
+          catchItem = item;
+          break;
+        }
+        rand -= item.weight;
+      }
     }
+    
     if (catchItem.value > 0) {
       await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [catchItem.value, req.user.id]);
     }
-    res.json({ success: true, data: { catch: catchItem.name, value: catchItem.value } });
+    
+    res.json({ 
+      success: true, 
+      data: { 
+        catch: catchItem.name, 
+        value: catchItem.value,
+        rarity: catchItem.rarity,
+        elapsed: Math.floor(elapsed)
+      } 
+    });
   } catch (err) {
     res.status(500).json({ success: false, message: '收竿失败' });
   }

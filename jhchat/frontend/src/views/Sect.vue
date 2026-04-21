@@ -287,25 +287,30 @@ function genderText(g) {
 
 async function loadSects() {
   try {
-    const res = await api.get('/sects')
+    const res = await api.get('/sect')
     if (res.success) sects.value = res.data || []
   } catch (e) {}
 }
 
 async function loadMySectInfo() {
   try {
-    const res = await api.get('/sects/info')
-    if (res.success && res.data.hasSect) {
+    const res = await api.get('/sect/info')
+    if (res.success && res.data?.hasSect) {
       mySectInfo.value = res.data
     }
   } catch (e) {
-    console.error('Load sect info failed:', e)
+    // 用户没有门派时 API 返回 404 是正常现象
+    // 不记录任何错误，避免控制台显示
+    // const isNoSuchSect = e.response?.status === 404 || e.message?.includes('门派不存在')
+    // if (!isNoSuchSect) {
+    //   console.error('Load sect info failed:', e.message)
+    // }
   }
 }
 
 async function claimSalary() {
   try {
-    const res = await api.post('/sects/checkin')
+    const res = await api.post('/sect/checkin')
     if (res.success) {
       alert(`✅ 领取俸禄 ${res.data.amount} 两`)
       await userStore.fetchProfile()
@@ -374,7 +379,7 @@ async function recruitMember() {
   
   recruiting.value = true
   try {
-    const res = await api.post('/sects/recruit', recruitForm.value)
+    const res = await api.post('/sect/recruit', recruitForm.value)
     if (res.success) {
       alert(res.message || '招收成功')
       showRecruitModal.value = false
@@ -404,7 +409,7 @@ async function confirmAbdicate() {
   
   abdicating.value = true
   try {
-    const res = await api.post('/sects/abdicate', { newLeader: abdicateTarget.value })
+    const res = await api.post('/sect/abdicate', { newLeader: abdicateTarget.value })
     if (res.success) {
       alert(res.message || '禅让成功')
       showAbdicateModal.value = false
@@ -426,7 +431,7 @@ async function expelMember(username) {
   if (!confirm(`确定要将${username}逐出师门吗？`)) return
   
   try {
-    const res = await api.post('/sects/expel', { username })
+    const res = await api.post('/sect/expel', { username })
     if (res.success) {
       alert(res.message || '开除成功')
       // 刷新成员列表
@@ -450,7 +455,7 @@ async function dissolveSect() {
   
   dissolving.value = true
   try {
-    const res = await api.post('/sects/dissolve', { name: mySectInfo.value.sect.name })
+    const res = await api.post('/sect/dissolve', { name: mySectInfo.value.sect.name })
     if (res.success) {
       alert(res.message || '门派已解散')
       showDissolveConfirm.value = false
@@ -482,7 +487,7 @@ async function createSect() {
   
   creating.value = true
   try {
-    const res = await api.post('/sects/create', createForm.value)
+    const res = await api.post('/sect/create', createForm.value)
     if (res.success) {
       alert(res.message || '创建成功')
       await userStore.fetchProfile()

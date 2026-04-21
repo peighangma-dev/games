@@ -1,40 +1,48 @@
 <template>
   <div class="chat-page">
     <div class="nav-bar">
+      <button class="menu-toggle" @click="toggleDrawer" aria-label="菜单">
+        <span class="hamburger"></span>
+      </button>
       <router-link to="/main" class="nav-logo">
         <span class="logo-icon">⚔️</span>
         <span class="logo-text">笑傲江湖</span>
       </router-link>
-      <router-link to="/main" class="nav-btn">首页</router-link>
-      <router-link to="/chat" class="nav-btn active">聊天</router-link>
-      <router-link to="/messages" class="nav-btn">邮件</router-link>
-      <router-link to="/sect" class="nav-btn">门派</router-link>
-      <router-link to="/marriage" class="nav-btn">婚姻</router-link>
-      <router-link to="/skills" class="nav-btn">武功</router-link>
-      <div class="nav-dropdown">
-        <button class="nav-btn dropdown-toggle">
-          游乐 <span class="dropdown-arrow">▼</span>
-        </button>
-        <div class="dropdown-menu">
-          <router-link to="/items" class="dropdown-item">🎒 物品</router-link>
-          <router-link to="/shop" class="dropdown-item">🏪 商店</router-link>
-          <router-link to="/market" class="dropdown-item">💰 商城</router-link>
-          <router-link to="/games" class="dropdown-item">🎲 游戏</router-link>
-          <router-link to="/pets" class="dropdown-item">🐾 宠物</router-link>
-          <router-link to="/alchemy" class="dropdown-item">🧪 配药</router-link>
-          <router-link to="/fishing" class="dropdown-item">🎣 钓鱼</router-link>
-          <router-link to="/fortune" class="dropdown-item">🔮 求签</router-link>
+      
+      <!-- 桌面端导航 -->
+      <div class="nav-links desktop-only">
+        <router-link to="/main" class="nav-btn">首页</router-link>
+        <router-link to="/chat" class="nav-btn active">聊天</router-link>
+        <router-link to="/messages" class="nav-btn">邮件</router-link>
+        <router-link to="/sect" class="nav-btn">门派</router-link>
+        <router-link to="/marriage" class="nav-btn">婚姻</router-link>
+        <router-link to="/skills" class="nav-btn">武功</router-link>
+        <div class="nav-dropdown">
+          <button class="nav-btn dropdown-toggle">
+            游乐 <span class="dropdown-arrow">▼</span>
+          </button>
+          <div class="dropdown-menu">
+            <router-link to="/items" class="dropdown-item">🎒 物品</router-link>
+            <router-link to="/shop" class="dropdown-item">🏪 商店</router-link>
+            <router-link to="/market" class="dropdown-item">💰 商城</router-link>
+            <router-link to="/games" class="dropdown-item">🎲 游戏</router-link>
+            <router-link to="/pets" class="dropdown-item">🐾 宠物</router-link>
+            <router-link to="/alchemy" class="dropdown-item">🧪 配药</router-link>
+            <router-link to="/fishing" class="dropdown-item">🎣 钓鱼</router-link>
+            <router-link to="/fortune" class="dropdown-item">🔮 求签</router-link>
+          </div>
         </div>
+        <router-link to="/rankings" class="nav-btn">排行</router-link>
+        <router-link to="/wishes" class="nav-btn">许愿</router-link>
+        <!-- 后台管理入口（管理员可见） -->
+        <router-link v-if="userStore.grade >= 6" to="/admin" class="nav-btn nav-admin">⚙️ 后台</router-link>
       </div>
-      <router-link to="/rankings" class="nav-btn">排行</router-link>
-      <router-link to="/wishes" class="nav-btn">许愿</router-link>
-      <!-- 后台管理入口（管理员可见） -->
-      <router-link v-if="userStore.grade >= 6" to="/admin" class="nav-btn nav-admin">⚙️ 后台</router-link>
+      
       <span class="nav-spacer"></span>
-      <span class="nav-user-info">
+      <span class="nav-user-info desktop-only">
         <span class="user-silver">💰 {{ userStore.silver }}两</span>
       </span>
-      <router-link to="/profile" class="nav-btn nav-profile">{{ userStore.username }}</router-link>
+      <router-link to="/profile" class="nav-btn nav-profile desktop-only">{{ userStore.username }}</router-link>
       <!-- 背景音乐控制 -->
       <div class="nav-music-control">
         <button @click="toggleMusic" class="nav-btn nav-music" :class="{ playing: isMusicPlaying }" :title="isMusicPlaying ? '暂停音乐' : '播放音乐'">
@@ -44,7 +52,76 @@
           <option v-for="music in musicList" :key="music.id" :value="music.id">{{ music.name }}</option>
         </select>
       </div>
-      <button @click="handleLogout" class="nav-btn nav-logout">退出</button>
+      <button @click="handleLogout" class="nav-btn nav-logout desktop-only">退出</button>
+    </div>
+    
+    <!-- 移动端抽屉菜单 -->
+    <div v-if="isDrawerOpen" class="drawer-overlay" @click="closeDrawer"></div>
+    <div :class="['drawer-menu', { open: isDrawerOpen }]">
+      <div class="drawer-header">
+        <span class="drawer-title">笑傲江湖</span>
+        <button class="drawer-close" @click="closeDrawer" aria-label="关闭菜单">✕</button>
+      </div>
+      <div class="drawer-user-info">
+        <div class="drawer-avatar">{{ userStore.username?.charAt(0).toUpperCase() }}</div>
+        <div class="drawer-user-details">
+          <div class="drawer-username">{{ userStore.username }}</div>
+          <div class="drawer-silver">💰 {{ userStore.silver }}两</div>
+        </div>
+      </div>
+      <nav class="drawer-nav">
+        <router-link to="/main" class="drawer-item" @click="closeDrawer">
+          <span class="drawer-icon">🏠</span>
+          <span class="drawer-label">首页</span>
+        </router-link>
+        <router-link to="/chat" class="drawer-item" @click="closeDrawer">
+          <span class="drawer-icon">💬</span>
+          <span class="drawer-label">聊天</span>
+        </router-link>
+        <router-link to="/messages" class="drawer-item" @click="closeDrawer">
+          <span class="drawer-icon">✉️</span>
+          <span class="drawer-label">邮件</span>
+        </router-link>
+        <router-link to="/sect" class="drawer-item" @click="closeDrawer">
+          <span class="drawer-icon">⚔️</span>
+          <span class="drawer-label">门派</span>
+        </router-link>
+        <router-link to="/marriage" class="drawer-item" @click="closeDrawer">
+          <span class="drawer-icon">❤️</span>
+          <span class="drawer-label">婚姻</span>
+        </router-link>
+        <router-link to="/skills" class="drawer-item" @click="closeDrawer">
+          <span class="drawer-icon">📜</span>
+          <span class="drawer-label">武功</span>
+        </router-link>
+        <div class="drawer-group">
+          <div class="drawer-group-title">🎮 游乐</div>
+          <router-link to="/items" class="drawer-item drawer-subitem" @click="closeDrawer">🎒 物品</router-link>
+          <router-link to="/shop" class="drawer-item drawer-subitem" @click="closeDrawer">🏪 商店</router-link>
+          <router-link to="/market" class="drawer-item drawer-subitem" @click="closeDrawer">💰 商城</router-link>
+          <router-link to="/games" class="drawer-item drawer-subitem" @click="closeDrawer">🎲 游戏</router-link>
+          <router-link to="/pets" class="drawer-item drawer-subitem" @click="closeDrawer">🐾 宠物</router-link>
+          <router-link to="/alchemy" class="drawer-item drawer-subitem" @click="closeDrawer">🧪 配药</router-link>
+          <router-link to="/fishing" class="drawer-item drawer-subitem" @click="closeDrawer">🎣 钓鱼</router-link>
+          <router-link to="/fortune" class="drawer-item drawer-subitem" @click="closeDrawer">🔮 求签</router-link>
+        </div>
+        <router-link to="/rankings" class="drawer-item" @click="closeDrawer">
+          <span class="drawer-icon">🏆</span>
+          <span class="drawer-label">排行</span>
+        </router-link>
+        <router-link to="/wishes" class="drawer-item" @click="closeDrawer">
+          <span class="drawer-icon">🌟</span>
+          <span class="drawer-label">许愿</span>
+        </router-link>
+        <router-link v-if="userStore.grade >= 6" to="/admin" class="drawer-item drawer-admin" @click="closeDrawer">
+          <span class="drawer-icon">⚙️</span>
+          <span class="drawer-label">后台管理</span>
+        </router-link>
+        <button @click="handleLogout" class="drawer-item drawer-logout">
+          <span class="drawer-icon">🚪</span>
+          <span class="drawer-label">退出登录</span>
+        </button>
+      </nav>
     </div>
     
     <!-- 隐藏的音乐播放器 -->
@@ -68,6 +145,20 @@
             <option v-for="user in privateChatUsers" :key="user" :value="user">{{ user }}</option>
           </select>
         </div>
+        
+        <!-- 房间切换控制栏 -->
+        <div class="room-control-bar">
+          <div class="room-selector">
+            <span class="room-label">🏠 房间:</span>
+            <select v-model="currentRoomId" @change="changeRoom" class="room-select" title="切换聊天房间">
+              <option v-for="room in rooms" :key="room.id" :value="room.id">{{ room.name }}</option>
+            </select>
+            <span class="room-user-count" v-if="roomOnlineUsers.length > 0" title="当前房间在线人数">
+              👥 {{ roomOnlineUsers.length }}人
+            </span>
+          </div>
+        </div>
+        
         <div class="messages-area" ref="messagesRef">
           <div
             v-for="msg in filteredMessages"
@@ -297,6 +388,17 @@ import api from '../utils/api'
 
 const router = useRouter()
 const userStore = useUserStore()
+const isDrawerOpen = ref(false)
+
+function toggleDrawer() {
+  isDrawerOpen.value = !isDrawerOpen.value
+  document.body.style.overflow = isDrawerOpen.value ? 'hidden' : ''
+}
+
+function closeDrawer() {
+  isDrawerOpen.value = false
+  document.body.style.overflow = ''
+}
 
 async function handleLogout() {
   await userStore.logout()
@@ -359,6 +461,7 @@ const currentEmoticonTab = ref('basic')
 
 // 背景音乐配置
 const musicList = [
+  { id: 'default_bgm', name: '🎵 默认背景音乐' },
   { id: 39, name: '笑傲江湖' },
   { id: 1, name: '爱的奉献' },
   { id: 2, name: '爱之初体验' },
@@ -410,7 +513,7 @@ const musicList = [
   { id: 49, name: '童年' },
   { id: 50, name: '弯弯的月亮' }
 ]
-const currentMusicId = ref(39) // 默认播放笑傲江湖
+const currentMusicId = ref('default_bgm')  // 默认显示"音乐"，不自动播放
 const isMusicPlaying = ref(false)
 const musicPlayer = ref(null)
 
@@ -866,6 +969,33 @@ onMounted(async () => {
   loadActions()
   loadCommands()
   setupSocket()
+  
+  // 尝试自动播放默认背景音乐
+  if (musicPlayer.value) {
+    try {
+      musicPlayer.value.volume = 0.7
+      const playPromise = musicPlayer.value.play()
+      if (playPromise !== undefined) {
+        playPromise.then(() => {
+          console.log('聊天室背景音乐自动播放成功')
+        }).catch(err => {
+          console.log('浏览器阻止自动播放，需要用户交互:', err)
+          // 用户首次点击后自动播放
+          const enableAutoPlay = () => {
+            musicPlayer.value.play().then(() => {
+              console.log('用户交互后开始播放背景音乐')
+            }).catch(() => {})
+            document.removeEventListener('click', enableAutoPlay)
+            document.removeEventListener('keydown', enableAutoPlay)
+          }
+          document.addEventListener('click', enableAutoPlay, { once: true })
+          document.addEventListener('keydown', enableAutoPlay, { once: true })
+        })
+      }
+    } catch (err) {
+      console.log('自动播放失败:', err)
+    }
+  }
 })
 
 onUnmounted(() => {
@@ -1145,6 +1275,63 @@ onUnmounted(() => {
   padding: 8px 16px;
   background: rgba(15, 15, 30, 0.6);
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+/* 房间切换控制栏 */
+.room-control-bar {
+  padding: 8px 16px;
+  background: linear-gradient(135deg, rgba(20, 20, 35, 0.9), rgba(30, 30, 50, 0.95));
+  border-bottom: 1px solid rgba(75, 135, 195, 0.3);
+  display: flex;
+  align-items: center;
+}
+
+.room-selector {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.room-label {
+  color: #7eb8da;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.room-select {
+  appearance: none;
+  background: linear-gradient(135deg, rgba(15, 15, 30, 0.8), rgba(20, 20, 40, 0.9));
+  border: 1px solid rgba(90, 139, 196, 0.4);
+  border-radius: 6px;
+  color: #ddd;
+  font-size: 13px;
+  padding: 6px 28px 6px 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%237eb8da' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+  min-width: 140px;
+}
+
+.room-select:hover {
+  border-color: rgba(90, 139, 196, 0.7);
+  background-color: rgba(25, 25, 50, 0.9);
+}
+
+.room-select:focus {
+  outline: none;
+  border-color: #5a8bc4;
+  box-shadow: 0 0 0 2px rgba(90, 139, 196, 0.2);
+}
+
+.room-user-count {
+  font-size: 12px;
+  color: #888;
+  padding: 2px 6px;
+  background: rgba(136, 136, 136, 0.1);
+  border-radius: 4px;
+  white-space: nowrap;
 }
 
 .msg-item {
@@ -2360,6 +2547,297 @@ onUnmounted(() => {
 .btn-sm:hover {
   transform: translateY(-1px);
   box-shadow: 0 3px 8px rgba(106, 172, 122, 0.4);
+}
+
+/* 移动端汉堡菜单按钮 */
+.menu-toggle {
+  display: none;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.menu-toggle:hover {
+  background: rgba(126, 184, 218, 0.15);
+}
+
+.hamburger {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  position: relative;
+  transition: background 0.2s;
+}
+
+.hamburger::before,
+.hamburger::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 2px;
+  background: #fff;
+  left: 0;
+  transition: transform 0.3s;
+}
+
+.hamburger::before {
+  top: -7px;
+}
+
+.hamburger::after {
+  top: 7px;
+}
+
+.menu-toggle.active .hamburger {
+  background: transparent;
+}
+
+.menu-toggle.active .hamburger::before {
+  transform: rotate(45deg);
+  top: 0;
+}
+
+.menu-toggle.active .hamburger::after {
+  transform: rotate(-45deg);
+  top: 0;
+}
+
+/* 桌面端导航容器 */
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* 移动端抽屉菜单 */
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 1999;
+  opacity: 0;
+  animation: fadeIn 0.3s forwards;
+}
+
+.drawer-menu {
+  position: fixed;
+  top: 0;
+  left: -280px;
+  width: 280px;
+  height: 100vh;
+  background: linear-gradient(135deg, #1a3a5c 0%, #0f1a26 100%);
+  z-index: 2000;
+  box-shadow: 2px 0 24px rgba(0, 0, 0, 0.5);
+  transition: transform 0.3s ease;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.drawer-menu.open {
+  transform: translateX(280px);
+}
+
+@keyframes fadeIn {
+  to { opacity: 1; }
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(126, 184, 218, 0.2);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.drawer-title {
+  font-size: 18px;
+  font-weight: bold;
+  color: #7eb8da;
+}
+
+.drawer-close {
+  width: 32px;
+  height: 32px;
+  background: rgba(126, 184, 218, 0.15);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 20px;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.drawer-close:hover {
+  background: rgba(126, 184, 218, 0.3);
+}
+
+.drawer-user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 20px;
+  border-bottom: 1px solid rgba(126, 184, 218, 0.1);
+}
+
+.drawer-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #7eb8da, #4a7c9d);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.drawer-user-details {
+  flex: 1;
+}
+
+.drawer-username {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 4px;
+}
+
+.drawer-silver {
+  font-size: 13px;
+  color: #ffd700;
+}
+
+.drawer-nav {
+  padding: 12px 0;
+}
+
+.drawer-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 20px;
+  color: #c0d8e8;
+  text-decoration: none;
+  transition: all 0.2s;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: left;
+  font-size: 15px;
+}
+
+.drawer-item:hover {
+  background: rgba(126, 184, 218, 0.15);
+  color: #fff;
+}
+
+.drawer-item.router-link-active {
+  background: rgba(126, 184, 218, 0.25);
+  color: #7eb8da;
+  border-left: 3px solid #7eb8da;
+}
+
+.drawer-icon {
+  font-size: 18px;
+  width: 24px;
+  text-align: center;
+}
+
+.drawer-label {
+  flex: 1;
+}
+
+.drawer-group {
+  margin: 8px 0;
+}
+
+.drawer-group-title {
+  padding: 10px 20px;
+  font-size: 13px;
+  color: #7eb8da;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.drawer-subitem {
+  padding-left: 56px;
+  font-size: 14px;
+}
+
+.drawer-admin {
+  margin-top: 12px;
+  border-top: 1px solid rgba(126, 184, 218, 0.15);
+  background: rgba(255, 193, 7, 0.08);
+}
+
+.drawer-admin:hover {
+  background: rgba(255, 193, 7, 0.15);
+}
+
+.drawer-logout {
+  margin-top: 8px;
+  border-top: 1px solid rgba(231, 76, 60, 0.2);
+  color: #ff6b6b;
+}
+
+.drawer-logout:hover {
+  background: rgba(231, 76, 60, 0.15);
+  color: #ff5252;
+}
+
+/* 响应式工具类 */
+.desktop-only {
+  display: flex;
+}
+
+@media (max-width: 992px) {
+  .menu-toggle {
+    display: flex;
+  }
+  
+  .desktop-only {
+    display: none !important;
+  }
+  
+  .nav-links {
+    display: none;
+  }
+  
+  .nav-user-info {
+    display: none;
+  }
+}
+
+@media (max-width: 768px) {
+  .nav-bar {
+    padding: 0 12px;
+  }
+  
+  .nav-logo {
+    font-size: 15px;
+  }
+  
+  .logo-icon {
+    font-size: 18px;
+  }
 }
 
 @media (max-width: 1024px) {

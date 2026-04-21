@@ -25,5 +25,18 @@ export default defineConfig({
       }
     },
     allowedHosts: ['.monkeycode-ai.online']
+  },
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          'vendor-vue': ['vue', 'pinia', 'vue-router'],
+          'vendor-element': ['element-plus'],
+          'vendor-socket': ['socket.io-client'],
+          'vendor-utils': ['axios', 'dayjs']
+        }
+      }
+    },
+    chunkSizeWarningLimit: 1000
   }
 })

@@ -18,7 +18,7 @@ exports.rankings = async (req, res) => {
 exports.getWishes = async (req, res) => {
   try {
     const [wishes] = await db.execute(
-      'SELECT id, name, gender, wish_type, content, created_at, view_count FROM wishes ORDER BY created_at DESC LIMIT 50'
+      'SELECT id, name as username, gender, wish_type, content, is_public, created_at FROM wishes ORDER BY created_at DESC LIMIT 50'
     );
     res.json({ success: true, data: wishes });
   } catch (err) {
@@ -93,6 +93,17 @@ exports.getNewsDetail = async (req, res) => {
     res.json({ success: true, data: news[0] });
   } catch (err) {
     res.status(500).json({ success: false, message: '查询新闻详情失败' });
+  }
+};
+
+// 获取江湖公告（announcements 表）
+exports.getAnnouncements = async (req, res) => {
+  try {
+    const [announcements] = await db.execute('SELECT * FROM announcements ORDER BY updated_at DESC LIMIT 1');
+    res.json({ success: true, data: announcements || [] });
+  } catch (err) {
+    console.error('获取公告失败:', err);
+    res.status(500).json({ success: false, message: '获取公告失败' });
   }
 };
 

@@ -158,7 +158,7 @@ function getActionText(record) {
 
 async function loadGarden() {
   try {
-    const res = await api.get('/api/garden/my-garden')
+    const res = await api.get('/garden/my-garden')
     if (res.success) {
       garden.value = res.data.garden
       plots.value = res.data.plots
@@ -172,7 +172,7 @@ async function loadGarden() {
 
 async function loadPlants() {
   try {
-    const res = await api.get('/api/garden/plants')
+    const res = await api.get('/garden/plants')
     if (res.success) {
       plants.value = res.data
       if (plants.value.length > 0) {
@@ -186,7 +186,7 @@ async function loadPlants() {
 
 async function loadRecords() {
   try {
-    const res = await api.get('/api/garden/records')
+    const res = await api.get('/garden/records')
     if (res.success) {
       records.value = res.data
     }
@@ -202,7 +202,7 @@ async function plant(plotNumber) {
   }
   
   try {
-    const res = await api.post('/api/garden/plant', {
+    const res = await api.post('/garden/plant', {
       plotNumber,
       plantId: selectedPlant.value.id
     })
@@ -219,7 +219,7 @@ async function plant(plotNumber) {
 
 async function water(plotNumber) {
   try {
-    const res = await api.post('/api/garden/water', { plotNumber })
+    const res = await api.post('/garden/water', { plotNumber })
     if (res.success) {
       alert('✅ ' + res.message)
       await loadGarden()
@@ -234,7 +234,7 @@ async function water(plotNumber) {
 
 async function harvest(plotNumber) {
   try {
-    const res = await api.post('/api/garden/harvest', { plotNumber })
+    const res = await api.post('/garden/harvest', { plotNumber })
     if (res.success) {
       alert('✅ ' + res.message)
       await loadGarden()

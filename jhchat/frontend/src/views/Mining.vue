@@ -48,21 +48,22 @@
           <div v-if="records.length === 0" class="empty-records">
             <p>暂无挖矿记录</p>
           </div>
-          <div v-else class="records-list">
-            <div v-for="record in records" :key="record.id" class="record-item" :class="record.rarities">
-              <div class="record-info">
-                <span class="record-name">{{ record.item_name }} {{ record.item_name.includes('矿石') || record.item_name.includes('金沙') || record.item_name.includes('玉石') || record.item_name.includes('寒铁') ? '💊' : '' }}</span>
-                <span class="record-type">{{ record.item_type }}</span>
-                <span class="record-rarity">{{ getRarityName(record.rarities) }}</span>
-              </div>
-              <div class="record-effect">
-                <span v-if="record.effect_neili">内力{{ record.effect_neili > 0 ? '+' : ''}}{{ record.effect_neili }}</span>
-                <span v-if="record.effect_tili">体力{{ record.effect_tili > 0 ? '+' : ''}}{{ record.effect_tili }}</span>
-                <span v-if="record.silver_reward && record.item_type !== '药材'">银子 +{{ record.silver_reward }}</span>
-              </div>
-              <span class="record-time">{{ formatDate(record.mined_at) }}</span>
+        <div v-else class="records-list">
+          <div v-for="record in records" :key="record.id" class="record-item" :class="record.rarities">
+            <div class="record-info">
+              <span class="record-name">{{ record.item_name }} {{ record.item_name.includes('矿石') || record.item_name.includes('金沙') || record.item_name.includes('玉石') || record.item_name.includes('寒铁') ? '💊' : '' }}</span>
+              <span class="record-type">{{ record.item_type === '杂物' ? '垃圾' : record.item_type }}</span>
+              <span class="record-rarity">{{ getRarityName(record.rarities) }}</span>
             </div>
+            <div class="record-effect">
+              <span v-if="record.item_type === '杂物'" class="trash-item">🗑️ 无价值</span>
+              <span v-else-if="record.effect_neili">内力{{ record.effect_neili > 0 ? '+' : ''}}{{ record.effect_neili }}</span>
+              <span v-else-if="record.effect_tili">体力{{ record.effect_tili > 0 ? '+' : ''}}{{ record.effect_tili }}</span>
+              <span v-else-if="record.silver_reward">银子 +{{ record.silver_reward }}</span>
+            </div>
+            <span class="record-time">{{ formatDate(record.mined_at) }}</span>
           </div>
+        </div>
         </div>
       </div>
     </div>
@@ -374,6 +375,18 @@ onMounted(() => {
 
 .record-item.common {
   border-left: 4px solid #6b7280;
+}
+
+.record-item.trash {
+  border-left: 4px solid #4a5568;
+  background: rgba(74, 85, 104, 0.1);
+  opacity: 0.7;
+}
+
+.trash-item {
+  color: #718096;
+  font-size: 13px;
+  font-style: italic;
 }
 
 .record-info {

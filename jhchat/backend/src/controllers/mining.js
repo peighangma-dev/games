@@ -9,14 +9,67 @@ const MINING_CONFIG = {
   maxTime: 10000 // 最多挖矿时间（毫秒）
 };
 
-// 挖矿物品概率配置（累计概率）
-const MINING_RARITY = {
-  legendary: { min: 0, max: 3, chance: 3 },    // 0-3%
-  epic: { min: 3, max: 10, chance: 7 },        // 3-10%
-  rare: { min: 10, max: 25, chance: 15 },      // 10-25%
-  uncommon: { min: 25, max: 45, chance: 20 },  // 25-45%
-  common: { min: 45, max: 100, chance: 55 }    // 45-100%
+// 挖矿基础概率配置（未考虑运势）
+const MINING_BASE_RARITY = {
+  legendary: { threshold: 3 },    // 0-3%
+  epic: { threshold: 10 },        // 3-10%
+  rare: { threshold: 25 },        // 10-25%
+  uncommon: { threshold: 45 },    // 25-45%
+  common: { threshold: 65 },      // 45-65%
+  trash: { threshold: 100 }       // 65-100% (35% 基础概率)
 };
+
+/**
+ * 获取用户今日运势值（0-100）
+ * 运势等级映射：great_luck:90-100, medium_luck:60-75, small_luck:45-59, small_misfortune:25-44, misfortune:0-24
+ */
+async function getTodayFortune(username) {
+  try {
+    const [fortunes] = await db.execute(
+      'SELECT fortune_type FROM user_fortunes WHERE username = ? AND fortune_date = CURDATE()',
+      [username]
+    );
+    
+    if (fortunes.length === 0) {
+      return 50; // 默认中等运势
+    }
+    
+    const fortuneType = fortunes[0].fortune_type;
+    const fortuneMap = {
+      'great_luck': 95,           // 大吉
+      'medium_luck': 67.5,        // 中吉
+      'small_luck': 52,           // 小吉
+      'small_misfortune': 34.5,   // 小凶
+      'misfortune': 12            // 大凶
+    };
+    
+    return fortuneMap[fortuneType] || 50;
+  } catch (err) {
+    console.error('Get fortune error:', err.message);
+    return 50;
+  }
+}
+
+/**
+ * 根据运势计算调整后的概率阈值
+ * 公式：fortune_bonus = (fortune_value - 50) * 0.35
+ * 运势越好，垃圾物品概率越低，好东西概率越高
+ * 运势越差，垃圾物品概率越高，好东西概率越低
+ */
+function getAdjustedRarity(fortuneValue) {
+  const fortune_bonus = (fortuneValue - 50) * 0.35;  // 范围：-17.5 到 +17.5
+  
+  const adjusted = {
+    legendary: { threshold: Math.max(1, MINING_BASE_RARITY.legendary.threshold - fortune_bonus) },
+    epic: { threshold: Math.max(MINING_BASE_RARITY.legendary.threshold + 1, MINING_BASE_RARITY.epic.threshold - fortune_bonus * 0.8) },
+    rare: { threshold: Math.max(MINING_BASE_RARITY.epic.threshold + 1, MINING_BASE_RARITY.rare.threshold - fortune_bonus * 0.6) },
+    uncommon: { threshold: Math.max(MINING_BASE_RARITY.rare.threshold + 1, MINING_BASE_RARITY.uncommon.threshold - fortune_bonus * 0.4) },
+    common: { threshold: Math.max(MINING_BASE_RARITY.uncommon.threshold + 1, MINING_BASE_RARITY.common.threshold - fortune_bonus * 0.3) },
+    trash: { threshold: 100 }
+  };
+  
+  return adjusted;
+}
 
 // 开始挖矿
 exports.startMining = async (req, res) => {
@@ -113,14 +166,20 @@ exports.finishMining = async (req, res) => {
       [userId]
     );
     
-    // 随机确定稀有度
+    // 获取今日运势
+    const fortuneValue = await getTodayFortune(username);
+    const adjustedRarity = getAdjustedRarity(fortuneValue);
+    
+    // 随机确定稀有度（基于运势调整后的概率）
     const rand = Math.random() * 100;
     let rarity = 'common';
     
-    if (rand < MINING_RARITY.legendary.max) rarity = 'legendary';
-    else if (rand < MINING_RARITY.epic.max) rarity = 'epic';
-    else if (rand < MINING_RARITY.rare.max) rarity = 'rare';
-    else if (rand < MINING_RARITY.uncommon.max) rarity = 'uncommon';
+    if (rand < adjustedRarity.legendary.threshold) rarity = 'legendary';
+    else if (rand < adjustedRarity.epic.threshold) rarity = 'epic';
+    else if (rand < adjustedRarity.rare.threshold) rarity = 'rare';
+    else if (rand < adjustedRarity.uncommon.threshold) rarity = 'uncommon';
+    else if (rand < adjustedRarity.common.threshold) rarity = 'common';
+    else rarity = 'trash'; // 垃圾物品
     
     // 根据稀有度获取物品
     const [items] = await db.execute(
@@ -158,21 +217,26 @@ exports.finishMining = async (req, res) => {
     // 更新任务进度（挖矿类任务）
     await quest.updateQuestProgress(username, 'gather', item.item_name, 1);
     
-    // 添加物品到药材库存
-    await db.execute(
-      `INSERT INTO alchemy_items (name, owner, quantity, potency) 
-       VALUES (?, ?, 1, 0)
-       ON DUPLICATE KEY UPDATE quantity = quantity + 1`,
-      [item.item_name, username]
-    );
+    let message = '';
     
-    let message = `恭喜！您挖到了【${item.item_name}】！`;
-    
-    if (item.item_type === '药材') {
-      message += `已放入药材仓库，可用于炼丹！`;
+    // 垃圾物品不计入物品库，只记录
+    if (item.item_type === '杂物') {
+      message = `唉！您挖到了【${item.item_name}】，这是一无用的废物，已丢到一旁。`;
     } else {
-      message += `可以卖得${item.silver_value}两银子！`;
-      await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [item.silver_value, userId]);
+      // 添加物品到药材库存
+      await db.execute(
+        `INSERT INTO alchemy_items (name, owner, quantity, potency) 
+         VALUES (?, ?, 1, 0)
+         ON DUPLICATE KEY UPDATE quantity = quantity + 1`,
+        [item.item_name, username]
+      );
+      
+      if (item.item_type === '药材') {
+        message = `恭喜！您挖到了【${item.item_name}】！已放入药材仓库，可用于炼丹！`;
+      } else {
+        message = `恭喜！您挖到了【${item.item_name}】！可以卖得${item.silver_value}两银子！`;
+        await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [item.silver_value, userId]);
+      }
     }
     
     res.json({

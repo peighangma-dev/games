@@ -1,5 +1,22 @@
 <template>
   <div class="login-page">
+    <!-- 首页背景音乐 -->
+    <audio 
+      ref="landingMusicPlayer" 
+      :src="musicStore.currentMusicUrl"
+      loop
+      @play="musicStore.onLandingPlay"
+      @pause="musicStore.onLandingPause"
+      @error="musicStore.onLandingError"
+    ></audio>
+    
+    <div v-if="musicStore.isLandingPlaying" class="music-playing-indicator" @click="toggleMusic" title="暂停背景音乐">
+      🔊 播放中
+    </div>
+    <button v-else @click="toggleMusic" class="music-toggle-btn" title="播放背景音乐">
+      🔇 播放背景音乐
+    </button>
+    
     <div class="ripple-bg login-bg">
       <div class="ripple-circle r1"></div>
       <div class="ripple-circle r2"></div>
@@ -33,18 +50,35 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { useMusicStore } from '../stores/music'
 import api from '../utils/api'
 
 const router = useRouter()
 const userStore = useUserStore()
+const musicStore = useMusicStore()
 
 const form = ref({ username: '', password: '' })
 const loading = ref(false)
 const errorMsg = ref('')
 const onlineCount = ref(0)
+const landingMusicPlayer = ref(null)
+
+// 音乐控制
+function toggleMusic() {
+  if (musicStore.isLandingPlaying.value) {
+    musicStore.pauseLandingMusic()
+  } else {
+    musicStore.playLandingMusic()
+  }
+}
+
+// 监听路由变化，暂停音乐
+onBeforeUnmount(() => {
+  musicStore.stopLandingMusicForNavigation()
+})
 
 async function handleLogin() {
   if (!form.value.username.trim() || !form.value.password.trim()) {
@@ -78,6 +112,12 @@ async function fetchOnlineCount() {
 
 onMounted(() => {
   fetchOnlineCount()
+  // 注册 audio 元素
+  musicStore.setLandingAudioElement(landingMusicPlayer.value)
+  // 自动尝试播放背景音乐（浏览器可能阻止自动播放）
+  setTimeout(() => {
+    musicStore.playLandingMusic()
+  }, 500)
 })
 </script>
 
@@ -222,5 +262,102 @@ onMounted(() => {
 
 .online-count {
   color: #4a7c59;
+}
+
+/* 音乐播放控制 */
+.music-toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1001;
+  padding: 8px 16px;
+  background: rgba(75, 135, 195, 0.3);
+  border: 1px solid rgba(126, 184, 218, 0.4);
+  border-radius: 20px;
+  color: #c0d8e8;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.music-toggle-btn:hover {
+  background: rgba(75, 135, 195, 0.5);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.music-playing-indicator {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1001;
+  padding: 8px 16px;
+  background: rgba(46, 204, 113, 0.3);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 20px;
+  color: #2ecc71;
+  cursor: pointer;
+  animation: pulse 2s infinite;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s;
+}
+
+.music-playing-indicator:hover {
+  background: rgba(46, 204, 113, 0.5);
+  transform: translateY(-1px);
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
+}
+
+/* 响应式设计 */
+@media (max-width: 480px) {
+  .login-card {
+    padding: 30px 20px;
+    width: 90vw;
+  }
+  
+  .login-header h1 {
+    font-size: 26px;
+    letter-spacing: 6px;
+  }
+  
+  .subtitle {
+    font-size: 12px;
+    letter-spacing: 3px;
+  }
+  
+  .form-group input {
+    padding: 9px 12px;
+    font-size: 14px;
+  }
+  
+  .login-btn {
+    padding: 11px;
+    font-size: 15px;
+    letter-spacing: 3px;
+  }
+  
+  .login-footer {
+    flex-direction: column;
+    gap: 10px;
+    text-align: center;
+  }
+  
+  .music-toggle-btn,
+  .music-playing-indicator {
+    top: 12px;
+    right: 12px;
+    padding: 6px 12px;
+    font-size: 12px;
+  }
 }
 </style>

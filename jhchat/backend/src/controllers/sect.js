@@ -352,9 +352,9 @@ exports.expel = async (req, res) => {
 exports.sectInfo = async (req, res) => {
   try {
     const userData = req.user;
-    const userSect = userData.sect;
+    const userSect = userData.sect || '无';
     
-    if (userSect === '无') {
+    if (userSect === '无' || !userSect) {
       return res.json({ 
         success: true, 
         data: { 
@@ -367,7 +367,13 @@ exports.sectInfo = async (req, res) => {
     // 获取门派信息
     const [sects] = await db.execute('SELECT * FROM sects WHERE name = ?', [userSect]);
     if (sects.length === 0) {
-      return res.json({ success: true, data: { hasSect: false } });
+      return res.json({ 
+        success: true, 
+        data: { 
+          hasSect: false,
+          message: '门派不存在'
+        } 
+      });
     }
     
     const sect = sects[0];

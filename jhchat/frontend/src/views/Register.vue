@@ -1,5 +1,22 @@
 <template>
   <div class="register-page">
+    <!-- 首页背景音乐 -->
+    <audio 
+      ref="landingMusicPlayer" 
+      :src="musicStore.currentMusicUrl"
+      loop
+      @play="musicStore.onLandingPlay"
+      @pause="musicStore.onLandingPause"
+      @error="musicStore.onLandingError"
+    ></audio>
+    
+    <div v-if="musicStore.isLandingPlaying" class="music-playing-indicator" @click="toggleMusic" title="暂停背景音乐">
+      🔊 播放中
+    </div>
+    <button v-else @click="toggleMusic" class="music-toggle-btn" title="播放背景音乐">
+      🔇 播放背景音乐
+    </button>
+    
     <div class="ripple-bg login-bg">
       <div class="ripple-circle r1"></div>
       <div class="ripple-circle r2"></div>
@@ -12,7 +29,7 @@
       <form @submit.prevent="handleRegister" class="register-form">
         <div class="form-group">
           <label>侠名</label>
-          <input v-model="form.username" type="text" placeholder="请输入用户名" />
+          <input v-model="form.username" type="text" maxlength="10" placeholder="请输入中文用户名（2-10 个汉字）" />
           <span v-if="errors.username" class="field-error">{{ errors.username }}</span>
         </div>
         <div class="form-group">
@@ -55,12 +72,14 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, onBeforeUnmount } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
+import { useMusicStore } from '../stores/music'
 
 const router = useRouter()
 const userStore = useUserStore()
+const musicStore = useMusicStore()
 
 const form = reactive({
   username: '',
@@ -78,6 +97,21 @@ const errors = reactive({
 })
 const loading = ref(false)
 const errorMsg = ref('')
+const landingMusicPlayer = ref(null)
+
+// 音乐控制
+function toggleMusic() {
+  if (musicStore.isLandingPlaying.value) {
+    musicStore.pauseLandingMusic()
+  } else {
+    musicStore.playLandingMusic()
+  }
+}
+
+// 监听路由变化，暂停音乐
+onBeforeUnmount(() => {
+  musicStore.stopLandingMusicForNavigation()
+})
 
 function validate() {
   let valid = true
@@ -89,15 +123,18 @@ function validate() {
   if (!form.username.trim()) {
     errors.username = '请输入用户名'
     valid = false
-  } else if (form.username.length < 2 || form.username.length > 20) {
-    errors.username = '用户名需2-20个字符'
+  } else if (!/^[一 - 龟]+$/.test(form.username.trim())) {
+    errors.username = '用户名必须是纯中文，不允许使用拼音、数字或符号'
+    valid = false
+  } else if (form.username.length < 2 || form.username.length > 10) {
+    errors.username = '用户名需 2-10 个汉字'
     valid = false
   }
   if (!form.password) {
     errors.password = '请输入密码'
     valid = false
   } else if (form.password.length < 6) {
-    errors.password = '密码至少6个字符'
+    errors.password = '密码至少 6 个字符'
     valid = false
   }
   if (form.password !== form.confirmPassword) {
@@ -140,6 +177,15 @@ async function handleRegister() {
     loading.value = false
   }
 }
+
+onMounted(() => {
+  // 注册 audio 元素
+  musicStore.setLandingAudioElement(landingMusicPlayer.value)
+  // 自动尝试播放背景音乐
+  setTimeout(() => {
+    musicStore.playLandingMusic()
+  }, 500)
+})
 </script>
 
 <style scoped>
@@ -276,5 +322,59 @@ async function handleRegister() {
   text-align: center;
   margin-top: 16px;
   font-size: 13px;
+}
+
+/* 音乐播放控制 */
+.music-toggle-btn {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1001;
+  padding: 8px 16px;
+  background: rgba(75, 135, 195, 0.3);
+  border: 1px solid rgba(126, 184, 218, 0.4);
+  border-radius: 20px;
+  color: #c0d8e8;
+  cursor: pointer;
+  transition: all 0.3s;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.music-toggle-btn:hover {
+  background: rgba(75, 135, 195, 0.5);
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+.music-playing-indicator {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  z-index: 1001;
+  padding: 8px 16px;
+  background: rgba(46, 204, 113, 0.3);
+  border: 1px solid rgba(46, 204, 113, 0.5);
+  border-radius: 20px;
+  color: #2ecc71;
+  cursor: pointer;
+  animation: pulse 2s infinite;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.3s;
+}
+
+.music-playing-indicator:hover {
+  background: rgba(46, 204, 113, 0.5);
+  transform: translateY(-1px);
+}
+
+@keyframes pulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(46, 204, 113, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(46, 204, 113, 0); }
 }
 </style>

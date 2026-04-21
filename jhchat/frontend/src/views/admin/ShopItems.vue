@@ -211,7 +211,7 @@ async function loadShopItems() {
   try {
     const res = await api.get('/admin/shop-items')
     if (res.success) {
-      shopItems.value = res.data || []
+      shopItems.value = res.data?.items || res.data || []
     }
   } catch (e) {
     alert('加载商店物品失败：' + (e.message || '未知错误'))

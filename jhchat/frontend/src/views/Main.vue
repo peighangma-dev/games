@@ -1,65 +1,34 @@
 <template>
-  <div class="main-page">
-    <div class="nav-bar">
-      <router-link to="/main" class="nav-logo">
-        <span class="logo-icon">⚔️</span>
-        <span class="logo-text">笑傲江湖</span>
-      </router-link>
-      <router-link to="/main" class="nav-btn active">首页</router-link>
-      <router-link to="/chat" class="nav-btn">聊天</router-link>
-      <router-link to="/messages" class="nav-btn">邮件</router-link>
-      <router-link to="/sect" class="nav-btn">门派</router-link>
-      <router-link to="/marriage" class="nav-btn">婚姻</router-link>
-      <router-link to="/skills" class="nav-btn">武功</router-link>
-      <div class="nav-dropdown">
-        <button class="nav-btn dropdown-toggle">
-          游乐 <span class="dropdown-arrow">▼</span>
-        </button>
-        <div class="dropdown-menu">
-          <router-link to="/items" class="dropdown-item">🎒 物品</router-link>
-          <router-link to="/shop" class="dropdown-item">🏪 商店</router-link>
-          <router-link to="/market" class="dropdown-item">💰 商城</router-link>
-          <router-link to="/games" class="dropdown-item">🎲 游戏</router-link>
-          <router-link to="/pets" class="dropdown-item">🐾 宠物</router-link>
-          <router-link to="/alchemy" class="dropdown-item">🧪 配药</router-link>
-          <router-link to="/herb-market" class="dropdown-item">💰 药材市场</router-link>
-          <router-link to="/garden" class="dropdown-item">🌱 药园</router-link>
-          <router-link to="/fishing" class="dropdown-item">🎣 钓鱼</router-link>
-          <router-link to="/mining" class="dropdown-item">⛏️ 挖矿</router-link>
-          <router-link to="/hunting" class="dropdown-item">🏹 狩猎</router-link>
-          <router-link to="/quests" class="dropdown-item">📜 任务</router-link>
-          <router-link to="/achievements" class="dropdown-item">🏅 成就</router-link>
-          <router-link to="/fortune" class="dropdown-item">🔮 求签</router-link>
+  <PageLayout>
+    <div class="main-page">
+      <div class="page-container">
+      <!-- 欢迎横幅 -->
+      <div class="welcome-banner card">
+        <div class="welcome-content">
+          <h2 class="welcome-title">🏮 欢迎重回江湖 🏮</h2>
+          <p class="welcome-text">
+            多年不见，甚是想念。<br>
+            曾经的热血江湖，如今的快意恩仇，<br>
+            让我们一起回忆那段仗剑走天涯的时光...
+          </p>
+          <p class="welcome-sub">
+            愿君在此重拾初心，再续江湖梦
+          </p>
         </div>
       </div>
-      <router-link to="/rankings" class="nav-btn">排行</router-link>
-      <router-link to="/wishes" class="nav-btn">许愿</router-link>
-      <!-- 后台管理入口（管理员可见） -->
-      <router-link v-if="userStore.grade >= 6" to="/admin" class="nav-btn nav-admin">⚙️ 后台</router-link>
-      <span class="nav-spacer"></span>
-      <span class="nav-user-info">
-        <span class="user-silver">💰 {{ userStore.silver }}两</span>
-      </span>
-      <router-link to="/profile" class="nav-btn nav-profile">{{ userStore.username }}</router-link>
-      <!-- 背景音乐控制 -->
-      <div class="nav-music-control">
-        <button @click="toggleMusic" class="nav-btn nav-music" :class="{ playing: isMusicPlaying }" :title="isMusicPlaying ? '暂停音乐' : '播放音乐'">
-          🎵 {{ isMusicPlaying ? currentMusicName : '音乐' }}
-        </button>
-        <select v-model="currentMusicId" @change="changeMusic" class="music-select" v-if="isMusicPlaying">
-          <option v-for="music in musicList" :key="music.id" :value="music.id">{{ music.name }}</option>
-        </select>
-      </div>
-      <button @click="handleLogout" class="nav-btn nav-logout">退出</button>
-    </div>
-    
-    <!-- 隐藏的音乐播放器 -->
-    <audio ref="musicPlayer" :src="currentMusicUrl" loop @play="onMusicPlay" @pause="onMusicPause" @error="onMusicError"></audio>
 
-    <div class="page-container">
+      <!-- 江湖公告（滚动显示） -->
       <div class="announcement card" v-if="announcement">
-        <h3 class="section-title">江湖公告</h3>
-        <p>{{ announcement }}</p>
+        <div class="announcement-header">
+          <h3 class="section-title">📜 江湖公告</h3>
+          <span class="announcement-badge">最新</span>
+        </div>
+        <div class="announcement-scroll-container">
+          <div class="announcement-scroll-content" :style="{ animationDuration: scrollDuration + 's' }">
+            <p class="announcement-content">{{ announcement }}</p>
+            <p class="announcement-content">{{ announcement }}</p>
+          </div>
+        </div>
       </div>
 
       <div class="user-summary card" v-if="userStore.profile">
@@ -161,8 +130,9 @@
         </div>
         <p v-else class="empty-text">暂无在线侠客</p>
       </div>
+      </div>
     </div>
-  </div>
+  </PageLayout>
 </template>
 
 <script setup>
@@ -170,69 +140,14 @@ import { ref, computed, onMounted, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
 import api from '../utils/api'
+import PageLayout from '../components/PageLayout.vue'
 
 const router = useRouter()
 const userStore = useUserStore()
 
 const announcement = ref('')
 const onlineUsers = ref([])
-
-// 背景音乐配置
-const musicList = [
-  { id: 39, name: '笑傲江湖' },
-  { id: 1, name: '爱的奉献' },
-  { id: 2, name: '爱之初体验' },
-  { id: 3, name: '把悲伤留给自己' },
-  { id: 4, name: '博基上校进行曲' },
-  { id: 5, name: '不要分离' },
-  { id: 6, name: '不知不觉想起你' },
-  { id: 7, name: '不装饰你的梦' },
-  { id: 8, name: '长江之歌' },
-  { id: 9, name: '迟来的爱' },
-  { id: 10, name: '春节' },
-  { id: 11, name: '春节序曲' },
-  { id: 12, name: '单身情歌' },
-  { id: 13, name: '独钓一江秋' },
-  { id: 14, name: '对你太在乎' },
-  { id: 15, name: '飞船即将坠毁' },
-  { id: 16, name: '奉献' },
-  { id: 17, name: '敢去承担爱' },
-  { id: 18, name: '给你一份惊喜' },
-  { id: 19, name: '国歌' },
-  { id: 20, name: '好日子' },
-  { id: 21, name: '洪湖水 2' },
-  { id: 22, name: '呼吸我' },
-  { id: 23, name: '加尔各答的天使' },
-  { id: 24, name: '将自己给你' },
-  { id: 25, name: '今宵多珍重' },
-  { id: 26, name: '京腔京韵' },
-  { id: 27, name: '九月九的酒' },
-  { id: 28, name: '辣妹子' },
-  { id: 29, name: '流浪歌手的情人' },
-  { id: 30, name: '路边的野花不要采' },
-  { id: 31, name: '没有恋爱的日子' },
-  { id: 32, name: '没有雨的夜里' },
-  { id: 33, name: '每一句说话' },
-  { id: 34, name: '梦回故园' },
-  { id: 35, name: '梦驼铃' },
-  { id: 36, name: '秘密情人' },
-  { id: 37, name: '呢喃' },
-  { id: 38, name: '你怎么舍得我难过' },
-  { id: 40, name: '千千阙歌' },
-  { id: 41, name: '如果可以再见你' },
-  { id: 42, name: '山丹丹' },
-  { id: 43, name: '伤了三个心' },
-  { id: 44, name: '伤心太平洋' },
-  { id: 45, name: '死不了' },
-  { id: 46, name: '天涯' },
-  { id: 47, name: '天意' },
-  { id: 48, name: '同桌的你' },
-  { id: 49, name: '童年' },
-  { id: 50, name: '弯弯的月亮' }
-]
-const currentMusicId = ref(39) // 默认播放笑傲江湖
-const isMusicPlaying = ref(false)
-const musicPlayer = ref(null)
+const scrollDuration = ref(30) // 滚动周期（秒）
 
 async function handleLogout() {
   await userStore.logout()
@@ -241,61 +156,6 @@ async function handleLogout() {
 
 function goToUser(username) {
   router.push('/profile')
-}
-
-// 背景音乐控制方法
-const currentMusicName = computed(() => {
-  const music = musicList.find(m => m.id === currentMusicId.value)
-  return music ? music.name : '音乐'
-})
-
-const currentMusicUrl = computed(() => {
-  return `/assets/music/${currentMusicId.value}.mp3`
-})
-
-function toggleMusic() {
-  if (!musicPlayer.value) return
-  if (isMusicPlaying.value) {
-    musicPlayer.value.pause()
-  } else {
-    musicPlayer.value.play().catch(err => {
-      console.warn('音乐播放失败:', err)
-      alert('🎵 请点击页面任意位置后再试（浏览器自动播放策略限制）')
-    })
-  }
-}
-
-function changeMusic() {
-  if (!musicPlayer.value || !isMusicPlaying.value) return
-  musicPlayer.value.pause()
-  nextTick(() => {
-    musicPlayer.value.play()
-  })
-}
-
-function onMusicPlay() {
-  isMusicPlaying.value = true
-}
-
-function onMusicPause() {
-  isMusicPlaying.value = false
-}
-
-function onMusicError(e) {
-  console.warn('音乐播放失败:', e)
-  isMusicPlaying.value = false
-}
-
-// 页面加载时自动播放音乐
-async function autoPlayMusic() {
-  await nextTick()
-  if (musicPlayer.value) {
-    try {
-      await musicPlayer.value.play()
-    } catch (err) {
-      console.log('自动播放被浏览器阻止，需要用户交互')
-    }
-  }
 }
 
 async function loadNews() {
@@ -318,8 +178,6 @@ onMounted(async () => {
   await userStore.fetchProfile()
   loadNews()
   loadOnline()
-  // 尝试自动播放音乐
-  autoPlayMusic()
 })
 </script>
 
@@ -330,141 +188,6 @@ onMounted(async () => {
 
 .nav-dropdown {
   position: relative;
-}
-
-.dropdown-toggle {
-  position: relative;
-}
-
-.dropdown-arrow {
-  font-size: 10px;
-  margin-left: 4px;
-  opacity: 0.7;
-}
-
-.dropdown-menu {
-  position: absolute;
-  top: 100%;
-  left: 0;
-  background: #1a3a5c;
-  border: 1px solid rgba(126, 184, 218, 0.3);
-  border-radius: 8px;
-  padding: 8px 0;
-  min-width: 160px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
-  opacity: 0;
-  visibility: hidden;
-  transform: translateY(-10px);
-  transition: all 0.2s;
-}
-
-.nav-dropdown:hover .dropdown-menu {
-  opacity: 1;
-  visibility: visible;
-  transform: translateY(0);
-}
-
-.dropdown-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  text-decoration: none;
-  color: #c0d8e8;
-  transition: all 0.2s;
-}
-
-.dropdown-item:hover {
-  background: rgba(126, 184, 218, 0.15);
-  color: #fff;
-}
-
-.nav-profile {
-  background: rgba(126, 184, 218, 0.1);
-}
-
-.nav-admin {
-  background: rgba(255, 193, 7, 0.15);
-  border: 1px solid rgba(255, 193, 7, 0.3);
-  color: #ffc107;
-}
-
-.nav-admin:hover {
-  background: rgba(255, 193, 7, 0.25);
-  border-color: rgba(255, 193, 7, 0.5);
-}
-
-.nav-logout {
-  border: none;
-  background: transparent;
-}
-
-.nav-logout:hover {
-  background: rgba(231, 76, 60, 0.2);
-  color: #ff6b6b;
-}
-
-/* 背景音乐控制 */
-.nav-music-control {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin: 0 8px;
-}
-
-.nav-music {
-  background: rgba(126, 184, 218, 0.15);
-  border: 1px solid rgba(126, 184, 218, 0.3);
-  color: #7eb8da;
-  padding: 6px 12px;
-  border-radius: 16px;
-  font-size: 13px;
-  transition: all 0.3s;
-  white-space: nowrap;
-}
-
-.nav-music:hover {
-  background: rgba(126, 184, 218, 0.25);
-  border-color: rgba(126, 184, 218, 0.5);
-  transform: translateY(-1px);
-}
-
-.nav-music.playing {
-  background: rgba(106, 172, 122, 0.3);
-  border-color: rgba(106, 172, 122, 0.6);
-  color: #6aac7a;
-  animation: musicPulse 2s ease-in-out infinite;
-}
-
-@keyframes musicPulse {
-  0%, 100% {
-    box-shadow: 0 0 0 0 rgba(106, 172, 122, 0.4);
-  }
-  50% {
-    box-shadow: 0 0 0 8px rgba(106, 172, 122, 0);
-  }
-}
-
-.music-select {
-  background: rgba(10, 10, 20, 0.9);
-  border: 1px solid rgba(126, 184, 218, 0.3);
-  color: #ccc;
-  padding: 4px 8px;
-  border-radius: 6px;
-  font-size: 12px;
-  max-width: 120px;
-  cursor: pointer;
-  transition: all 0.2s;
-}
-
-.music-select:hover {
-  border-color: rgba(126, 184, 218, 0.6);
-}
-
-.music-select:focus {
-  outline: none;
-  border-color: #7eb8da;
-  box-shadow: 0 0 8px rgba(126, 184, 218, 0.3);
 }
 
 .page-container {
@@ -481,10 +204,132 @@ onMounted(async () => {
   padding-left: 10px;
 }
 
-.announcement p {
-  color: #ccc;
+/* 欢迎横幅 */
+.welcome-banner {
+  background: linear-gradient(135deg, rgba(75, 135, 195, 0.15) 0%, rgba(26, 58, 92, 0.2) 100%);
+  border: 1px solid rgba(126, 184, 218, 0.3);
+  padding: 30px 40px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.welcome-banner::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(circle, rgba(126, 184, 218, 0.05) 0%, transparent 70%);
+  animation: welcome-rotate 30s linear infinite;
+}
+
+@keyframes welcome-rotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.welcome-content {
+  position: relative;
+  z-index: 1;
+}
+
+.welcome-title {
+  font-size: 28px;
+  color: #7eb8da;
+  margin-bottom: 16px;
+  text-shadow: 0 0 20px rgba(126, 184, 218, 0.4);
+  letter-spacing: 4px;
+}
+
+.welcome-text {
+  font-size: 16px;
+  color: #c0d8e8;
+  line-height: 1.8;
+  margin-bottom: 12px;
+}
+
+.welcome-sub {
   font-size: 14px;
-  line-height: 1.6;
+  color: #888;
+  font-style: italic;
+  letter-spacing: 2px;
+}
+
+/* 公告优化（滚动显示） */
+.announcement {
+  background: linear-gradient(135deg, rgba(230, 180, 60, 0.1) 0%, rgba(75, 135, 195, 0.08) 100%);
+  border: 1px solid rgba(230, 180, 60, 0.3);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  overflow: hidden;
+}
+
+.announcement-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.announcement-badge {
+  display: inline-block;
+  padding: 2px 10px;
+  background: linear-gradient(135deg, #e6b43c, #f0c840);
+  color: #1a1a2e;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 12px;
+  animation: badge-pulse 2s infinite;
+  box-shadow: 0 2px 8px rgba(230, 180, 60, 0.4);
+}
+
+@keyframes badge-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
+
+.announcement-scroll-container {
+  overflow: hidden;
+  position: relative;
+  height: 60px; /* 固定高度 */
+}
+
+@media (max-width: 600px) {
+  .announcement-scroll-container {
+    height: 50px; /* 移动端减小高度 */
+  }
+}
+
+.announcement-scroll-content {
+  position: absolute;
+  width: 100%;
+  animation: scroll-up 30s linear infinite;
+}
+
+@keyframes scroll-up {
+  0% {
+    transform: translateY(0);
+  }
+  100% {
+    transform: translateY(-100%);
+  }
+}
+
+.announcement-content {
+  color: #f0e68c;
+  font-size: 14px;
+  line-height: 1.8;
+  padding-left: 12px;
+  border-left: 2px solid rgba(230, 180, 60, 0.5);
+  white-space: pre-line; /* 保留换行 */
+  margin: 0;
+}
+
+/* 暂停滚动（hover 时） */
+.announcement-scroll-container:hover .announcement-scroll-content {
+  animation-play-state: paused;
 }
 
 .summary-grid {
@@ -577,11 +422,51 @@ onMounted(async () => {
 }
 
 @media (max-width: 600px) {
+  .page-container {
+    padding: 12px;
+  }
+  
   .summary-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  
   .entry-grid {
     grid-template-columns: repeat(3, 1fr);
+  }
+  
+  .welcome-banner {
+    padding: 20px 16px;
+  }
+  
+  .welcome-title {
+    font-size: 20px;
+    letter-spacing: 2px;
+  }
+  
+  .welcome-text {
+    font-size: 14px;
+    line-height: 1.6;
+  }
+  
+  .welcome-sub {
+    font-size: 12px;
+  }
+  
+  .announcement {
+    padding: 12px 14px;
+  }
+  
+  .announcement-header {
+    margin-bottom: 8px;
+  }
+  
+  .announcement-scroll-container {
+    height: 50px; /* 移动端减小高度 */
+  }
+  
+  .announcement-content {
+    font-size: 12px;
+    line-height: 1.6;
   }
 }
 </style>

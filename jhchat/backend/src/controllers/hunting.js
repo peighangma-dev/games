@@ -281,7 +281,7 @@ exports.finishHunt = async (req, res) => {
     // 记录打猎结果
     await db.execute(
       `INSERT INTO hunting_records (user_id, username, type, item_name, item_type, reward_silver, reward_exp, is_success, rarities) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+       VALUES (?, ?, 'hunt', ?, ?, ?, ?, ?, ?)`,
       [userId, username, item.item_name, item.item_type, item.silver_value, item.effect_neili || 0, isSuccess ? 1 : 0, rarity]
     );
     

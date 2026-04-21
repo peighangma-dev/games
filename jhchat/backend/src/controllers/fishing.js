@@ -10,14 +10,64 @@ const FISHING_CONFIG = {
   maxTime: 8000  // 最多钓鱼时间（毫秒）
 };
 
-// 钓鱼物品概率配置（累计概率）
-const FISH_RARITY = {
-  legendary: { min: 0, max: 5, chance: 5 },    // 0-5%
-  epic: { min: 5, max: 15, chance: 10 },       // 5-15%
-  rare: { min: 15, max: 30, chance: 15 },      // 15-30%
-  uncommon: { min: 30, max: 50, chance: 20 },  // 30-50%
-  common: { min: 50, max: 100, chance: 50 }    // 50-100%
+// 钓鱼基础概率配置（未考虑运势）
+const FISH_BASE_RARITY = {
+  legendary: { threshold: 5 },    // 0-5%
+  epic: { threshold: 15 },        // 5-15%
+  rare: { threshold: 30 },        // 15-30%
+  uncommon: { threshold: 50 },    // 30-50%
+  common: { threshold: 70 },      // 50-70%
+  trash: { threshold: 100 }       // 70-100% (30% 基础概率)
 };
+
+/**
+ * 获取用户今日运势值（0-100）
+ */
+async function getTodayFortune(username) {
+  try {
+    const [fortunes] = await db.execute(
+      'SELECT fortune_type FROM user_fortunes WHERE username = ? AND fortune_date = CURDATE()',
+      [username]
+    );
+    
+    if (fortunes.length === 0) {
+      return 50; // 默认中等运势
+    }
+    
+    const fortuneType = fortunes[0].fortune_type;
+    const fortuneMap = {
+      'great_luck': 95,           // 大吉
+      'medium_luck': 67.5,        // 中吉
+      'small_luck': 52,           // 小吉
+      'small_misfortune': 34.5,   // 小凶
+      'misfortune': 12            // 大凶
+    };
+    
+    return fortuneMap[fortuneType] || 50;
+  } catch (err) {
+    console.error('Get fortune error:', err.message);
+    return 50;
+  }
+}
+
+/**
+ * 根据运势计算调整后的概率阈值
+ * 公式：fortune_bonus = (fortune_value - 50) * 0.35
+ */
+function getAdjustedRarity(fortuneValue) {
+  const fortune_bonus = (fortuneValue - 50) * 0.35;  // 范围：-17.5 到 +17.5
+  
+  const adjusted = {
+    legendary: { threshold: Math.max(1, FISH_BASE_RARITY.legendary.threshold - fortune_bonus) },
+    epic: { threshold: Math.max(FISH_BASE_RARITY.legendary.threshold + 1, FISH_BASE_RARITY.epic.threshold - fortune_bonus * 0.8) },
+    rare: { threshold: Math.max(FISH_BASE_RARITY.epic.threshold + 1, FISH_BASE_RARITY.rare.threshold - fortune_bonus * 0.6) },
+    uncommon: { threshold: Math.max(FISH_BASE_RARITY.rare.threshold + 1, FISH_BASE_RARITY.uncommon.threshold - fortune_bonus * 0.4) },
+    common: { threshold: Math.max(FISH_BASE_RARITY.uncommon.threshold + 1, FISH_BASE_RARITY.common.threshold - fortune_bonus * 0.3) },
+    trash: { threshold: 100 }
+  };
+  
+  return adjusted;
+}
 
 // 开始钓鱼
 exports.startFishing = async (req, res) => {
@@ -114,14 +164,20 @@ exports.finishFishing = async (req, res) => {
       [userId]
     );
     
-    // 随机确定稀有度
+    // 获取今日运势
+    const fortuneValue = await getTodayFortune(username);
+    const adjustedRarity = getAdjustedRarity(fortuneValue);
+    
+    // 随机确定稀有度（基于运势调整后的概率）
     const rand = Math.random() * 100;
     let rarity = 'common';
     
-    if (rand < FISH_RARITY.legendary.max) rarity = 'legendary';
-    else if (rand < FISH_RARITY.epic.max) rarity = 'epic';
-    else if (rand < FISH_RARITY.rare.max) rarity = 'rare';
-    else if (rand < FISH_RARITY.uncommon.max) rarity = 'uncommon';
+    if (rand < adjustedRarity.legendary.threshold) rarity = 'legendary';
+    else if (rand < adjustedRarity.epic.threshold) rarity = 'epic';
+    else if (rand < adjustedRarity.rare.threshold) rarity = 'rare';
+    else if (rand < adjustedRarity.uncommon.threshold) rarity = 'uncommon';
+    else if (rand < adjustedRarity.common.threshold) rarity = 'common';
+    else rarity = 'trash'; // 垃圾物品
     
     // 根据稀有度获取物品
     const [items] = await db.execute(
@@ -166,31 +222,53 @@ exports.finishFishing = async (req, res) => {
     }
     
     // 根据物品类型添加效果
-    let message = `恭喜！您钓到了【${item.item_name}】！`;
+    let message = '';
     
-    if (item.item_type === '药品') {
-      await db.execute(
-        'UPDATE users SET neili = neili + ?, tili = tili + ? WHERE id = ?',
-        [item.effect_neili, item.effect_tili, userId]
-      );
-      message += `食用后内力 +${item.effect_neili}，体力 +${item.effect_tili}！`;
+    // 垃圾物品不计入物品库，只记录
+    if (item.item_type === '杂物') {
+      message = `唉！您钓到了【${item.item_name}】，这是一无用的废物，已丢回水中。`;
+    } else {
+      // 更新成就进度
+      await achievement.updateProgress(username, 'fishing', 1);
+      if (item.rarities === 'legendary') {
+        await achievement.updateProgress(username, 'legendary', 1);
+      }
       
-      // 添加到物品栏
-      await db.execute(
-        `INSERT INTO items (name, owner, type, neili_bonus, tili_bonus, quantity, is_equipped) 
-         VALUES (?, ?, 'medicine', ?, ?, 1, 0)`,
-        [item.item_name, username, item.effect_neili, item.effect_tili]
-      );
-    } else if (item.item_type === '食材') {
-      message += `可以卖得${item.silver_value}两银子！`;
-      await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [item.silver_value, userId]);
-    } else if (item.item_type === '暗器') {
-      message += `获得了强力暗器！`;
-      await db.execute(
-        `INSERT INTO items (name, owner, type, attack, tili_bonus, quantity, is_equipped) 
-         VALUES (?, ?, 'weapon', ?, ?, 1, 0)`,
-        [item.item_name, username, Math.abs(item.effect_neili), Math.abs(item.effect_tili)]
-      );
+      // 更新钓鱼排行榜
+      await ranking.updateFishingRecord(username, item.item_name, 0, item.silver_value, item.rarities);
+      
+      // 更新任务进度（钓鱼类任务）
+      if (item.item_type === '药材') {
+        await quest.updateQuestProgress(username, 'gather', item.item_name, 1);
+      }
+      
+      if (item.item_type === '药品') {
+        await db.execute(
+          'UPDATE users SET neili = neili + ?, tili = tili + ? WHERE id = ?',
+          [item.effect_neili, item.effect_tili, userId]
+        );
+        message = `恭喜！您钓到了【${item.item_name}】！食用后内力 +${item.effect_neili}，体力 +${item.effect_tili}！`;
+        
+        // 添加到物品栏
+        await db.execute(
+          `INSERT INTO items (name, owner, type, neili_bonus, tili_bonus, quantity, is_equipped) 
+           VALUES (?, ?, 'medicine', ?, ?, 1, 0)`,
+          [item.item_name, username, item.effect_neili, item.effect_tili]
+        );
+      } else if (item.item_type === '食材') {
+        message = `恭喜！您钓到了【${item.item_name}】！可以卖得${item.silver_value}两银子！`;
+        await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [item.silver_value, userId]);
+      } else if (item.item_type === '暗器') {
+        message = `恭喜！您钓到了【${item.item_name}】！获得了强力暗器！`;
+        await db.execute(
+          `INSERT INTO items (name, owner, type, attack, tili_bonus, quantity, is_equipped) 
+           VALUES (?, ?, 'weapon', ?, ?, 1, 0)`,
+          [item.item_name, username, Math.abs(item.effect_neili), Math.abs(item.effect_tili)]
+        );
+      } else {
+        message = `恭喜！您钓到了【${item.item_name}】！可以卖得${item.silver_value}两银子！`;
+        await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [item.silver_value, userId]);
+      }
     }
     
     res.json({

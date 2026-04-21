@@ -672,3 +672,315 @@ exports.restockShopItem = async (req, res) => {
     res.status(500).json({ success: false, message: '补货失败' });
   }
 };
+
+// 随机事件管理
+exports.getRandomEvents = async (req, res) => {
+  try {
+    const { page = 1, limit = 20, eventType, isEnabled } = req.query;
+    const offset = (page - 1) * limit;
+    let where = '1=1';
+    const params = [];
+    
+    if (eventType) { where += ' AND event_type = ?'; params.push(eventType); }
+    if (isEnabled !== undefined) { where += ' AND is_enabled = ?'; params.push(isEnabled === 'true' ? 1 : 0); }
+    
+    const [events] = await db.execute(
+      `SELECT * FROM random_events WHERE ${where} ORDER BY sort_order ASC, id DESC LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), offset]
+    );
+    
+    const [countResult] = await db.execute(`SELECT COUNT(*) as total FROM random_events WHERE ${where}`, params);
+    
+    res.json({ success: true, data: { events, total: countResult[0].total, page: parseInt(page), limit: parseInt(limit) } });
+  } catch (err) {
+    console.error('Get random events error:', err);
+    res.status(500).json({ success: false, message: '查询随机事件列表失败' });
+  }
+};
+
+exports.getRandomEventDetail = async (req, res) => {
+  try {
+    const [events] = await db.execute('SELECT * FROM random_events WHERE id = ?', [req.params.id]);
+    if (events.length === 0) return res.status(404).json({ success: false, message: '事件不存在' });
+    res.json({ success: true, data: events[0] });
+  } catch (err) {
+    console.error('Get random event detail error:', err);
+    res.status(500).json({ success: false, message: '查询事件详情失败' });
+  }
+};
+
+exports.createRandomEvent = async (req, res) => {
+  try {
+    const {
+      event_name, event_type, message_template, effect_type, effect_value_min,
+      effect_value_max, probability, cooldown_minutes, min_grade, is_enabled, is_global, icon, sort_order
+    } = req.body;
+    
+    if (!event_name || !event_type || !message_template) {
+      return res.status(400).json({ success: false, message: '事件名称、类型和消息模板为必填项' });
+    }
+    
+    await db.execute(
+      `INSERT INTO random_events (
+        event_name, event_type, message_template, effect_type, effect_value_min, effect_value_max,
+        probability, cooldown_minutes, min_grade, is_enabled, is_global, icon, sort_order
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        event_name, event_type, message_template, effect_type || 'none',
+        effect_value_min || 0, effect_value_max || 0, probability || 100,
+        cooldown_minutes || 30, min_grade || 1, is_enabled ? 1 : 0,
+        is_global ? 1 : 0, icon || null, sort_order || 0
+      ]
+    );
+    
+    res.json({ success: true, message: '随机事件已创建' });
+  } catch (err) {
+    console.error('Create random event error:', err);
+    res.status(500).json({ success: false, message: '创建随机事件失败' });
+  }
+};
+
+exports.updateRandomEvent = async (req, res) => {
+  try {
+    const {
+      event_name, event_type, message_template, effect_type, effect_value_min,
+      effect_value_max, probability, cooldown_minutes, min_grade, is_enabled, is_global, icon, sort_order
+    } = req.body;
+    
+    const fields = [];
+    const params = [];
+    
+    if (event_name !== undefined) { fields.push('event_name = ?'); params.push(event_name); }
+    if (event_type !== undefined) { fields.push('event_type = ?'); params.push(event_type); }
+    if (message_template !== undefined) { fields.push('message_template = ?'); params.push(message_template); }
+    if (effect_type !== undefined) { fields.push('effect_type = ?'); params.push(effect_type); }
+    if (effect_value_min !== undefined) { fields.push('effect_value_min = ?'); params.push(effect_value_min); }
+    if (effect_value_max !== undefined) { fields.push('effect_value_max = ?'); params.push(effect_value_max); }
+    if (probability !== undefined) { fields.push('probability = ?'); params.push(probability); }
+    if (cooldown_minutes !== undefined) { fields.push('cooldown_minutes = ?'); params.push(cooldown_minutes); }
+    if (min_grade !== undefined) { fields.push('min_grade = ?'); params.push(min_grade); }
+    if (is_enabled !== undefined) { fields.push('is_enabled = ?'); params.push(is_enabled ? 1 : 0); }
+    if (is_global !== undefined) { fields.push('is_global = ?'); params.push(is_global ? 1 : 0); }
+    if (icon !== undefined) { fields.push('icon = ?'); params.push(icon); }
+    if (sort_order !== undefined) { fields.push('sort_order = ?'); params.push(sort_order); }
+    
+    if (fields.length === 0) return res.status(400).json({ success: false, message: '没有需要更新的字段' });
+    
+    params.push(req.params.id);
+    await db.execute(`UPDATE random_events SET ${fields.join(', ')} WHERE id = ?`, params);
+    
+    res.json({ success: true, message: '随机事件已更新' });
+  } catch (err) {
+    console.error('Update random event error:', err);
+    res.status(500).json({ success: false, message: '更新随机事件失败' });
+  }
+};
+
+exports.deleteRandomEvent = async (req, res) => {
+  try {
+    await db.execute('DELETE FROM random_events WHERE id = ?', [req.params.id]);
+    res.json({ success: true, message: '随机事件已删除' });
+  } catch (err) {
+    console.error('Delete random event error:', err);
+    res.status(500).json({ success: false, message: '删除随机事件失败' });
+  }
+};
+
+exports.toggleRandomEvent = async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    // 查询当前状态
+    const [events] = await db.execute('SELECT is_enabled FROM random_events WHERE id = ?', [id]);
+    if (events.length === 0) return res.status(404).json({ success: false, message: '事件不存在' });
+    
+    // 切换状态
+    const newStatus = events[0].is_enabled ? 0 : 1;
+    await db.execute('UPDATE random_events SET is_enabled = ? WHERE id = ?', [newStatus, id]);
+    
+    res.json({ success: true, message: newStatus ? '事件已启用' : '事件已禁用' });
+  } catch (err) {
+    console.error('Toggle random event error:', err);
+    res.status(500).json({ success: false, message: '切换事件状态失败' });
+  }
+};
+
+exports.triggerRandomEvent = async (req, res) => {
+  try {
+    const { event_id, target_user_id } = req.body;
+    
+    if (!event_id) return res.status(400).json({ success: false, message: '事件 ID 不能为空' });
+    
+    // 查询事件详情
+    const [events] = await db.execute('SELECT * FROM random_events WHERE id = ? AND is_enabled = 1', [event_id]);
+    if (events.length === 0) return res.status(404).json({ success: false, message: '事件不存在或未启用' });
+    
+    const event = events[0];
+    
+    // 根据效果类型计算效果值
+    let effect_value = 0;
+    if (event.effect_type !== 'none') {
+      // 效果类型不为 none 时都计算效果值
+      if (event.effect_type === 'all') {
+        // 全属性提升，效果值使用固定值或小范围
+        effect_value = Math.floor(Math.random() * (event.effect_value_max - event.effect_value_min + 1)) + event.effect_value_min;
+      } else {
+        const min = event.effect_value_min;
+        const max = event.effect_value_max;
+        effect_value = Math.floor(Math.random() * (Math.abs(max - min + 1))) + Math.min(min, max);
+      }
+    }
+    
+    const io = req.app.get('io');
+    
+    // 全服事件处理
+    if (event.is_global === 1) {
+      // 获取所有在线用户
+      const [onlineUsers] = await db.execute(
+        'SELECT user_id, id as online_id FROM online_users'
+      );
+      
+      const affectedUsers = [];
+      
+      // 对每个在线用户应用效果
+      if (event.effect_type !== 'none' && onlineUsers.length > 0) {
+        for (const user of onlineUsers) {
+          const uid = user.user_id;
+          
+          if (event.effect_type === 'silver') {
+            await db.execute('UPDATE users SET silver = silver + ? WHERE id = ?', [effect_value, uid]);
+          } else if (event.effect_type === 'neili') {
+            await db.execute('UPDATE users SET neili = GREATEST(0, neili + ?) WHERE id = ?', [effect_value, uid]);
+          } else if (event.effect_type === 'tili') {
+            await db.execute('UPDATE users SET tili = GREATEST(0, tili + ?) WHERE id = ?', [effect_value, uid]);
+          } else if (event.effect_type === 'wugong') {
+            await db.execute('UPDATE users SET grade = grade + ? WHERE id = ? AND grade < 10', [Math.floor(effect_value / 10) || 1, uid]);
+          } else if (event.effect_type === 'all') {
+            await db.execute(
+              'UPDATE users SET silver = silver + ?, neili = neili + ?, tili = tili + ? WHERE id = ?',
+              [effect_value, effect_value, effect_value, uid]
+            );
+          }
+          
+          const [userRows] = await db.execute('SELECT username FROM users WHERE id = ?', [uid]);
+          affectedUsers.push({
+            user_id: uid,
+            username: userRows[0]?.username || 'Unknown'
+          });
+        }
+      }
+      
+      // 记录日志
+      await db.execute(
+        'INSERT INTO random_event_logs (event_id, event_name, event_type, message, affected_users) VALUES (?, ?, ?, ?, ?)',
+        [event_id, event.event_name, event.event_type, event.message_template, JSON.stringify(affectedUsers)]
+      );
+      
+      // 全服广播
+      if (io) {
+        io.emit('chat:system', {
+          content: `【全服事件】${event.message_template.replace('{amount}', Math.abs(effect_value))}`,
+          type: 'global_event'
+        });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: `全服事件 ${event.event_name} 已触发，影响 ${affectedUsers.length} 名在线玩家`, 
+        data: { 
+          event, 
+          effect_type: event.effect_type, 
+          effect_value: effect_value,
+          affected_users_count: affectedUsers.length,
+          is_global: true
+        } 
+      });
+      
+    } else {
+      // 单体事件处理
+      const userId = target_user_id || req.user.id;
+      
+      if (event.effect_type !== 'none') {
+        let effectField = '';
+        if (event.effect_type === 'silver') effectField = 'silver';
+        else if (event.effect_type === 'neili') effectField = 'neili';
+        else if (event.effect_type === 'tili') effectField = 'tili';
+        else if (event.effect_type === 'wugong') effectField = 'wugong_level';
+        else if (event.effect_type === 'all') {
+          await db.execute(
+            `UPDATE users SET silver = silver + ?, neili = neili + ?, tili = tili + ? WHERE id = ?`,
+            [effect_value, effect_value, effect_value, userId]
+          );
+        }
+        
+        if (effectField) {
+          await db.execute(
+            `UPDATE users SET ${effectField} = ${effectField} + ? WHERE id = ?`,
+            [effect_value, userId]
+          );
+        }
+      }
+      
+      await db.execute(
+        'INSERT INTO user_event_logs (user_id, event_id, event_type, event_name, effect_type, effect_value) VALUES (?, ?, ?, ?, ?, ?)',
+        [userId, event_id, event.event_type, event.event_name, event.effect_type, effect_value]
+      );
+      
+      res.json({ 
+        success: true, 
+        message: `触发了 ${event.event_name}`, 
+        data: { 
+          event, 
+          effect_type: event.effect_type, 
+          effect_value: effect_value,
+          is_global: false
+        } 
+      });
+    }
+  } catch (err) {
+    console.error('Trigger random event error:', err);
+    res.status(500).json({ success: false, message: '触发随机事件失败' });
+  }
+};
+
+// 获取用户 IP 日志（任务 7）
+exports.getUserIpLogs = async (req, res) => {
+  try {
+    const { page = 1, limit = 50, user_id, ip_type } = req.query;
+    const offset = (page - 1) * limit;
+    let where = '1=1';
+    const params = [];
+    
+    if (user_id) { 
+      where += ' AND l.user_id = ?'; 
+      params.push(user_id); 
+    }
+    if (ip_type) { 
+      where += ' AND l.ip_type = ?'; 
+      params.push(ip_type); 
+    }
+    
+    const [logs] = await db.execute(
+      `SELECT l.*, u.username 
+       FROM user_ip_logs l 
+       LEFT JOIN users u ON l.user_id = u.id 
+       WHERE ${where} 
+       ORDER BY l.created_at DESC 
+       LIMIT ? OFFSET ?`,
+      [...params, parseInt(limit), offset]
+    );
+    
+    const [countResult] = await db.execute(
+      `SELECT COUNT(*) as total FROM user_ip_logs l WHERE ${where}`, 
+      params
+    );
+    
+    res.json({ 
+      success: true, 
+      data: { logs, total: countResult[0].total, page: parseInt(page), limit: parseInt(limit) } 
+    });
+  } catch (err) {
+    console.error('Get IP logs error:', err);
+    res.status(500).json({ success: false, message: '查询 IP 日志失败' });
+  }
+};

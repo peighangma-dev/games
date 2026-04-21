@@ -26,6 +26,22 @@ exports.register = async (req, res) => {
       return res.status(400).json({ success: false, message: '用户名、密码、性别为必填项' });
     }
     if (password.length < 3) {
+      return res.status(400).json({ success: false, message: '密码长度不能少于 3 位' });
+    }
+    
+    // 验证用户名必须是纯中文
+    const chineseUsername = username.trim();
+    if (!/^[一 - 龟]+$/.test(chineseUsername)) {
+      return res.status(400).json({ success: false, message: '用户名必须是纯中文，不允许使用拼音、数字或符号' });
+    }
+    if (chineseUsername.length < 2 || chineseUsername.length > 10) {
+      return res.status(400).json({ success: false, message: '用户名长度必须为 2-10 个汉字' });
+    }
+    
+    if (/[<>'"=\s]/.test(chineseUsername)) {
+      return res.status(400).json({ success: false, message: '用户名包含非法字符' });
+    }
+    if (password.length < 3) {
       return res.status(400).json({ success: false, message: '密码长度不能少于3位' });
     }
     if (username.length > 10) {
@@ -40,20 +56,20 @@ exports.register = async (req, res) => {
       return res.status(403).json({ success: false, message: '系统暂时禁止新用户注册' });
     }
 
-    if (await isUsernameBanned(username)) {
+    if (await isUsernameBanned(chineseUsername)) {
       return res.status(403).json({ success: false, message: '该用户名被禁止使用' });
     }
 
-    if (await containsBadWord(username)) {
+    if (await containsBadWord(chineseUsername)) {
       return res.status(403).json({ success: false, message: '用户名包含敏感词' });
     }
 
     const ip = req.ip || req.connection.remoteAddress;
     if (await isIpBanned(ip)) {
-      return res.status(403).json({ success: false, message: '您的IP已被封禁' });
+      return res.status(403).json({ success: false, message: '您的 IP 已被封禁' });
     }
 
-    const [existing] = await db.execute('SELECT id FROM users WHERE username = ? AND status != ?', [username, 'dead']);
+    const [existing] = await db.execute('SELECT id FROM users WHERE username = ? AND status != ?', [chineseUsername, 'dead']);
     if (existing.length > 0) {
       return res.status(409).json({ success: false, message: '该用户名已存在' });
     }
@@ -64,12 +80,18 @@ exports.register = async (req, res) => {
     const [result] = await db.execute(
       `INSERT INTO users (username, password, password_answer, gender, referrer, email, status, tili, attack, defense, attack_power, charm, spouse, is_vip, silver, sect, faction, sect_title, grade, registered_at, register_ip)
        VALUES (?, ?, ?, ?, ?, ?, 'normal', 30, 10, 10, 100, 100, '无', 0, 0, '无', '无', '无', 1, NOW(), ?)`,
-      [username, hashedPwd, hashedAnswer, gender, referrer || null, email || null, ip]
+      [chineseUsername, hashedPwd, hashedAnswer, gender, referrer || null, email || null, ip]
     );
 
-    const token = generateToken({ id: result.insertId, username, grade: 1, faction: '无', sect_title: '无', sect: '无', gender });
+    // 记录注册 IP 日志
+    await db.execute(
+      `INSERT INTO user_ip_logs (user_id, ip_address, ip_type, user_agent, login_status) VALUES (?, ?, 'register', ?, 'success')`,
+      [result.insertId, ip, req.headers['user-agent'] || null]
+    );
 
-    res.json({ success: true, message: '注册成功', data: { token, user: { id: result.insertId, username, gender, grade: 1 } } });
+    const token = generateToken({ id: result.insertId, username: chineseUsername, grade: 1, faction: '无', sect_title: '无', sect: '无', gender });
+
+    res.json({ success: true, message: '注册成功', data: { token, user: { id: result.insertId, username: chineseUsername, gender, grade: 1 } } });
   } catch (err) {
     console.error('注册错误:', err);
     res.status(500).json({ success: false, message: '注册失败' });
@@ -146,6 +168,12 @@ exports.login = async (req, res) => {
     await db.execute(
       `UPDATE users SET login_count = login_count + 1, last_login_at = NOW(), last_login_ip = ?, neili = ?, tili = ?, wugong = GREATEST(0, wugong) WHERE id = ?`,
       [ip, Math.min(user.neili, maxNeili), Math.min(user.tili, maxTili), user.id]
+    );
+
+    // 记录登录 IP 日志
+    await db.execute(
+      `INSERT INTO user_ip_logs (user_id, ip_address, ip_type, user_agent, login_status) VALUES (?, ?, 'login', ?, 'success')`,
+      [user.id, ip, req.headers['user-agent'] || null]
     );
 
     const [online] = await db.execute('SELECT id FROM online_users WHERE user_id = ?', [user.id]);

@@ -1,6 +1,47 @@
 const db = require('../config/db');
 const achievement = require('./achievement');
 
+// 获取所有任务列表（用于藏经阁关联显示）
+exports.list = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    
+    const [quests] = await db.execute(
+      `SELECT * FROM alchemy_quests WHERE is_active = 1 ORDER BY is_daily DESC, requirement_level`
+    );
+    
+    const [userQuests] = await db.execute(
+      `SELECT quest_id, status, progress, completed_count 
+       FROM user_quests WHERE user_id = ?`,
+      [userId]
+    );
+    
+    const questMap = {};
+    userQuests.forEach(uq => {
+      questMap[uq.quest_id] = uq;
+    });
+    
+    const result = quests.map(q => ({
+      id: q.id,
+      title: q.title,
+      description: q.description,
+      type: q.quest_type || 'general',
+      current_progress: questMap[q.id]?.progress || 0,
+      target_progress: q.requirement_count || 0,
+      reward: q.reward_desc || `${q.exp_reward} 经验`,
+      exp_reward: q.exp_reward,
+      silver_reward: q.silver_reward || 0,
+      item_reward: q.item_reward || null,
+      is_daily: q.is_daily === 1
+    }));
+    
+    res.json({ success: true, data: result });
+  } catch (err) {
+    console.error('List quests error:', err.message);
+    res.status(500).json({ success: false, message: '获取任务列表失败' });
+  }
+};
+
 // 获取用户的任务列表（包括进行中和已完成）
 exports.getMyQuests = async (req, res) => {
   try {

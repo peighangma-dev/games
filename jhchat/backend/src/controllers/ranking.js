@@ -1,12 +1,31 @@
 const db = require('../config/db');
 
+// 新增：综合排行榜（前端需要 totalScore 字段）
+exports.getComprehensiveRanking = async (req, res) => {
+  try {
+    const [rankings] = await db.execute(
+      `SELECT id, username, sect, grade, 
+              (all_value + silver + deposit + wugong + neili) as totalScore
+       FROM users
+       WHERE status != 'dead'
+       ORDER BY totalScore DESC
+       LIMIT 50`
+    );
+    res.json({ success: true, data: rankings });
+  } catch (err) {
+    console.error('Get comprehensive ranking error:', err);
+    res.status(500).json({ success: false, message: '查询综合排行榜失败' });
+  }
+};
+
 // 获取财富排行榜
 exports.getWealthRanking = async (req, res) => {
   try {
     const [rankings] = await db.execute(
-      `SELECT username, silver + deposit as total_wealth, silver, deposit, grade
+      `SELECT id, username, sect, silver, deposit, (silver + deposit) as value
        FROM users
-       ORDER BY total_wealth DESC
+       WHERE status != 'dead'
+       ORDER BY (silver + deposit) DESC
        LIMIT 50`
     );
     
@@ -24,9 +43,10 @@ exports.getWealthRanking = async (req, res) => {
 exports.getPowerRanking = async (req, res) => {
   try {
     const [rankings] = await db.execute(
-      `SELECT username, wugong, attack, defense, grade
+      `SELECT id, username, sect, wugong, attack, defense, (wugong + attack + defense) as value
        FROM users
-       ORDER BY wugong DESC, attack DESC
+       WHERE status != 'dead'
+       ORDER BY (wugong + attack + defense) DESC
        LIMIT 50`
     );
     
@@ -44,15 +64,16 @@ exports.getPowerRanking = async (req, res) => {
 exports.getNeiliRanking = async (req, res) => {
   try {
     const [rankings] = await db.execute(
-      `SELECT username, neili, grade
+      `SELECT id, username, sect, neili
        FROM users
+       WHERE status != 'dead'
        ORDER BY neili DESC
        LIMIT 50`
     );
     
     res.json({
       success: true,
-      data: rankings
+      data: rankings.map(r => ({ ...r, value: r.neili }))
     });
   } catch (err) {
     console.error('Get neili ranking error:', err);
@@ -64,15 +85,16 @@ exports.getNeiliRanking = async (req, res) => {
 exports.getLevelRanking = async (req, res) => {
   try {
     const [rankings] = await db.execute(
-      `SELECT username, grade, all_value
+      `SELECT id, username, sect, grade, all_value
        FROM users
+       WHERE status != 'dead'
        ORDER BY grade DESC, all_value DESC
        LIMIT 50`
     );
     
     res.json({
       success: true,
-      data: rankings
+      data: rankings.map(r => ({ ...r, value: r.grade }))
     });
   } catch (err) {
     console.error('Get level ranking error:', err);
@@ -84,7 +106,7 @@ exports.getLevelRanking = async (req, res) => {
 exports.getFishingRanking = async (req, res) => {
   try {
     const [rankings] = await db.execute(
-      `SELECT username, total_count, total_weight, rare_count, shenpin_count, total_value
+      `SELECT id, username, total_count, total_weight, rare_count, shenpin_count, total_value
        FROM fishing_ranking
        ORDER BY total_value DESC
        LIMIT 50`
@@ -97,6 +119,61 @@ exports.getFishingRanking = async (req, res) => {
   } catch (err) {
     console.error('Get fishing ranking error:', err);
     res.status(500).json({ success: false, message: '查询排行榜失败' });
+  }
+};
+
+// 新增：炼丹排行榜
+exports.getAlchemyRanking = async (req, res) => {
+  try {
+    const [rankings] = await db.execute(
+      `SELECT id, username, sect, (SELECT COUNT(*) FROM alchemy_records WHERE user_id = u.id) as craftCount
+       FROM users u
+       WHERE status != 'dead'
+       ORDER BY craftCount DESC
+       LIMIT 50`
+    );
+    res.json({ success: true, data: rankings });
+  } catch (err) {
+    console.error('Get alchemy ranking error:', err);
+    res.status(500).json({ success: false, message: '查询炼丹排行榜失败' });
+  }
+};
+
+// 新增：挖矿排行榜
+exports.getMiningRanking = async (req, res) => {
+  try {
+    const [rankings] = await db.execute(
+      `SELECT id, username, sect, 
+              COALESCE((SELECT COUNT(*) FROM mining_records WHERE user_id = u.id), 0) as mineCount,
+              COALESCE((SELECT COUNT(*) FROM mining_records WHERE user_id = u.id AND rarity = 'legendary'), 0) as legendaryCount
+       FROM users u
+       WHERE status != 'dead'
+       ORDER BY mineCount DESC
+       LIMIT 50`
+    );
+    res.json({ success: true, data: rankings });
+  } catch (err) {
+    console.error('Get mining ranking error:', err);
+    res.status(500).json({ success: false, message: '查询挖矿排行榜失败' });
+  }
+};
+
+// 新增：狩猎排行榜
+exports.getHuntingRanking = async (req, res) => {
+  try {
+    const [rankings] = await db.execute(
+      `SELECT id, username, sect,
+              COALESCE((SELECT COUNT(*) FROM hunting_records WHERE user_id = u.id), 0) as huntCount,
+              COALESCE((SELECT COUNT(*) FROM hunting_records WHERE user_id = u.id AND rarity = 'legendary'), 0) as legendaryCount
+       FROM users u
+       WHERE status != 'dead'
+       ORDER BY huntCount DESC
+       LIMIT 50`
+    );
+    res.json({ success: true, data: rankings });
+  } catch (err) {
+    console.error('Get hunting ranking error:', err);
+    res.status(500).json({ success: false, message: '查询狩猎排行榜失败' });
   }
 };
 

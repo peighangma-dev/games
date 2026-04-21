@@ -54,13 +54,14 @@
           <div v-for="record in records" :key="record.id" class="record-item" :class="record.rarities">
             <div class="record-info">
               <span class="record-name">{{ record.item_name }}</span>
-              <span class="record-type">{{ record.item_type }}</span>
+              <span class="record-type">{{ record.item_type === '杂物' ? '垃圾' : record.item_type }}</span>
               <span class="record-rarity">{{ getRarityName(record.rarities) }}</span>
             </div>
             <div class="record-effect">
-              <span v-if="record.effect_neili">内力{{ record.effect_neili > 0 ? '+' : ''}}{{ record.effect_neili }}</span>
-              <span v-if="record.effect_tili">体力{{ record.effect_tili > 0 ? '+' : ''}}{{ record.effect_tili }}</span>
-              <span v-if="record.silver_reward">银子 +{{ record.silver_reward }}</span>
+              <span v-if="record.item_type === '杂物'" class="trash-item">🗑️ 无价值</span>
+              <span v-else-if="record.effect_neili">内力{{ record.effect_neili > 0 ? '+' : ''}}{{ record.effect_neili }}</span>
+              <span v-else-if="record.effect_tili">体力{{ record.effect_tili > 0 ? '+' : ''}}{{ record.effect_tili }}</span>
+              <span v-else-if="record.silver_reward">银子 +{{ record.silver_reward }}</span>
             </div>
             <span class="record-time">{{ formatDate(record.fished_at) }}</span>
           </div>
@@ -444,6 +445,18 @@ onMounted(() => {
 .epic .record-rarity { background: #a855f7; }
 .rare .record-rarity { background: #3b82f6; }
 .uncommon .record-rarity { background: #22c55e; }
+
+.trash-item {
+  color: #718096;
+  font-size: 13px;
+  font-style: italic;
+}
+
+.record-item.trash {
+  border-color: #4a5568;
+  background: rgba(74, 85, 104, 0.1);
+  opacity: 0.7;
+}
 
 .record-effect {
   color: #a0aec0;

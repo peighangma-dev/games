@@ -149,7 +149,7 @@ function calculateProgress(quest) {
 async function loadQuests() {
   loading.value = true
   try {
-    const res = await api.get('/api/quests/my')
+    const res = await api.get('/quests/my')
     if (res.success) {
       quests.value = res.data
     }
@@ -162,7 +162,7 @@ async function loadQuests() {
 
 async function claimReward(quest) {
   try {
-    const res = await api.post('/api/quests/claim', { questId: quest.id })
+    const res = await api.post('/quests/claim', { questId: quest.id })
     if (res.success) {
       alert('✅ ' + res.message)
       await loadQuests()
