@@ -157,6 +157,9 @@
               👥 {{ roomOnlineUsers.length }}人
             </span>
           </div>
+          <button @click="clearMessages" class="btn btn-clear-screen" title="清空当前聊天消息">
+            🗑️ 清屏
+          </button>
         </div>
         
         <div class="messages-area" ref="messagesRef">
@@ -798,11 +801,10 @@ async function loadRooms() {
 }
 
 async function loadHistory() {
-  try {
-    const res = await api.get(`/chat/rooms/${currentRoomId.value}/messages`)
-    if (res.success) messages.value = res.data || []
-    scrollToBottom()
-  } catch (e) {}
+  // 不加载历史消息，保持空消息列表
+  // 用户只会看到欢迎语和进入后的新消息
+  messages.value = []
+  scrollToBottom()
 }
 
 async function loadActions() {
@@ -951,14 +953,20 @@ function changeRoom() {
   if (socket) {
     socket.emit('room:change', { roomId: currentRoomId.value })
   }
+  // 切换房间时清空消息，不保留历史消息
   messages.value = []
-  loadHistory()
+  // 不加载历史消息
+  scrollToBottom()
 }
 
 function onSlashCommand() {
   if (slashCommand.value) {
     inputText.value = `/${slashCommand.value} `
   }
+}
+
+function clearMessages() {
+  messages.value = []
 }
 
 watch(chatTab, () => scrollToBottom())
@@ -1332,6 +1340,32 @@ onUnmounted(() => {
   background: rgba(136, 136, 136, 0.1);
   border-radius: 4px;
   white-space: nowrap;
+}
+
+.btn-clear-screen {
+  margin-left: auto;
+  padding: 6px 12px;
+  background: rgba(231, 76, 60, 0.15);
+  border: 1px solid rgba(231, 76, 60, 0.3);
+  border-radius: 6px;
+  color: #e74c3c;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.btn-clear-screen:hover {
+  background: rgba(231, 76, 60, 0.25);
+  border-color: rgba(231, 76, 60, 0.5);
+  transform: translateY(-1px);
+}
+
+.btn-clear-screen:active {
+  transform: translateY(0);
 }
 
 .msg-item {
