@@ -378,7 +378,7 @@ class AuditController {
       const where = whereClauses.join(' AND ');
 
       const [logs] = await db.execute(
-        `SELECT c.*, u.username as sender_name 
+        `SELECT c.*, COALESCE(u.username, '未知用户') as sender_name 
          FROM chat_messages c
          LEFT JOIN users u ON c.sender = u.id
          WHERE ${where} 

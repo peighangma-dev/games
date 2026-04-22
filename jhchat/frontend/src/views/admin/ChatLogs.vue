@@ -48,14 +48,16 @@
           <tbody>
             <tr v-for="log in logs" :key="log.id">
               <td>{{ log.id }}</td>
-              <td><strong>{{ log.sender_name || log.username || '-' }}</strong></td>
+              <td>
+                <strong>{{ log.sender_name || log.sender || '未知用户' }}</strong>
+              </td>
               <td>{{ getRoomName(log.room_id) }}</td>
               <td>
-                <span :class="['type-badge', 'type-'+log.type]">
-                  {{ getMessageTypeText(log.type) }}
+                <span :class="['type-badge', 'type-'+(log.type || 'normal')]">
+                  {{ getMessageTypeText(log.type || 'normal') }}
                 </span>
               </td>
-              <td class="message-content">{{ log.content }}</td>
+              <td class="message-content">{{ log.content || '' }}</td>
               <td style="color: #a0a0a0;">{{ formatDate(log.created_at) }}</td>
               <td>
                 <button @click="deleteMessage(log)" class="btn btn-sm btn-danger" title="删除">🗑️</button>
