@@ -1,0 +1,178 @@
+version: '3.8'
+
+###############################################################################
+# 江湖聊天室 - 生产环境 Docker Compose 配置
+# 
+# 使用方法:
+#   docker-compose -f docker-compose.prod.yml up -d
+#   
+# 停止服务:
+#   docker-compose -f docker-compose.prod.yml down
+###############################################################################
+
+services:
+  # Redis 缓存
+  redis:
+    image: redis:7-alpine
+    container_name: jhchat-redis
+    restart: always
+    volumes:
+      - redis_data:/data
+      - ./redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: redis-server /usr/local/etc/redis/redis.conf
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - jhchat-network
+
+  # MySQL 8.0 数据库
+  mysql:
+    image: mysql:8.0
+    container_name: jhchat-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-jhchat_root_pass}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jhchat}
+      MYSQL_USER: ${MYSQL_USER:-jhchat_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jhchat_user_pass}
+      TZ: Asia/Shanghai
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql:ro
+      - ./logs/mysql:/var/log/mysql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-jhchat_root_pass}"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    networks:
+      - jhchat-network
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+
+  # 后端服务
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: jhchat-backend
+    restart: always
+    environment:
+      NODE_ENV: production
+      PORT: 3001
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_USER: ${MYSQL_USER:-jhchat_user}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-jhchat_user_pass}
+      DB_NAME: ${MYSQL_DATABASE:-jhchat}
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_SECRET: ${JWT_SECRET:-change-this-secret-key-in-production}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost}
+    ports:
+      - "${BACKEND_PORT:-3001}:3001"
+    volumes:
+      - ./backend:/app
+      - ./backend/uploads:/app/uploads
+      - ./logs/backend:/app/logs
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3001/api/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - jhchat-network
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+
+  # 前端服务 (Nginx 静态文件)
+  frontend:
+    image: nginx:alpine
+    container_name: jhchat-frontend
+    restart: always
+    ports:
+      - "${FRONTEND_PORT:-80}:80"
+    volumes:
+      - ./frontend/dist:/usr/share/nginx/html:ro
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/conf.d:/etc/nginx/conf.d:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - jhchat-network
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 256M
+
+  # 日志收集 (可选)
+  log_collector:
+    image: busybox:latest
+    container_name: jhchat-log-collector
+    restart: unless-stopped
+    volumes:
+      - ./logs:/var/log/jhchat
+    command: /bin/sh -c "tail -f /var/log/jhchat/*/*.log 2>/dev/null"
+    networks:
+      - jhchat-network
+
+###############################################################################
+# 网络配置
+###############################################################################
+networks:
+  jhchat-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.20.0.0/16
+          gateway: 172.20.0.1
+
+###############################################################################
+# 数据卷配置
+###############################################################################
+volumes:
+  redis_data:
+    driver: local
+  mysql_data:
+    driver: local
+
+###############################################################################
+# 环境变量说明
+###############################################################################
+# 复制 .env.example 为 .env 并修改配置
+# 必需环境变量:
+#   MYSQL_ROOT_PASSWORD - MySQL root 密码
+#   MYSQL_DATABASE - 数据库名
+#   MYSQL_USER - 数据库用户
+#   MYSQL_PASSWORD - 数据库密码
+#   JWT_SECRET - JWT 密钥（生产环境务必修改）
+#
+# 可选环境变量:
+#   MYSQL_PORT - MySQL 端口（默认 3306）
+#   BACKEND_PORT - 后端端口（默认 3001）
+#   FRONTEND_PORT - 前端端口（默认 80）
+#   FRONTEND_URL - 前端 URL
