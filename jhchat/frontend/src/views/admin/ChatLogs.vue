@@ -1,93 +1,120 @@
 <template>
-  <div class="chat-logs-page">
-    <div class="page-header">
-      <h1 class="page-title">
-        <el-icon><ChatLineRound /></el-icon>
-        聊天记录
-      </h1>
-    </div>
-
-    <!-- 筛选 -->
-    <el-card class="filter-card mb-4">
-      <el-form :inline="true" :model="filterForm">
-        <el-form-item label="用户名">
-          <el-input v-model="filterForm.username" placeholder="搜索用户名" clearable />
-        </el-form-item>
-        <el-form-item label="房间">
-          <el-select v-model="filterForm.room" placeholder="全部房间" clearable>
-            <el-option label="逍遥派" value="逍遥派" />
-            <el-option label="少林派" value="少林派" />
-            <el-option label="武当派" value="武当派" />
-            <el-option label="其他" value="其他" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="消息类型">
-          <el-select v-model="filterForm.type" placeholder="全部类型" clearable>
-            <el-option label="普通消息" value="normal" />
-            <el-option label="系统消息" value="system" />
-            <el-option label="私聊" value="private" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="时间范围">
-          <el-date-picker
-            v-model="filterForm.dateRange"
-            type="datetimerange"
-            range-separator="至"
-            start-placeholder="开始时间"
-            end-placeholder="结束时间"
-            value-format="YYYY-MM-DD HH:mm:ss"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="loadLogs">
-            <el-icon><Search /></el-icon>
-            搜索
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-
-    <!-- 日志列表 -->
-    <el-card>
-      <el-table :data="logs" v-loading="loading">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="username" label="用户名" width="150" />
-        <el-table-column prop="room" label="房间" width="120" />
-        <el-table-column prop="type" label="类型" width="100">
-          <template #default="{ row }">
-            <el-tag size="small" :type="row.type === 'system' ? 'warning' : row.type === 'private' ? 'danger' : 'info'">
-              {{ messageTypeText(row.type) }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="content" label="消息内容" min-width="400" show-overflow-tooltip />
-        <el-table-column prop="created_at" label="发送时间" width="180" />
-        <el-table-column label="操作" width="150" fixed="right">
-          <template #default="{ row }">
-            <el-button size="small" type="danger" @click="deleteMessage(row)">删除</el-button>
-          </template>
-        </el-table-column>
-      </el-table>
-
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100, 200]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="loadLogs"
-          @current-change="loadLogs"
-        />
+  <div class="chat-logs-management">
+    <h3 class="section-title">💬 聊天记录</h3>
+    
+    <div class="card">
+      <!-- 筛选栏 -->
+      <div class="filter-bar">
+        <div class="filter-row">
+          <input v-model="filterForm.username" type="text" placeholder="用户名" class="form-input" style="width: 150px;" />
+          <select v-model="filterForm.room" class="form-select" style="width: 120px;">
+            <option value="">全部房间</option>
+            <option value="逍遥派">逍遥派</option>
+            <option value="少林派">少林派</option>
+            <option value="武当派">武当派</option>
+            <option value="其他">其他</option>
+          </select>
+          <select v-model="filterForm.type" class="form-select" style="width: 120px;">
+            <option value="">全部类型</option>
+            <option value="normal">普通消息</option>
+            <option value="system">系统消息</option>
+            <option value="private">私聊</option>
+          </select>
+          <input v-model="filterForm.startDate" type="text" placeholder="开始时间" class="form-input" style="width: 160px;" @focus="(e) => e.target.showPicker && e.target.showPicker()" />
+          <input v-model="filterForm.endDate" type="text" placeholder="结束时间" class="form-input" style="width: 160px;" @focus="(e) => e.target.showPicker && e.target.showPicker()" />
+          <button @click="loadLogs" class="btn btn-primary">
+            <span style="font-size: 14px">🔍</span> 搜索
+          </button>
+          <button @click="resetFilter" class="btn">
+            <span style="font-size: 14px">🔄</span> 重置
+          </button>
+        </div>
       </div>
-    </el-card>
+
+      <!-- 日志列表 -->
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th style="width: 60px;">ID</th>
+              <th>用户名</th>
+              <th style="width: 120px;">房间</th>
+              <th style="width: 100px;">类型</th>
+              <th>消息内容</th>
+              <th style="width: 180px;">发送时间</th>
+              <th style="width: 120px;">操作</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="log in logs" :key="log.id">
+              <td>{{ log.id }}</td>
+              <td><strong>{{ log.username }}</strong></td>
+              <td>{{ log.room }}</td>
+              <td>
+                <span :class="['type-badge', 'type-'+log.type]">
+                  {{ getMessageTypeText(log.type) }}
+                </span>
+              </td>
+              <td class="message-content">{{ log.content }}</td>
+              <td style="color: #a0a0a0;">{{ log.created_at }}</td>
+              <td>
+                <button @click="deleteMessage(log)" class="btn btn-sm btn-danger" title="删除">🗑️</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-if="logs.length === 0" class="empty-text">暂无聊天记录</div>
+
+      <!-- 分页 -->
+      <div class="pagination-bar">
+        <button 
+          @click="pagination.page = 1" 
+          :disabled="pagination.page === 1"
+          class="btn btn-sm"
+        >
+          ⏮️ 首页
+        </button>
+        <button 
+          @click="pagination.page--" 
+          :disabled="pagination.page === 1"
+          class="btn btn-sm"
+        >
+          ◀️ 上一页
+        </button>
+        <span style="color: #aaa; font-size: 13px; margin: 0 12px">
+          第 {{ pagination.page }} 页 / 共 {{ Math.ceil(pagination.total / pagination.pageSize) }} 页
+          <span style="margin-left: 12px">每页：
+            <select v-model.number="pagination.pageSize" @change="loadLogs" class="form-select" style="width: 70px; display: inline-block; padding: 4px 8px;">
+              <option :value="20">20</option>
+              <option :value="50">50</option>
+              <option :value="100">100</option>
+              <option :value="200">200</option>
+            </select>
+          </span>
+        </span>
+        <button 
+          @click="pagination.page++" 
+          :disabled="pagination.page >= Math.ceil(pagination.total / pagination.pageSize)"
+          class="btn btn-sm"
+        >
+          下一页 ▶️
+        </button>
+        <button 
+          @click="pagination.page = Math.ceil(pagination.total / pagination.pageSize)" 
+          :disabled="pagination.page >= Math.ceil(pagination.total / pagination.pageSize)"
+          class="btn btn-sm"
+        >
+          末页 ⏭️
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { ChatLineRound, Search } from '@element-plus/icons-vue'
 import api from '../../utils/api'
 
 const loading = ref(false)
@@ -97,7 +124,8 @@ const filterForm = reactive({
   username: '',
   room: '',
   type: '',
-  dateRange: []
+  startDate: '',
+  endDate: ''
 })
 
 const pagination = reactive({
@@ -106,7 +134,7 @@ const pagination = reactive({
   total: 0
 })
 
-const messageTypeText = (type) => {
+const getMessageTypeText = (type) => {
   const map = { normal: '普通', system: '系统', private: '私聊' }
   return map[type] || type
 }
@@ -117,27 +145,44 @@ const loadLogs = async () => {
     const params = {
       page: pagination.page,
       page_size: pagination.pageSize,
-      ...filterForm
+      username: filterForm.username,
+      room: filterForm.room,
+      type: filterForm.type,
+      start_date: filterForm.startDate,
+      end_date: filterForm.endDate
     }
     const res = await api.get('/admin/chat-logs', { params })
-    if (res.data.success) {
-      logs.value = res.data.data?.items || res.data.data || []
-      pagination.total = res.data.data?.total || logs.value.length
+    if (res.success || res.data?.success) {
+      logs.value = res.data?.data?.items || res.data?.data || []
+      pagination.total = res.data?.data?.total || logs.value.length
     }
   } catch (error) {
-    ElMessage.error('加载聊天记录失败')
+    alert('加载聊天记录失败')
   } finally {
     loading.value = false
   }
 }
 
+const resetFilter = () => {
+  Object.assign(filterForm, {
+    username: '',
+    room: '',
+    type: '',
+    startDate: '',
+    endDate: ''
+  })
+  pagination.page = 1
+  loadLogs()
+}
+
 const deleteMessage = async (row) => {
+  if (!confirm(`确定要删除这条消息吗？`)) return
   try {
     await api.delete(`/admin/chat-logs/${row.id}`)
-    ElMessage.success('删除成功')
+    alert('删除成功')
     loadLogs()
   } catch (error) {
-    ElMessage.error('删除失败')
+    alert('删除失败')
   }
 }
 
@@ -147,63 +192,30 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.chat-logs-page {
-  padding: 0;
-}
-
-.mb-4 {
-  margin-bottom: 20px;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.page-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 24px;
-  color: #fff;
-  margin: 0;
-}
-
-.page-title .el-icon {
-  font-size: 28px;
-  color: #409EFF;
-}
-
-.filter-card {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-.pagination-container {
-  margin-top: 24px;
-  display: flex;
-  justify-content: flex-end;
-}
-
-:deep(.el-card) {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-:deep(.el-card__header) {
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #fff;
-}
-
-:deep(.el-table) {
-  --el-table-bg-color: transparent;
-  --el-table-header-bg-color: rgba(255, 255, 255, 0.05);
-  --el-table-text-color: #e0e0e0;
-  --el-table-header-text-color: #a0a0a0;
-  --el-table-border-color: rgba(255, 255, 255, 0.05);
-  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.05);
-}
+.chat-logs-management { padding: 20px; }
+.section-title { color: #7eb8da; font-size: 18px; margin-bottom: 16px; border-left: 3px solid #f39c12; padding-left: 10px; }
+.card { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; }
+.filter-bar { background: rgba(255,255,255,0.02); border-radius: 6px; padding: 12px; margin-bottom: 16px; border: 1px solid rgba(255,255,255,0.05); }
+.filter-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.form-input { padding: 8px 12px; border: 1px solid #444; background: rgba(0,0,0,0.5); color: #fff; border-radius: 4px; }
+.form-select { padding: 8px 12px; border: 1px solid #444; background: rgba(0,0,0,0.5); color: #fff; border-radius: 4px; }
+.btn { padding: 8px 16px; border: none; border-radius: 4px; cursor: pointer; background: #555; color: #fff; transition: all 0.3s; font-size: 13px; }
+.btn:hover:not(:disabled) { opacity: 0.8; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-primary { background: #f39c12; }
+.btn-danger { background: #e74c3c; }
+.btn-sm { padding: 4px 8px; font-size: 12px; }
+.table-container { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.data-table th { color: #f39c12; font-weight: 600; font-size: 14px; white-space: nowrap; background: rgba(243, 156, 18, 0.1); }
+.data-table td { font-size: 13px; }
+.data-table tr:hover { background: rgba(255,255,255,0.02); }
+.type-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.type-normal { background: #3498db; color: #fff; }
+.type-system { background: #f39c12; color: #fff; }
+.type-private { background: #e74c3c; color: #fff; }
+.message-content { color: #e0e0e0; word-break: break-word; }
+.empty-text { text-align: center; color: #888; padding: 40px 20px; }
+.pagination-bar { display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin-top: 16px; padding-top: 16px; border-top: 1px solid rgba(255,255,255,0.1); }
 </style>
