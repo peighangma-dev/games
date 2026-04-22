@@ -1,107 +1,83 @@
 <template>
-  <div class="economy-page">
-    <div class="page-header">
-      <h1 class="page-title">
-        <el-icon><Coin /></el-icon>
-        经济监控
-      </h1>
+  <div class="economy-management">
+    <h3 class="section-title">💰 经济监控</h3>
+    
+    <div class="card">
+      <!-- 经济指标 -->
+      <div class="stats-row">
+        <div class="stat-item">
+          <span class="stat-label">💵 流通银两总额</span>
+          <span class="stat-value">{{ formatNumber(economy.totalSilver) }} <small>两</small></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">👤 人均银两</span>
+          <span class="stat-value">{{ formatNumber(economy.avgSilver) }} <small>两</small></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">🏦 银行存款总额</span>
+          <span class="stat-value">{{ formatNumber(economy.totalDeposit) }} <small>两</small></span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">📊 市场交易额（今日）</span>
+          <span class="stat-value">{{ formatNumber(economy.marketToday) }} <small>两</small></span>
+        </div>
+      </div>
+
+      <!-- 经济健康度和通胀率 -->
+      <div class="info-grid">
+        <div class="info-card">
+          <h4 class="info-title">📈 经济健康度</h4>
+          <div class="health-bar">
+            <div class="health-fill" :style="{ width: economy.healthScore + '%' }" :class="healthClass"></div>
+          </div>
+          <div class="health-text">{{ economy.healthScore }}% - {{ healthText }}</div>
+        </div>
+        <div class="info-card">
+          <h4 class="info-title">📉 通货膨胀率</h4>
+          <div class="inflation-display">
+            <span class="inflation-value">{{ economy.inflationRate }}%</span>
+            <span class="inflation-trend">↑ 较上月 +0.5%</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 富豪排行榜 -->
+      <div class="subsection">
+        <h4 class="subsection-title">🏆 富豪排行榜 TOP 10</h4>
+        <div class="table-container">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th style="width: 60px;">排名</th>
+                <th>用户名</th>
+                <th style="width: 150px;">银两</th>
+                <th style="width: 150px;">存款</th>
+                <th style="width: 150px;">总资产</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="(item, index) in richList" :key="item.user_id || index">
+                <td>
+                  <span :class="['rank-badge', 'rank-'+(index+1)]">
+                    {{ getRankIcon(index+1) }} {{ index+1 }}
+                  </span>
+                </td>
+                <td><strong>{{ item.username }}</strong></td>
+                <td class="price">{{ formatNumber(item.silver) }} 两</td>
+                <td class="price">{{ formatNumber(item.deposit || 0) }} 两</td>
+                <td class="price">{{ formatNumber(item.silver + (item.deposit || 0)) }} 两</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <div v-if="richList.length === 0" class="empty-text">暂无数据</div>
+      </div>
     </div>
-
-    <!-- 经济指标 -->
-    <el-row :gutter="20" class="mb-4">
-      <el-col :span="6">
-        <el-statistic title="流通银两总额" :value="economy.totalSilver" :precision="0">
-          <template #suffix>
-            <span style="font-size: 14px; color: #ffd700;"> 两</span>
-          </template>
-        </el-statistic>
-      </el-col>
-      <el-col :span="6">
-        <el-statistic title="人均银两" :value="economy.avgSilver" :precision="0">
-          <template #suffix>
-            <span style="font-size: 14px; color: #ffd700;"> 两</span>
-          </template>
-        </el-statistic>
-      </el-col>
-      <el-col :span="6">
-        <el-statistic title="银行存款总额" :value="economy.totalDeposit" :precision="0">
-          <template #suffix>
-            <span style="font-size: 14px; color: #ffd700;"> 两</span>
-          </template>
-        </el-statistic>
-      </el-col>
-      <el-col :span="6">
-        <el-statistic title="市场交易额（今日）" :value="economy.marketToday" :precision="0">
-          <template #suffix>
-            <span style="font-size: 14px; color: #ffd700;"> 两</span>
-          </template>
-        </el-statistic>
-      </el-col>
-    </el-row>
-
-    <!-- 通货膨胀率 -->
-    <el-row :gutter="20" class="mb-4">
-      <el-col :span="12">
-        <el-card>
-          <template #header>
-            <span>经济健康度</span>
-          </template>
-          <div class="health-indicator">
-            <el-progress 
-              :percentage="economy.healthScore" 
-              :status="economy.healthScore >= 80 ? 'success' : 'warning'"
-              :format="percentage => percentage >= 80 ? '健康' : '需要调整'"
-            />
-          </div>
-        </el-card>
-      </el-col>
-      <el-col :span="12">
-        <el-card>
-          <template #header>
-            <span>通货膨胀率</span>
-          </template>
-          <div class="inflation-rate">
-            <span class="rate-value">{{ economy.inflationRate }}%</span>
-            <span class="rate-trend positive">
-              <el-icon><Top /></el-icon>
-              较上月 +0.5%
-            </span>
-          </div>
-        </el-card>
-      </el-col>
-    </el-row>
-
-    <!-- 财富排行榜 -->
-    <el-card>
-      <template #header>
-        <span>富豪排行榜 TOP 10</span>
-      </template>
-      <el-table :data="richList" style="width: 100%">
-        <el-table-column type="index" label="排名" width="80" />
-        <el-table-column prop="username" label="用户名" width="200" />
-        <el-table-column prop="silver" label="银两" align="right">
-          <template #default="{ row }">
-            <span class="price-text">{{ row.silver.toLocaleString() }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="deposit" label="存款" align="right">
-          <template #default="{ row }">
-            <span class="price-text">{{ row.deposit?.toLocaleString() || 0 }}</span>
-          </template>
-        </el-table-column>
-        <el-table-column prop="total" label="总资产" align="right">
-          <template #default="{ row }">
-            <span class="price-text">{{ (row.silver + (row.deposit || 0)).toLocaleString() }}</span>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-card>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
-import { Coin, Top } from '@element-plus/icons-vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import api from '../../utils/api'
 
 const economy = reactive({
@@ -114,6 +90,25 @@ const economy = reactive({
 })
 
 const richList = ref([])
+
+const healthClass = computed(() => {
+  return economy.healthScore >= 80 ? 'health-good' : 'health-warning'
+})
+
+const healthText = computed(() => {
+  return economy.healthScore >= 80 ? '健康' : '需要调整'
+})
+
+const formatNumber = (num) => {
+  return Number(num || 0).toLocaleString()
+}
+
+const getRankIcon = (rank) => {
+  if (rank === 1) return '🥇'
+  if (rank === 2) return '🥈'
+  if (rank === 3) return '🥉'
+  return '🏅'
+}
 
 const loadEconomyData = async () => {
   try {
@@ -148,89 +143,37 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.economy-page {
-  padding: 0;
-}
-
-.mb-4 {
-  margin-bottom: 20px;
-}
-
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-}
-
-.page-title {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  font-size: 24px;
-  color: #fff;
-  margin: 0;
-}
-
-.page-title .el-icon {
-  font-size: 28px;
-  color: #ffd700;
-}
-
-.health-indicator,
-.inflation-rate {
-  padding: 20px;
-}
-
-.rate-value {
-  font-size: 36px;
-  font-weight: bold;
-  color: #fff;
-}
-
-.rate-trend {
-  display: block;
-  margin-top: 8px;
-  font-size: 14px;
-  color: #f56c6c;
-}
-
-.rate-trend.positive {
-  color: #67c23a;
-}
-
-.price-text {
-  color: #ffd700;
-  font-weight: 500;
-}
-
-:deep(.el-statistic__title) {
-  color: #a0a0a0;
-}
-
-:deep(.el-statistic__content) {
-  color: #fff;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-:deep(.el-card) {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-}
-
-:deep(.el-card__header) {
-  background: rgba(255, 255, 255, 0.02);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #fff;
-}
-
-:deep(.el-table) {
-  --el-table-bg-color: transparent;
-  --el-table-header-bg-color: rgba(255, 255, 255, 0.05);
-  --el-table-text-color: #e0e0e0;
-  --el-table-header-text-color: #a0a0a0;
-  --el-table-border-color: rgba(255, 255, 255, 0.05);
-  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.05);
-}
+.economy-management { padding: 20px; }
+.section-title { color: #7eb8da; font-size: 18px; margin-bottom: 16px; border-left: 3px solid #f39c12; padding-left: 10px; }
+.card { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 16px; }
+.stats-row { display: flex; gap: 16px; margin-bottom: 20px; flex-wrap: wrap; }
+.stat-item { flex: 1; min-width: 200px; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 16px; border: 1px solid rgba(255,255,255,0.1); }
+.stat-label { color: #a0a0a0; font-size: 13px; display: block; margin-bottom: 8px; }
+.stat-value { color: #ffd700; font-size: 24px; font-weight: bold; }
+.stat-value small { font-size: 14px; color: #a0a0a0; font-weight: normal; }
+.info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; margin-bottom: 20px; }
+.info-card { background: rgba(255,255,255,0.05); border-radius: 6px; padding: 16px; border: 1px solid rgba(255,255,255,0.1); }
+.info-title { color: #f39c12; font-size: 14px; margin: 0 0 12px 0; }
+.health-bar { height: 24px; background: rgba(0,0,0,0.3); border-radius: 12px; overflow: hidden; margin-bottom: 8px; }
+.health-fill { height: 100%; transition: width 0.5s; }
+.health-good { background: linear-gradient(90deg, #27ae60, #2ecc71); }
+.health-warning { background: linear-gradient(90deg, #f39c12, #e67e22); }
+.health-text { color: #fff; font-size: 13px; text-align: center; }
+.inflation-display { display: flex; flex-direction: column; align-items: center; }
+.inflation-value { color: #fff; font-size: 42px; font-weight: bold; }
+.inflation-trend { color: #27ae60; font-size: 14px; margin-top: 8px; }
+.subsection { margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(255,255,255,0.1); }
+.subsection-title { color: #f39c12; font-size: 16px; margin-bottom: 16px; }
+.table-container { overflow-x: auto; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th, .data-table td { padding: 10px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+.data-table th { color: #f39c12; font-weight: 600; font-size: 14px; white-space: nowrap; background: rgba(243, 156, 18, 0.1); }
+.data-table td { font-size: 13px; }
+.data-table tr:hover { background: rgba(255,255,255,0.02); }
+.rank-badge { font-size: 14px; }
+.rank-1 { color: #ffd700; }
+.rank-2 { color: #c0c0c0; }
+.rank-3 { color: #cd7f32; }
+.price { color: #ffd700; font-weight: bold; }
+.empty-text { text-align: center; color: #888; padding: 40px 20px; }
 </style>
