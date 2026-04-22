@@ -46,9 +46,27 @@ router.put('/pets/:id', adminAuth, logAction('update_pet'), adminCtrl.updatePet)
 router.delete('/pets/:id', adminAuth, logAction('delete_pet'), adminCtrl.deletePet);
 
 // ==================== 门派管理 ====================
+// 基本管理
 router.get('/sects', adminAuth, adminCtrl.getSects);
+router.get('/sects/stats', adminAuth, adminCtrl.getSectStats);
 router.get('/sects/:id', adminAuth, adminCtrl.getSectDetail);
+router.post('/sects', adminAuth, logAction('create_sect'), adminCtrl.createSect);
 router.put('/sects/:id', adminAuth, logAction('update_sect'), adminCtrl.updateSect);
+router.delete('/sects/:id', adminAuth, logAction('delete_sect'), adminCtrl.deleteSect);
+
+// 门派成员管理
+router.get('/sects/:sectId/members', adminAuth, adminCtrl.getSectMembers);
+router.post('/sects/:sectId/sync', adminAuth, logAction('sync_sect_members'), adminCtrl.syncSectMembers);
+
+// 门派职位管理
+router.get('/sects/:sectId/positions', adminAuth, adminCtrl.getSectPositions);
+router.post('/sects/:sectId/positions', adminAuth, logAction('save_sect_position'), adminCtrl.saveSectPosition);
+router.put('/sects/:sectId/positions/:positionId', adminAuth, logAction('update_sect_position'), adminCtrl.saveSectPosition);
+router.delete('/sects/:sectId/positions/:positionId', adminAuth, logAction('delete_sect_position'), adminCtrl.deleteSectPosition);
+
+// 入派申请管理
+router.get('/sects/:sectId/applications', adminAuth, adminCtrl.getSectApplications);
+router.post('/sects/:sectId/applications/:appId/review', adminAuth, logAction('review_sect_application'), adminCtrl.reviewApplication);
 
 // ==================== 经济监控 ====================
 router.get('/economy/stats', adminAuth, adminCtrl.getEconomyStats);

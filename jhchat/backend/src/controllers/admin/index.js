@@ -9,6 +9,7 @@ const SecretSkillController = require('./SecretSkillController');
 const QuestController = require('./QuestController');
 const PetController = require('./PetController');
 const SectController = require('./SectController');
+const SectManagementController = require('./SectManagementController');
 const MarketController = require('./MarketController');
 const SecurityController = require('./SecurityController');
 const AuditController = require('./AuditController');
@@ -58,9 +59,19 @@ module.exports = {
   deletePet: PetController.deletePet,
   
   // 门派管理
-  getSects: SectController.getSects,
-  getSectDetail: SectController.getSectDetail,
-  updateSect: SectController.updateSect,
+  getSects: SectManagementController.getSects,
+  getSectDetail: SectManagementController.getSectDetail,
+  createSect: SectManagementController.createSect,
+  updateSect: SectManagementController.updateSect,
+  deleteSect: SectManagementController.deleteSect,
+  getSectMembers: SectManagementController.getSectMembers,
+  getSectPositions: SectManagementController.getSectPositions,
+  saveSectPosition: SectManagementController.saveSectPosition,
+  deleteSectPosition: SectManagementController.deleteSectPosition,
+  getSectApplications: SectManagementController.getSectApplications,
+  reviewApplication: SectManagementController.reviewApplication,
+  syncSectMembers: SectManagementController.syncSectMembers,
+  getSectStats: SectManagementController.getSectStats,
   
   // 经济监控
   getEconomyStats: EconomyController.getStats,
