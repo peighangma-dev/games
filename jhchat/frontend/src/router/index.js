@@ -221,8 +221,20 @@ const routes = [
         name: 'MobileSettings',
         component: () => import('../views/MobileSettings.vue'),
         meta: { requiresAuth: true }
+      },
+      {
+        path: 'desktop-settings',
+        name: 'DesktopSettings',
+        component: () => import('../views/DesktopSettings.vue'),
+        meta: { requiresAuth: true }
       }
     ]
+  },
+  {
+    path: '/desktop',
+    name: 'Desktop',
+    component: () => import('../views/DesktopLayout.vue'),
+    meta: { requiresAuth: true }
   },
   {
     path: '/',
