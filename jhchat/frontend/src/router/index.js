@@ -183,6 +183,48 @@ const routes = [
     ]
   },
   {
+    path: '/mobile',
+    name: 'Mobile',
+    component: () => import('../views/MobileLayout.vue'),
+    meta: { requiresAuth: true },
+    children: [
+      {
+        path: '',
+        redirect: '/mobile/chat'
+      },
+      {
+        path: 'chat',
+        name: 'MobileChat',
+        component: () => import('../views/Chat.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'games',
+        name: 'MobileGames',
+        component: () => import('../views/Games.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'sect',
+        name: 'MobileSect',
+        component: () => import('../views/Sect.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'rankings',
+        name: 'MobileRankings',
+        component: () => import('../views/Rankings.vue'),
+        meta: { requiresAuth: true }
+      },
+      {
+        path: 'settings',
+        name: 'MobileSettings',
+        component: () => import('../views/MobileSettings.vue'),
+        meta: { requiresAuth: true }
+      }
+    ]
+  },
+  {
     path: '/',
     redirect: '/main'
   }
