@@ -545,30 +545,38 @@ class AuditController {
       const params = [];
 
       if (operator) {
-        whereClauses.push('operator = ?');
+        whereClauses.push('username = ?');
         params.push(operator);
       }
       if (startDate) {
-        whereClauses.push('log_time >= ?');
+        whereClauses.push('created_at >= ?');
         params.push(startDate);
       }
       if (endDate) {
-        whereClauses.push('log_time <= ?');
+        whereClauses.push('created_at <= ?');
         params.push(endDate + ' 23:59:59');
       }
 
       const where = whereClauses.join(' AND ');
 
       const [logs] = await db.execute(
-        `SELECT * FROM operation_logs 
+        `SELECT 
+          id,
+          username as operator,
+          action_type,
+          action,
+          ip,
+          response_status,
+          created_at as log_time
+         FROM admin_action_logs 
          WHERE ${where} 
-         ORDER BY log_time DESC 
+         ORDER BY created_at DESC 
          LIMIT ? OFFSET ?`,
         [...params, parseInt(limit), offset]
       );
 
       const [countResult] = await db.execute(
-        `SELECT COUNT(*) as total FROM operation_logs WHERE ${where}`,
+        `SELECT COUNT(*) as total FROM admin_action_logs WHERE ${where}`,
         params
       );
 
@@ -602,7 +610,7 @@ class AuditController {
       if (keepDays && keepDays > 0) {
         // 保留最近 N 天的日志
         await db.execute(
-          'DELETE FROM operation_logs WHERE log_time < DATE_SUB(NOW(), INTERVAL ? DAY)',
+          'DELETE FROM admin_action_logs WHERE created_at < DATE_SUB(NOW(), INTERVAL ? DAY)',
           [parseInt(keepDays)]
         );
         
@@ -612,7 +620,7 @@ class AuditController {
         });
       } else {
         // 清空所有日志（危险操作）
-        await db.execute('DELETE FROM operation_logs');
+        await db.execute('DELETE FROM admin_action_logs');
         
         res.json({
           success: true,

@@ -4,7 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const adminCtrl = require('../controllers/admin/index');
-const { adminAuth } = require('../middleware/adminAuth');
+const { adminAuth, logAction } = require('../middleware/adminAuth');
 
 // ==================== 仪表盘 ====================
 router.get('/dashboard', adminAuth, adminCtrl.getOverview);
@@ -14,7 +14,7 @@ router.get('/dashboard/charts', adminAuth, adminCtrl.getChartData);
 // ==================== 服务器状态 ====================
 router.get('/server/status', adminAuth, adminCtrl.getServerInfo);
 router.get('/server/cache-stats', adminAuth, adminCtrl.getCacheStats);
-router.post('/server/clear-cache', adminAuth, adminCtrl.clearCache);
+router.post('/server/clear-cache', adminAuth, logAction('clear_cache'), adminCtrl.clearCache);
 
 // ==================== 用户管理 ====================
 router.get('/users', adminAuth, adminCtrl.getUsers);
@@ -27,28 +27,28 @@ router.get('/managers', adminAuth, adminCtrl.getManagers);
 router.get('/secret-skills/stats', adminAuth, adminCtrl.getSecretSkillsStats);
 router.get('/secret-skills', adminAuth, adminCtrl.getSecretSkills);
 router.get('/secret-skills/:id', adminAuth, adminCtrl.getSecretSkillDetail);
-router.post('/secret-skills', adminAuth, adminCtrl.createSecretSkill);
-router.put('/secret-skills/:id', adminAuth, adminCtrl.updateSecretSkill);
-router.delete('/secret-skills/:id', adminAuth, adminCtrl.deleteSecretSkill);
+router.post('/secret-skills', adminAuth, logAction('create_secret_skill'), adminCtrl.createSecretSkill);
+router.put('/secret-skills/:id', adminAuth, logAction('update_secret_skill'), adminCtrl.updateSecretSkill);
+router.delete('/secret-skills/:id', adminAuth, logAction('delete_secret_skill'), adminCtrl.deleteSecretSkill);
 
 // ==================== 任务管理 ====================
 router.get('/quests', adminAuth, adminCtrl.getQuests);
 router.get('/quests/:id', adminAuth, adminCtrl.getQuestDetail);
-router.post('/quests', adminAuth, adminCtrl.createQuest);
-router.put('/quests/:id', adminAuth, adminCtrl.updateQuest);
-router.delete('/quests/:id', adminAuth, adminCtrl.deleteQuest);
+router.post('/quests', adminAuth, logAction('create_quest'), adminCtrl.createQuest);
+router.put('/quests/:id', adminAuth, logAction('update_quest'), adminCtrl.updateQuest);
+router.delete('/quests/:id', adminAuth, logAction('delete_quest'), adminCtrl.deleteQuest);
 
 // ==================== 宠物管理 ====================
 router.get('/pets', adminAuth, adminCtrl.getPets);
 router.get('/pets/:id', adminAuth, adminCtrl.getPetDetail);
-router.post('/pets', adminAuth, adminCtrl.createPet);
-router.put('/pets/:id', adminAuth, adminCtrl.updatePet);
-router.delete('/pets/:id', adminAuth, adminCtrl.deletePet);
+router.post('/pets', adminAuth, logAction('create_pet'), adminCtrl.createPet);
+router.put('/pets/:id', adminAuth, logAction('update_pet'), adminCtrl.updatePet);
+router.delete('/pets/:id', adminAuth, logAction('delete_pet'), adminCtrl.deletePet);
 
 // ==================== 门派管理 ====================
 router.get('/sects', adminAuth, adminCtrl.getSects);
 router.get('/sects/:id', adminAuth, adminCtrl.getSectDetail);
-router.put('/sects/:id', adminAuth, adminCtrl.updateSect);
+router.put('/sects/:id', adminAuth, logAction('update_sect'), adminCtrl.updateSect);
 
 // ==================== 经济监控 ====================
 router.get('/economy/stats', adminAuth, adminCtrl.getEconomyStats);
@@ -56,62 +56,62 @@ router.get('/economy/rich-list', adminAuth, adminCtrl.getRichList);
 
 // ==================== 市场管理 ====================
 router.get('/market/listings', adminAuth, adminCtrl.getMarketListings);
-router.delete('/market/listings/:id', adminAuth, adminCtrl.cancelListing);
+router.delete('/market/listings/:id', adminAuth, logAction('cancel_listing'), adminCtrl.cancelListing);
 
 // ==================== 商店物品管理 ====================
 router.get('/shop-items', adminAuth, adminCtrl.getShopItems);
 router.get('/shop-items/:id', adminAuth, adminCtrl.getShopItemDetail);
-router.post('/shop-items', adminAuth, adminCtrl.createShopItem);
-router.put('/shop-items/:id', adminAuth, adminCtrl.updateShopItem);
-router.delete('/shop-items/:id', adminAuth, adminCtrl.deleteShopItem);
-router.post('/shop-items/:id/restock', adminAuth, adminCtrl.restockShopItem);
+router.post('/shop-items', adminAuth, logAction('create_shop_item'), adminCtrl.createShopItem);
+router.put('/shop-items/:id', adminAuth, logAction('update_shop_item'), adminCtrl.updateShopItem);
+router.delete('/shop-items/:id', adminAuth, logAction('delete_shop_item'), adminCtrl.deleteShopItem);
+router.post('/shop-items/:id/restock', adminAuth, logAction('restock_shop_item'), adminCtrl.restockShopItem);
 
 // ==================== 安全监控 ====================
 router.get('/security/suspicious', adminAuth, adminCtrl.getSuspiciousUsers);
-router.post('/security/warn/:userId', adminAuth, adminCtrl.warnUser);
-router.post('/security/ban/:userId', adminAuth, adminCtrl.banUser);
-router.post('/security/clear-all', adminAuth, adminCtrl.clearAllCheats);
+router.post('/security/warn/:userId', adminAuth, logAction('warn_user'), adminCtrl.warnUser);
+router.post('/security/ban/:userId', adminAuth, logAction('ban_user'), adminCtrl.banUser);
+router.post('/security/clear-all', adminAuth, logAction('clear_all_cheats'), adminCtrl.clearAllCheats);
 
 // ==================== 登录日志 ====================
 router.get('/login-logs', adminAuth, adminCtrl.getLoginLogs);
 
 // ==================== IP 管理 ====================
 router.get('/ip-locks', adminAuth, adminCtrl.getIpLocks);
-router.post('/ip-locks', adminAuth, adminCtrl.createIpLock);
-router.delete('/ip-locks/:id', adminAuth, adminCtrl.deleteIpLock);
+router.post('/ip-locks', adminAuth, logAction('create_ip_lock'), adminCtrl.createIpLock);
+router.delete('/ip-locks/:id', adminAuth, logAction('delete_ip_lock'), adminCtrl.deleteIpLock);
 router.get('/ip-logs', adminAuth, adminCtrl.getUserIpLogs);
 
 // IP Bans 别名路由（与 ip-locks 相同功能）
 router.get('/ip-bans', adminAuth, adminCtrl.getIpLocks);
-router.post('/ip-bans', adminAuth, adminCtrl.createIpLock);
-router.delete('/ip-bans/:id', adminAuth, adminCtrl.deleteIpLock);
+router.post('/ip-bans', adminAuth, logAction('create_ip_ban'), adminCtrl.createIpLock);
+router.delete('/ip-bans/:id', adminAuth, logAction('delete_ip_ban'), adminCtrl.deleteIpLock);
 
 // ==================== 操作日志 ====================
 router.get('/logs', adminAuth, adminCtrl.getLogs);
-router.delete('/logs', adminAuth, adminCtrl.clearLogs);
+router.delete('/logs', adminAuth, logAction('clear_logs'), adminCtrl.clearLogs);
 
 // ==================== 系统配置 ====================
 router.get('/config', adminAuth, adminCtrl.getConfigs);
 router.get('/config/grouped', adminAuth, adminCtrl.getGroupedConfigs);
-router.put('/config/:name', adminAuth, adminCtrl.updateConfig);
-router.post('/config/batch', adminAuth, adminCtrl.batchUpdateConfigs);
+router.put('/config/:name', adminAuth, logAction('update_config'), adminCtrl.updateConfig);
+router.post('/config/batch', adminAuth, logAction('batch_update_config'), adminCtrl.batchUpdateConfigs);
 
 // ==================== 聊天记录 ====================
 router.get('/chat-logs', adminAuth, adminCtrl.getChatLogs);
-router.delete('/chat-logs/:id', adminAuth, adminCtrl.deleteChatLog);
+router.delete('/chat-logs/:id', adminAuth, logAction('delete_chat_log'), adminCtrl.deleteChatLog);
 
 // ==================== 物品管理 ====================
 router.get('/items', adminAuth, adminCtrl.getItems);
 router.get('/items/:id', adminAuth, adminCtrl.getItemDetail);
-router.post('/items', adminAuth, adminCtrl.createItem);
-router.put('/items/:id', adminAuth, adminCtrl.updateItem);
-router.delete('/items/:id', adminAuth, adminCtrl.deleteItem);
+router.post('/items', adminAuth, logAction('create_item'), adminCtrl.createItem);
+router.put('/items/:id', adminAuth, logAction('update_item'), adminCtrl.updateItem);
+router.delete('/items/:id', adminAuth, logAction('delete_item'), adminCtrl.deleteItem);
 
 // ==================== 房间管理 ====================
 router.get('/rooms', adminAuth, adminCtrl.getRooms);
-router.post('/rooms', adminAuth, adminCtrl.createRoom);
-router.put('/rooms/:id', adminAuth, adminCtrl.updateRoom);
-router.delete('/rooms/:id', adminAuth, adminCtrl.deleteRoom);
+router.post('/rooms', adminAuth, logAction('create_room'), adminCtrl.createRoom);
+router.put('/rooms/:id', adminAuth, logAction('update_room'), adminCtrl.updateRoom);
+router.delete('/rooms/:id', adminAuth, logAction('delete_room'), adminCtrl.deleteRoom);
 
 // ==================== 统计分析 ====================
 router.get('/statistics/online', adminAuth, adminCtrl.getOnlineStats);
@@ -122,8 +122,8 @@ router.get('/statistics/economy', adminAuth, adminCtrl.getEconomyStats);
 // ==================== 公告管理 ====================
 router.get('/news', adminAuth, adminCtrl.getNews);
 router.get('/news/:id', adminAuth, adminCtrl.getNewsDetail);
-router.post('/news', adminAuth, adminCtrl.createNews);
-router.put('/news/:id', adminAuth, adminCtrl.updateNews);
-router.delete('/news/:id', adminAuth, adminCtrl.deleteNews);
+router.post('/news', adminAuth, logAction('create_news'), adminCtrl.createNews);
+router.put('/news/:id', adminAuth, logAction('update_news'), adminCtrl.updateNews);
+router.delete('/news/:id', adminAuth, logAction('delete_news'), adminCtrl.deleteNews);
 
 module.exports = router;
