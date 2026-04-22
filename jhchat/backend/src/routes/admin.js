@@ -81,6 +81,11 @@ router.post('/ip-locks', adminAuth, adminCtrl.createIpLock);
 router.delete('/ip-locks/:id', adminAuth, adminCtrl.deleteIpLock);
 router.get('/ip-logs', adminAuth, adminCtrl.getUserIpLogs);
 
+// IP Bans 别名路由（与 ip-locks 相同功能）
+router.get('/ip-bans', adminAuth, adminCtrl.getIpLocks);
+router.post('/ip-bans', adminAuth, adminCtrl.createIpLock);
+router.delete('/ip-bans/:id', adminAuth, adminCtrl.deleteIpLock);
+
 // ==================== 操作日志 ====================
 router.get('/logs', adminAuth, adminCtrl.getLogs);
 router.delete('/logs', adminAuth, adminCtrl.clearLogs);
