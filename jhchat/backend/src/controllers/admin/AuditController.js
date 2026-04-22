@@ -559,6 +559,22 @@ class AuditController {
 
       const where = whereClauses.join(' AND ');
 
+      // 检查表是否存在
+      const [tables] = await db.execute('SHOW TABLES LIKE "admin_action_logs"');
+      if (tables.length === 0) {
+        return res.json({
+          success: true,
+          data: {
+            logs: [],
+            total: 0,
+            page: parseInt(page),
+            limit: parseInt(limit),
+            totalPages: 0,
+            message: '操作日志表不存在，请先运行迁移脚本'
+          }
+        });
+      }
+
       const [logs] = await db.execute(
         `SELECT 
           id,
@@ -594,7 +610,7 @@ class AuditController {
       logger.error('获取操作日志失败', { error: err.message });
       res.status(500).json({
         success: false,
-        message: '获取操作日志失败',
+        message: '获取操作日志失败：' + err.message,
         code: 'LOGS_ERROR'
       });
     }
