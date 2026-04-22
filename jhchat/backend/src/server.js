@@ -22,6 +22,11 @@ const io = new Server(server, {
   }
 });
 
+// 系统信息（公开接口）
+const SystemController = require('./controllers/system');
+app.get('/api/ping', SystemController.ping);
+app.get('/api/server-info', SystemController.getServerInfo);
+
 // 初始化 logger
 const { logger } = require('./utils/logger');
 logger.info('服务器启动中...');

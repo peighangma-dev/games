@@ -227,6 +227,12 @@ const routes = [
         name: 'DesktopSettings',
         component: () => import('../views/DesktopSettings.vue'),
         meta: { requiresAuth: true }
+      },
+      {
+        path: 'server-config',
+        name: 'ServerConfig',
+        component: () => import('../views/ServerConfig.vue'),
+        meta: { requiresAuth: true }
       }
     ]
   },

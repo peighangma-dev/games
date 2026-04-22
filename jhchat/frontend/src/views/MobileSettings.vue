@@ -2,6 +2,18 @@
   <div class="mobile-settings">
     <h3>⚙️ 应用设置</h3>
 
+    <!-- 服务器配置入口 -->
+    <div class="settings-section quick-access" @click="goToServerConfig">
+      <div class="quick-access-item">
+        <span class="icon">🌐</span>
+        <div class="info">
+          <span class="title">服务器地址</span>
+          <span class="subtitle">配置后端服务器连接地址</span>
+        </div>
+        <span class="arrow">›</span>
+      </div>
+    </div>
+
     <div class="settings-section">
       <h4>服务器配置</h4>
       <div class="form-group">
@@ -65,10 +77,12 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
 import { Capacitor } from '@capacitor/core'
 import { App } from '@capacitor/app'
 import api from '../utils/api'
 
+const router = useRouter()
 const serverUrl = ref('')
 const testing = ref(false)
 const connectionStatus = ref(null)
@@ -81,6 +95,10 @@ const serverPresets = [
   { name: '局域网', url: 'http://192.168.1.100:3001' },
   { name: '公网地址', url: 'https://jhchat.example.com' }
 ]
+
+const goToServerConfig = () => {
+  router.push('/mobile/server-config')
+}
 
 const testConnection = async () => {
   if (!serverUrl.value) {
@@ -157,6 +175,53 @@ onMounted(() => {
   padding: 20px;
   max-width: 600px;
   margin: 0 auto;
+}
+
+/* 快速访问 */
+.quick-access {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.quick-access:hover {
+  transform: translateY(-2px);
+}
+
+.quick-access-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  background: rgba(75, 135, 195, 0.1);
+  border-radius: 8px;
+  border: 2px solid rgba(75, 135, 195, 0.3);
+}
+
+.quick-access-item .icon {
+  font-size: 32px;
+}
+
+.quick-access-item .info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quick-access-item .title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+}
+
+.quick-access-item .subtitle {
+  font-size: 12px;
+  color: #888;
+}
+
+.quick-access-item .arrow {
+  font-size: 24px;
+  color: #4B87C3;
 }
 
 h3 {
