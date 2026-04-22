@@ -21,7 +21,11 @@
       
       <el-row :gutter="20">
         <el-col :span="6">
-          <el-statistic title="内存使用" :value="stats.memory" />
+          <el-statistic title="内存使用">
+            <template #value>
+              {{ stats.memory }}
+            </template>
+          </el-statistic>
         </el-col>
         <el-col :span="6">
           <el-statistic title="总缓存键数" :value="stats.totalKeys" />
@@ -30,8 +34,8 @@
           <el-statistic title="连接客户端" :value="stats.connectedClients" />
         </el-col>
         <el-col :span="6">
-          <el-statistic title="Redis 状态" :value="stats.status">
-            <template #suffix>
+          <el-statistic title="Redis 状态">
+            <template #value>
               <el-tag :type="stats.status === '正常' ? 'success' : 'danger'" size="small">
                 {{ stats.status }}
               </el-tag>
