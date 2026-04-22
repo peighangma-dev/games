@@ -1,87 +1,94 @@
 <template>
   <div class="login-logs-page">
-    <div class="page-header">
-      <h1 class="page-title">
-        <el-icon><List /></el-icon>
-        登录日志
-      </h1>
-    </div>
+    <h3 class="section-title">📋 登录日志</h3>
 
-    <!-- 筛选 -->
-    <el-card class="filter-card mb-4">
-      <el-form :inline="true" :model="filterForm">
-        <el-form-item label="用户名">
-          <el-input v-model="filterForm.username" placeholder="搜索用户名" clearable />
-        </el-form-item>
-        <el-form-item label="IP 地址">
-          <el-input v-model="filterForm.ip" placeholder="搜索 IP" clearable />
-        </el-form-item>
-        <el-form-item label="状态">
-          <el-select v-model="filterForm.status" placeholder="全部状态" clearable>
-            <el-option label="成功" value="success" />
-            <el-option label="失败" value="failed" />
-          </el-select>
-        </el-form-item>
-        <el-form-item label="时间范围">
-          <el-date-picker
-            v-model="filterForm.dateRange"
-            type="daterange"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            value-format="YYYY-MM-DD"
-          />
-        </el-form-item>
-        <el-form-item>
-          <el-button type="primary" @click="loadLogs">
-            <el-icon><Search /></el-icon>
-            搜索
-          </el-button>
-        </el-form-item>
-      </el-form>
-    </el-card>
-
-    <!-- 日志列表 -->
-    <el-card>
-      <el-table :data="logs" v-loading="loading">
-        <el-table-column prop="id" label="ID" width="80" />
-        <el-table-column prop="username" label="用户名" width="150" />
-        <el-table-column prop="ip" label="IP 地址" width="150">
-          <template #default="{ row }">
-            <el-tag size="small">{{ row.ip }}</el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="location" label="地理位置" width="200" />
-        <el-table-column prop="status" label="状态" width="100">
-          <template #default="{ row }">
-            <el-tag :type="row.status === 'success' ? 'success' : 'danger'">
-              {{ row.status === 'success' ? '成功' : '失败' }}
-            </el-tag>
-          </template>
-        </el-table-column>
-        <el-table-column prop="reason" label="失败原因" width="200" />
-        <el-table-column prop="created_at" label="登录时间" width="180" />
-      </el-table>
-
-      <div class="pagination-container">
-        <el-pagination
-          v-model:current-page="pagination.page"
-          v-model:page-size="pagination.pageSize"
-          :page-sizes="[20, 50, 100, 200]"
-          :total="pagination.total"
-          layout="total, sizes, prev, pager, next, jumper"
-          @size-change="loadLogs"
-          @current-change="loadLogs"
-        />
+    <div class="card">
+      <div class="filter-bar">
+        <div class="filter-item">
+          <label>用户名:</label>
+          <input v-model="filterForm.username" type="text" placeholder="搜索用户名" class="form-input" />
+        </div>
+        <div class="filter-item">
+          <label>IP 地址:</label>
+          <input v-model="filterForm.ip" type="text" placeholder="搜索 IP" class="form-input" />
+        </div>
+        <div class="filter-item">
+          <label>状态:</label>
+          <select v-model="filterForm.status" class="form-select">
+            <option value="">全部状态</option>
+            <option value="success">成功</option>
+            <option value="failed">失败</option>
+          </select>
+        </div>
+        <div class="filter-item">
+          <label>时间范围:</label>
+          <div class="date-range">
+            <input 
+              v-model="filterForm.startDate" 
+              type="date" 
+              class="form-input" 
+              placeholder="开始日期" 
+            />
+            <span class="separator">至</span>
+            <input 
+              v-model="filterForm.endDate" 
+              type="date" 
+              class="form-input" 
+              placeholder="结束日期" 
+            />
+          </div>
+        </div>
+        <div class="filter-item">
+          <button @click="loadLogs" class="btn btn-primary">🔍 搜索</button>
+        </div>
       </div>
-    </el-card>
+
+      <div class="table-container">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>用户名</th>
+              <th>IP 地址</th>
+              <th>地理位置</th>
+              <th>状态</th>
+              <th>失败原因</th>
+              <th>登录时间</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="log in logs" :key="log.id">
+              <td>{{ log.id }}</td>
+              <td>{{ log.username }}</td>
+              <td><span class="ip-tag">{{ log.ip }}</span></td>
+              <td>{{ log.location || '-' }}</td>
+              <td>
+                <span :class="['status-badge', log.status]">
+                  {{ log.status === 'success' ? '✓ 成功' : '✗ 失败' }}
+                </span>
+              </td>
+              <td>{{ log.reason || '-' }}</td>
+              <td>{{ formatDate(log.created_at) }}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div v-if="logs.length === 0" class="empty-text">暂无登录日志</div>
+
+      <div class="pagination" v-if="pagination.total > pagination.pageSize">
+        <button @click="changePage(1)" :disabled="pagination.page === 1" class="btn btn-sm">⏮️</button>
+        <button @click="changePage(pagination.page - 1)" :disabled="pagination.page === 1" class="btn btn-sm">◀️</button>
+        <span class="page-info">第 {{ pagination.page }} 页 / 共 {{ Math.ceil(pagination.total / pagination.pageSize) }} 页</span>
+        <button @click="changePage(pagination.page + 1)" :disabled="pagination.page * pagination.pageSize >= pagination.total" class="btn btn-sm">▶️</button>
+        <button @click="changePage(Math.ceil(pagination.total / pagination.pageSize))" :disabled="pagination.page * pagination.pageSize >= pagination.total" class="btn btn-sm">⏭️</button>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import { ElMessage } from 'element-plus'
-import { List, Search } from '@element-plus/icons-vue'
 import api from '../../utils/api'
 
 const loading = ref(false)
@@ -91,7 +98,8 @@ const filterForm = reactive({
   username: '',
   ip: '',
   status: '',
-  dateRange: []
+  startDate: '',
+  endDate: ''
 })
 
 const pagination = reactive({
@@ -100,24 +108,44 @@ const pagination = reactive({
   total: 0
 })
 
+const formatDate = (date) => {
+  if (!date) return '-'
+  return new Date(date).toLocaleString('zh-CN')
+}
+
 const loadLogs = async () => {
   loading.value = true
   try {
     const params = {
       page: pagination.page,
-      page_size: pagination.pageSize,
-      ...filterForm
+      limit: pagination.pageSize,
+      username: filterForm.username,
+      ip: filterForm.ip,
+      status: filterForm.status
     }
+    
+    if (filterForm.startDate) {
+      params.startDate = filterForm.startDate
+    }
+    if (filterForm.endDate) {
+      params.endDate = filterForm.endDate
+    }
+    
     const res = await api.get('/admin/login-logs', { params })
-    if (res.data.success) {
-      logs.value = res.data.data?.items || res.data.data || []
-      pagination.total = res.data.data?.total || logs.value.length
+    if (res.success) {
+      logs.value = res.data || []
+      pagination.total = logs.value.length
     }
   } catch (error) {
-    ElMessage.error('加载登录日志失败')
+    alert('加载登录日志失败：' + (error.message || '未知错误'))
   } finally {
     loading.value = false
   }
+}
+
+const changePage = (newPage) => {
+  pagination.page = newPage
+  loadLogs()
 }
 
 onMounted(() => {
@@ -126,63 +154,173 @@ onMounted(() => {
 </script>
 
 <style scoped>
-.login-logs-page {
-  padding: 0;
-}
-
-.mb-4 {
+.section-title {
+  color: #7eb8da;
+  font-size: 18px;
   margin-bottom: 20px;
+  border-left: 3px solid #4B87C3;
+  padding-left: 10px;
 }
 
-.page-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
+.card {
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 8px;
+  padding: 16px;
 }
 
-.page-title {
+.filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.filter-item {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 24px;
+  gap: 8px;
+}
+
+.filter-item label {
+  color: #ccc;
+  font-size: 13px;
+  white-space: nowrap;
+}
+
+.form-input {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   color: #fff;
-  margin: 0;
+  border-radius: 4px;
+  font-size: 14px;
 }
 
-.page-title .el-icon {
-  font-size: 28px;
-  color: #409EFF;
+.form-input:focus {
+  outline: none;
+  border-color: #4B87C3;
 }
 
-.filter-card {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.form-select {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #fff;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
 }
 
-.pagination-container {
-  margin-top: 24px;
+.date-range {
   display: flex;
-  justify-content: flex-end;
+  align-items: center;
+  gap: 8px;
 }
 
-:deep(.el-card) {
-  background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+.separator {
+  color: #888;
+  font-size: 12px;
 }
 
-:deep(.el-card__header) {
-  background: rgba(255, 255, 255, 0.02);
+.btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.btn-primary {
+  background: #4B87C3;
+}
+
+.btn-primary:hover {
+  background: #3a75b0;
+}
+
+.btn-sm {
+  padding: 6px 12px;
+  font-size: 13px;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th {
+  background: rgba(243, 156, 18, 0.2);
+  color: #f39c12;
+  font-weight: 600;
+  font-size: 14px;
+  padding: 12px;
+  text-align: left;
+  border-bottom: 2px solid rgba(243, 156, 18, 0.3);
+}
+
+.data-table td {
+  padding: 12px;
   border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-  color: #fff;
+  color: #ccc;
 }
 
-:deep(.el-table) {
-  --el-table-bg-color: transparent;
-  --el-table-header-bg-color: rgba(255, 255, 255, 0.05);
-  --el-table-text-color: #e0e0e0;
-  --el-table-header-text-color: #a0a0a0;
-  --el-table-border-color: rgba(255, 255, 255, 0.05);
-  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.05);
+.data-table tbody tr:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.ip-tag {
+  padding: 4px 8px;
+  background: rgba(75, 135, 195, 0.2);
+  color: #7eb8da;
+  border-radius: 4px;
+  font-size: 13px;
+  font-family: 'Courier New', monospace;
+}
+
+.status-badge {
+  padding: 4px 12px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+}
+
+.status-badge.success {
+  background: rgba(67, 233, 123, 0.2);
+  color: #43e97b;
+}
+
+.status-badge.failed {
+  background: rgba(245, 87, 108, 0.2);
+  color: #f5576c;
+}
+
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.page-info {
+  color: #ccc;
+  font-size: 13px;
+}
+
+.empty-text {
+  text-align: center;
+  color: #888;
+  padding: 40px;
 }
 </style>
