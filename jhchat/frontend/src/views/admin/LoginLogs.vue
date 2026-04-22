@@ -121,20 +121,16 @@ const loadLogs = async () => {
       limit: pagination.pageSize,
       username: filterForm.username,
       ip: filterForm.ip,
-      status: filterForm.status
-    }
-    
-    if (filterForm.startDate) {
-      params.startDate = filterForm.startDate
-    }
-    if (filterForm.endDate) {
-      params.endDate = filterForm.endDate
+      status: filterForm.status,
+      startDate: filterForm.startDate,
+      endDate: filterForm.endDate
     }
     
     const res = await api.get('/admin/login-logs', { params })
-    if (res.success) {
-      logs.value = res.data || []
-      pagination.total = logs.value.length
+    if (res.success || res.data?.success) {
+      const data = res.data?.data || res.data || {}
+      logs.value = data.logs || []
+      pagination.total = data.total || 0
     }
   } catch (error) {
     alert('加载登录日志失败：' + (error.message || '未知错误'))

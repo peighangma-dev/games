@@ -153,11 +153,12 @@ const loadLogs = async () => {
     }
     const res = await api.get('/admin/chat-logs', { params })
     if (res.success || res.data?.success) {
-      logs.value = res.data?.data?.items || res.data?.data || []
-      pagination.total = res.data?.data?.total || logs.value.length
+      const data = res.data?.data || res.data || {}
+      logs.value = data.logs || []
+      pagination.total = data.total || 0
     }
   } catch (error) {
-    alert('加载聊天记录失败')
+    alert('加载聊天记录失败：' + (error.message || '未知错误'))
   } finally {
     loading.value = false
   }

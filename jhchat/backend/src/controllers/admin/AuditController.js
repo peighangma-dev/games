@@ -85,22 +85,30 @@ class AuditController {
    */
   static async getLoginLogs(req, res) {
     try {
-      const { page = 1, limit = 50, userId, status, ip } = req.query;
+      const { page = 1, limit = 50, username, ip, status, startDate, endDate } = req.query;
       const offset = (page - 1) * limit;
       const whereClauses = ['1=1'];
       const params = [];
 
-      if (userId) {
-        whereClauses.push('user_id = ?');
-        params.push(userId);
-      }
-      if (status) {
-        whereClauses.push('login_status = ?');
-        params.push(status);
+      if (username) {
+        whereClauses.push('l.username = ?');
+        params.push(username);
       }
       if (ip) {
-        whereClauses.push('ip_address = ? OR ip_address LIKE ?');
-        params.push(ip, `%${ip}%`);
+        whereClauses.push('l.ip_address LIKE ?');
+        params.push(`%${ip}%`);
+      }
+      if (status) {
+        whereClauses.push('l.login_status = ?');
+        params.push(status);
+      }
+      if (startDate) {
+        whereClauses.push('l.created_at >= ?');
+        params.push(startDate);
+      }
+      if (endDate) {
+        whereClauses.push('l.created_at <= ?');
+        params.push(endDate + ' 23:59:59');
       }
 
       const where = whereClauses.join(' AND ');
@@ -291,7 +299,18 @@ class AuditController {
    */
   static async getChatLogs(req, res) {
     try {
-      const { page = 1, page_size = 50, username, room, sender, receiver } = req.query;
+      const { 
+        page = 1, 
+        page_size = 50, 
+        username, 
+        room, 
+        sender,
+        receiver,
+        type,
+        start_date,
+        end_date 
+      } = req.query;
+      
       const offset = (page - 1) * page_size;
       const whereClauses = ['1=1'];
       const params = [];
@@ -308,13 +327,27 @@ class AuditController {
         whereClauses.push('room_id = ?');
         params.push(parseInt(room));
       }
+      if (type) {
+        whereClauses.push('type = ?');
+        params.push(type);
+      }
+      if (start_date) {
+        whereClauses.push('created_at >= ?');
+        params.push(start_date);
+      }
+      if (end_date) {
+        whereClauses.push('created_at <= ?');
+        params.push(end_date + ' 23:59:59');
+      }
 
       const where = whereClauses.join(' AND ');
 
       const [logs] = await db.execute(
-        `SELECT * FROM chat_messages 
+        `SELECT c.*, u.username as sender_name 
+         FROM chat_messages c
+         LEFT JOIN users u ON c.sender = u.id
          WHERE ${where} 
-         ORDER BY created_at DESC 
+         ORDER BY c.created_at DESC 
          LIMIT ? OFFSET ?`,
         [...params, parseInt(page_size), offset]
       );
@@ -521,7 +554,7 @@ class AuditController {
       }
       if (endDate) {
         whereClauses.push('log_time <= ?');
-        params.push(endDate);
+        params.push(endDate + ' 23:59:59');
       }
 
       const where = whereClauses.join(' AND ');
