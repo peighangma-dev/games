@@ -48,15 +48,15 @@
           <tbody>
             <tr v-for="log in logs" :key="log.id">
               <td>{{ log.id }}</td>
-              <td><strong>{{ log.username }}</strong></td>
-              <td>{{ log.room }}</td>
+              <td><strong>{{ log.sender_name || log.username || '-' }}</strong></td>
+              <td>{{ getRoomName(log.room_id) }}</td>
               <td>
                 <span :class="['type-badge', 'type-'+log.type]">
                   {{ getMessageTypeText(log.type) }}
                 </span>
               </td>
               <td class="message-content">{{ log.content }}</td>
-              <td style="color: #a0a0a0;">{{ log.created_at }}</td>
+              <td style="color: #a0a0a0;">{{ formatDate(log.created_at) }}</td>
               <td>
                 <button @click="deleteMessage(log)" class="btn btn-sm btn-danger" title="删除">🗑️</button>
               </td>
@@ -119,6 +119,7 @@ import api from '../../utils/api'
 
 const loading = ref(false)
 const logs = ref([])
+const rooms = ref([])
 
 const filterForm = reactive({
   username: '',
@@ -137,6 +138,43 @@ const pagination = reactive({
 const getMessageTypeText = (type) => {
   const map = { normal: '普通', system: '系统', private: '私聊' }
   return map[type] || type
+}
+
+const getRoomName = (roomId) => {
+  if (!roomId && roomId !== 0) return '-'
+  if (roomId === 0) return '私聊'
+  const room = rooms.value.find(r => r.id === roomId)
+  return room ? room.name : `房间${roomId}`
+}
+
+const formatDate = (dateStr) => {
+  if (!dateStr) return '-'
+  try {
+    const date = new Date(dateStr)
+    if (isNaN(date.getTime())) return dateStr
+    return date.toLocaleString('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    })
+  } catch (e) {
+    return dateStr
+  }
+}
+
+const loadRooms = async () => {
+  try {
+    const res = await api.get('/admin/rooms')
+    if (res.success || res.data?.success) {
+      const data = res.data?.data || res.data || {}
+      rooms.value = data.rooms || data || []
+    }
+  } catch (e) {
+    console.error('加载房间列表失败:', e)
+  }
 }
 
 const loadLogs = async () => {
@@ -187,7 +225,8 @@ const deleteMessage = async (row) => {
   }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await loadRooms()
   loadLogs()
 })
 </script>
