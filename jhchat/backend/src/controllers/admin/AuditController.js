@@ -114,7 +114,20 @@ class AuditController {
       const where = whereClauses.join(' AND ');
 
       const [logs] = await db.execute(
-        `SELECT l.*, u.username 
+        `SELECT 
+          l.id,
+          l.user_id,
+          l.username,
+          l.ip_address as ip,
+          l.login_status as status,
+          l.reason,
+          l.created_at,
+          CASE 
+            WHEN l.city IS NOT NULL AND l.city != '' THEN CONCAT(l.country, l.region, l.city)
+            WHEN l.region IS NOT NULL AND l.region != '' THEN CONCAT(l.country, l.region)
+            WHEN l.country IS NOT NULL AND l.country != '' THEN l.country
+            ELSE NULL
+          END as location
          FROM user_ip_logs l
          LEFT JOIN users u ON l.user_id = u.id
          WHERE ${where} AND l.ip_type = 'login'
@@ -141,7 +154,7 @@ class AuditController {
       logger.error('查询登录日志失败', { error: err.message });
       res.status(500).json({
         success: false,
-        message: '查询登录日志失败',
+        message: '查询登录日志失败：' + err.message,
         code: 'LOGIN_LOGS_ERROR'
       });
     }

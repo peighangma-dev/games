@@ -1,21 +1,132 @@
 const db = require('../config/db');
 const jwt = require('jsonwebtoken');
-const { encryptPassword, verifyPassword, isIpBanned, isUsernameBanned, containsBadWord, escapeHtml, getConfig } = require('../utils/helpers');
+const { hashPassword, verifyPassword } = require('../utils/password');
+const db = require('../config/db');
+const { generateToken } = require('../utils/jwt');
+const { getConfig, incrementStat } = require('../config/configManager');
+const { logger } = require('../utils/logger');
+const Redis = require('ioredis');
 
-function generateToken(user) {
-  return jwt.sign(
-    {
-      id: user.id,
-      username: user.username,
-      grade: user.grade,
-      faction: user.faction,
-      sect_title: user.sect_title,
-      sect: user.sect,
-      gender: user.gender
-    },
-    process.env.JWT_SECRET,
-    { expiresIn: process.env.JWT_EXPIRES_IN || '7d' }
-  );
+let onlineUserClient;
+
+function getOnlineUserClient() {
+  if (!onlineUserClient) {
+    onlineUserClient = new Redis({
+      host: process.env.REDIS_HOST || 'localhost',
+      port: process.env.REDIS_PORT || 6379,
+      password: process.env.REDIS_PASSWORD || undefined,
+      db: process.env.REDIS_DB || 0,
+      maxRetriesPerRequest: 1,
+      retryDelayOnFail: 100,
+      reconnectOnError: (err) => {
+        return err.message.includes('READONLY') || err.message.includes('ECONNREFUSED') || false;
+      }
+    });
+  }
+  return onlineUserClient;
+}
+
+/**
+ * 简单的 IP 地理位置解析
+ * 使用纯真 IP 库或离线 IP 库的简化版本
+ */
+async function getLocationFromIp(ip) {
+  // 内网 IP 直接返回
+  if (['127.0.0.1', '::1', 'localhost'].includes(ip) || 
+      ip.startsWith('192.168.') || 
+      ip.startsWith('10.') || 
+      ip.startsWith('172.')) {
+    return { country: '内网', region: '', city: '' };
+  }
+
+  // 简单 IP 段匹配（可以扩展为更完整的 IP 库）
+  // 这里使用一个简化的方法：查询 IP 归属地 API
+  try {
+    // 使用淘宝 IP 地址库 API（免费，有调用限制）
+    // 注意：生产环境应该使用离线 IP 库如 ip2region
+    const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`, {
+      timeout: 2000
+    });
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 'success') {
+        return {
+          country: data.country || '',
+          region: data.regionName || '',
+          city: data.city || ''
+        };
+      }
+    }
+  } catch (e) {
+    logger.debug('获取 IP 地理位置失败', { ip, error: e.message });
+  }
+
+  // 备用方案：使用数据库表中的缓存
+  try {
+    const [cached] = await db.execute(
+      'SELECT country, region, city FROM user_ip_logs WHERE ip_address = ? AND country IS NOT NULL ORDER BY created_at DESC LIMIT 1',
+      [ip]
+    );
+    if (cached.length > 0 && cached[0].country) {
+      return {
+        country: cached[0].country,
+        region: cached[0].region || '',
+        city: cached[0].city || ''
+      };
+    }
+  } catch (e) {
+    // 忽略数据库查询错误
+  }
+
+  return { country: '', region: '', city: '' };
+}
+
+/**
+ * 记录登录日志
+ */
+async function recordLoginLog(userId, username, ip, status, reason = null) {
+  try {
+    // 获取地理位置
+    const location = await getLocationFromIp(ip);
+    
+    if (userId) {
+      // 用户存在，记录完整日志
+      await db.execute(
+        `INSERT INTO user_ip_logs (
+          user_id, username, ip_address, ip_type, user_agent, 
+          login_status, reason, country, region, city, created_at
+        ) VALUES (?, ?, ?, 'login', ?, ?, ?, ?, ?, ?, NOW())`,
+        [
+          userId,
+          username,
+          ip,
+          '',
+          status,
+          reason,
+          location.country,
+          location.region,
+          location.city
+        ]
+      );
+    } else {
+      // 用户不存在，只记录 IP 和用户名
+      await db.execute(
+        `INSERT INTO user_ip_logs (
+          username, ip_address, ip_type, user_agent, 
+          login_status, reason, created_at
+        ) VALUES (?, ?, 'login', ?, ?, ?, NOW())`,
+        [
+          username || '未知',
+          ip,
+          '',
+          status,
+          reason
+        ]
+      );
+    }
+  } catch (err) {
+    logger.error('记录登录日志失败', { userId, username, ip, error: err.message });
+  }
 }
 
 exports.register = async (req, res) => {
@@ -123,20 +234,25 @@ exports.login = async (req, res) => {
 
     const [users] = await db.execute('SELECT * FROM users WHERE username = ? AND status != ?', [username, 'dead']);
     if (users.length === 0) {
+      // 登录失败：用户不存在
+      await recordLoginLog(null, username, ip, 'failed', '用户不存在');
       return res.status(401).json({ success: false, message: '用户名或密码错误' });
     }
 
     const user = users[0];
 
     if (user.status === 'banned') {
+      await recordLoginLog(user.id, user.username, ip, 'failed', '账号已被封禁');
       return res.status(403).json({ success: false, message: '该账号已被封禁' });
     }
     if (user.status === 'jailed') {
+      await recordLoginLog(user.id, user.username, ip, 'failed', '账号正在坐牢');
       return res.status(403).json({ success: false, message: '该账号正在坐牢' });
     }
 
     const valid = await verifyPassword(password, user.password);
     if (!valid) {
+      await recordLoginLog(user.id, user.username, ip, 'failed', '密码错误');
       return res.status(401).json({ success: false, message: '用户名或密码错误' });
     }
 
@@ -170,11 +286,8 @@ exports.login = async (req, res) => {
       [ip, Math.min(user.neili, maxNeili), Math.min(user.tili, maxTili), user.id]
     );
 
-    // 记录登录 IP 日志
-    await db.execute(
-      `INSERT INTO user_ip_logs (user_id, ip_address, ip_type, user_agent, login_status) VALUES (?, ?, 'login', ?, 'success')`,
-      [user.id, ip, req.headers['user-agent'] || null]
-    );
+    // 记录登录 IP 日志（成功）
+    await recordLoginLog(user.id, user.username, ip, 'success', null);
 
     const [online] = await db.execute('SELECT id FROM online_users WHERE user_id = ?', [user.id]);
     if (online.length > 0) {
@@ -202,7 +315,7 @@ exports.login = async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('登录错误:', err);
+    logger.error('登录错误', { error: err.message });
     res.status(500).json({ success: false, message: '登录失败' });
   }
 };
