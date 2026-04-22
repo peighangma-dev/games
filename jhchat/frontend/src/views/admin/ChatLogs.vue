@@ -49,7 +49,7 @@
             <tr v-for="log in logs" :key="log.id">
               <td>{{ log.id }}</td>
               <td>
-                <strong>{{ log.sender_name || log.sender || '未知用户' }}</strong>
+                <strong>{{ log.sender_name || '未知用户' }}</strong>
               </td>
               <td>{{ getRoomName(log.room_id) }}</td>
               <td>

@@ -350,9 +350,14 @@ class AuditController {
       const whereClauses = ['1=1'];
       const params = [];
 
-      if (username || sender) {
+      // sender 字段存储的是用户名
+      if (username) {
         whereClauses.push('sender = ?');
-        params.push(username || sender);
+        params.push(username);
+      }
+      if (sender) {
+        whereClauses.push('sender = ?');
+        params.push(sender);
       }
       if (receiver) {
         whereClauses.push('receiver = ?');
@@ -377,10 +382,10 @@ class AuditController {
 
       const where = whereClauses.join(' AND ');
 
+      // sender 字段存储的是用户名，不是 ID，直接查询即可
       const [logs] = await db.execute(
-        `SELECT c.*, COALESCE(u.username, '未知用户') as sender_name 
+        `SELECT c.*, c.sender as sender_name 
          FROM chat_messages c
-         LEFT JOIN users u ON c.sender = u.id
          WHERE ${where} 
          ORDER BY c.created_at DESC 
          LIMIT ? OFFSET ?`,
