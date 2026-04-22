@@ -101,7 +101,7 @@
         <h4>添加服务器预设</h4>
         <div class="form-group">
           <label>名称</label>
-          <input v-model="newPreset.name" type="text" class="form-input" placeholder如：公司服务器 />
+          <input v-model="newPreset.name" type="text" class="form-input" placeholder="例如：公司服务器" />
         </div>
         <div class="form-group">
           <label>地址</label>
