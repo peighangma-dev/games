@@ -2,16 +2,18 @@ const db = require('../config/db');
 
 exports.getMe = async (req, res) => {
   try {
+    const userId = req.user?.id || 0;
     const [users] = await db.execute(
       `SELECT id, username, gender, avatar, status, neili, wugong, tili, attack, defense, charm, attack_power,
         spouse, is_vip, silver, sect, faction, sect_title, deposit, grade, all_value, month_value,
         job, master, vip_expires_at, registered_at, last_login_at
-       FROM users WHERE id = ?`, [req.user.id]
+       FROM users WHERE id = ?`, [userId]
     );
     if (users.length === 0) return res.status(404).json({ success: false, message: '用户不存在' });
     res.json({ success: true, data: users[0] });
   } catch (err) {
-    res.status(500).json({ success: false, message: '查询失败' });
+    console.error('getMe error:', err.message);
+    res.status(500).json({ success: false, message: '查询失败：' + err.message });
   }
 };
 
