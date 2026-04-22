@@ -1,10 +1,10 @@
 const db = require('../config/db');
 const jwt = require('jsonwebtoken');
 const { hashPassword, verifyPassword } = require('../utils/password');
-const db = require('../config/db');
 const { generateToken } = require('../utils/jwt');
 const { getConfig, incrementStat } = require('../config/configManager');
 const { logger } = require('../utils/logger');
+const { isIpBanned, isUsernameBanned, containsBadWord } = require('../utils/helpers');
 const Redis = require('ioredis');
 
 let onlineUserClient;
@@ -28,7 +28,7 @@ function getOnlineUserClient() {
 
 /**
  * 简单的 IP 地理位置解析
- * 使用纯真 IP 库或离线 IP 库的简化版本
+ * 使用 IP-API 的免费 API
  */
 async function getLocationFromIp(ip) {
   // 内网 IP 直接返回
@@ -39,29 +39,7 @@ async function getLocationFromIp(ip) {
     return { country: '内网', region: '', city: '' };
   }
 
-  // 简单 IP 段匹配（可以扩展为更完整的 IP 库）
-  // 这里使用一个简化的方法：查询 IP 归属地 API
-  try {
-    // 使用淘宝 IP 地址库 API（免费，有调用限制）
-    // 注意：生产环境应该使用离线 IP 库如 ip2region
-    const response = await fetch(`http://ip-api.com/json/${ip}?lang=zh-CN`, {
-      timeout: 2000
-    });
-    if (response.ok) {
-      const data = await response.json();
-      if (data.status === 'success') {
-        return {
-          country: data.country || '',
-          region: data.regionName || '',
-          city: data.city || ''
-        };
-      }
-    }
-  } catch (e) {
-    logger.debug('获取 IP 地理位置失败', { ip, error: e.message });
-  }
-
-  // 备用方案：使用数据库表中的缓存
+  // 优先从缓存读取
   try {
     const [cached] = await db.execute(
       'SELECT country, region, city FROM user_ip_logs WHERE ip_address = ? AND country IS NOT NULL ORDER BY created_at DESC LIMIT 1',
@@ -75,7 +53,24 @@ async function getLocationFromIp(ip) {
       };
     }
   } catch (e) {
-    // 忽略数据库查询错误
+    logger.debug('查询 IP 地理位置缓存失败', { ip, error: e.message });
+  }
+
+  // 使用 IP-API 免费 API（生产环境建议使用离线 IP 库）
+  try {
+    const axios = require('axios');
+    const response = await axios.get(`http://ip-api.com/json/${ip}?lang=zh-CN`, {
+      timeout: 2000
+    });
+    if (response.data && response.data.status === 'success') {
+      return {
+        country: response.data.country || '',
+        region: response.data.regionName || '',
+        city: response.data.city || ''
+      };
+    }
+  } catch (e) {
+    logger.debug('获取 IP 地理位置失败', { ip, error: e.message });
   }
 
   return { country: '', region: '', city: '' };
