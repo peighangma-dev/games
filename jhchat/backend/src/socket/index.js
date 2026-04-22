@@ -1,4 +1,5 @@
 const db = require('../config/db');
+const { getRandomWelcomeMessage } = require('../utils/welcomeMessages');
 
 let lastLineNo = {};
 
@@ -142,7 +143,8 @@ module.exports = function(io) {
         );
         io.to(`room_${roomId}`).emit('room:onlineUpdate', { roomId, users: online });
 
-        await sendSystemMessage(io, roomId, `<b>${username}</b> 来到了笑傲江湖`);
+        const welcomeMsg = getRandomWelcomeMessage();
+        await sendSystemMessage(io, roomId, `<b>${username}</b> ${welcomeMsg}`);
 
         socket.emit('chat:joinSuccess', { roomId });
       } catch (err) {
@@ -280,7 +282,8 @@ module.exports = function(io) {
         );
         io.to(`room_${newRoomId}`).emit('room:onlineUpdate', { roomId: newRoomId, users: newOnline });
 
-        await sendSystemMessage(io, newRoomId, `<b>${username}</b> 来到了房间`);
+        const welcomeMsg = getRandomWelcomeMessage();
+        await sendSystemMessage(io, newRoomId, `<b>${username}</b> ${welcomeMsg}`);
 
         socket.emit('chat:joinSuccess', { roomId: newRoomId });
       } catch (err) {
