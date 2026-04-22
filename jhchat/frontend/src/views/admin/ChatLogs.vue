@@ -72,23 +72,23 @@
       <!-- 分页 -->
       <div class="pagination-bar">
         <button 
-          @click="pagination.page = 1" 
+          @click="goToPage(1)" 
           :disabled="pagination.page === 1"
           class="btn btn-sm"
         >
           ⏮️ 首页
         </button>
         <button 
-          @click="pagination.page--" 
+          @click="goToPage(pagination.page - 1)" 
           :disabled="pagination.page === 1"
           class="btn btn-sm"
         >
           ◀️ 上一页
         </button>
         <span style="color: #aaa; font-size: 13px; margin: 0 12px">
-          第 {{ pagination.page }} 页 / 共 {{ Math.ceil(pagination.total / pagination.pageSize) }} 页
+          第 {{ pagination.page }} 页 / 共 {{ totalPages }} 页
           <span style="margin-left: 12px">每页：
-            <select v-model.number="pagination.pageSize" @change="loadLogs" class="form-select" style="width: 70px; display: inline-block; padding: 4px 8px;">
+            <select v-model.number="pagination.pageSize" @change="onPageSizeChange" class="form-select" style="width: 70px; display: inline-block; padding: 4px 8px;">
               <option :value="20">20</option>
               <option :value="50">50</option>
               <option :value="100">100</option>
@@ -97,15 +97,15 @@
           </span>
         </span>
         <button 
-          @click="pagination.page++" 
-          :disabled="pagination.page >= Math.ceil(pagination.total / pagination.pageSize)"
+          @click="goToPage(pagination.page + 1)" 
+          :disabled="pagination.page >= totalPages"
           class="btn btn-sm"
         >
           下一页 ▶️
         </button>
         <button 
-          @click="pagination.page = Math.ceil(pagination.total / pagination.pageSize)" 
-          :disabled="pagination.page >= Math.ceil(pagination.total / pagination.pageSize)"
+          @click="goToPage(totalPages)" 
+          :disabled="pagination.page >= totalPages"
           class="btn btn-sm"
         >
           末页 ⏭️
@@ -116,7 +116,7 @@
 </template>
 
 <script setup>
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, onMounted, computed } from 'vue'
 import api from '../../utils/api'
 
 const loading = ref(false)
@@ -135,6 +135,11 @@ const pagination = reactive({
   page: 1,
   pageSize: 50,
   total: 0
+})
+
+// 计算总页数
+const totalPages = computed(() => {
+  return Math.ceil(pagination.total / pagination.pageSize) || 1
 })
 
 const getMessageTypeText = (type) => {
@@ -177,6 +182,17 @@ const loadRooms = async () => {
   } catch (e) {
     console.error('加载房间列表失败:', e)
   }
+}
+
+const goToPage = (page) => {
+  if (page < 1 || page > totalPages.value) return
+  pagination.page = page
+  loadLogs()
+}
+
+const onPageSizeChange = () => {
+  pagination.page = 1
+  loadLogs()
 }
 
 const loadLogs = async () => {
