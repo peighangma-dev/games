@@ -138,7 +138,48 @@ CREATE TABLE IF NOT EXISTS `chat_actions` (
   `action_type` VARCHAR(1) DEFAULT '1',
   PRIMARY KEY (`id`),
   KEY `idx_name` (`name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天动作表';
+
+-- ================================================================
+-- 6. 门派表
+-- ================================================================
+CREATE TABLE IF NOT EXISTS `sects` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(30) NOT NULL COMMENT '门派名称',
+  `leader` VARCHAR(20) DEFAULT NULL COMMENT '掌门',
+  `slogan` VARCHAR(100) DEFAULT NULL COMMENT '口号',
+  `description` TEXT COMMENT '简介',
+  `rules` VARCHAR(100) DEFAULT NULL COMMENT '门规',
+  `member_count` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '人数',
+  `fit_gender` ENUM('male','female','both') NOT NULL DEFAULT 'both' COMMENT '适合性别',
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='门派';
+
+-- ================================================================
+-- 7. 系统配置表
+-- ================================================================
+CREATE TABLE IF NOT EXISTS `system_config` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(50) NOT NULL,
+  `label` VARCHAR(100) DEFAULT NULL,
+  `value` TEXT,
+  `type` VARCHAR(10) DEFAULT 'string',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置表';
+
+-- ================================================================
+-- 8. 公告表
+-- ================================================================
+CREATE TABLE IF NOT EXISTS `announcements` (
+  `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
+  `content` TEXT NOT NULL,
+  `created_at` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='公告表';
+
 -- ================================================================
 -- 江湖聊天室 - 初始数据
 -- 版本：v1.0
