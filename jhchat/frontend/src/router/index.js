@@ -179,7 +179,8 @@ const routes = [
       { path: 'security', name: 'AdminSecurity', component: () => import('../views/admin/Security.vue') },
       { path: 'logs', name: 'AdminLogs', component: () => import('../views/admin/Logs.vue') },
       { path: 'login-logs', name: 'AdminLoginLogs', component: () => import('../views/admin/LoginLogs.vue') },
-      { path: 'chat-logs', name: 'AdminChatLogs', component: () => import('../views/admin/ChatLogs.vue') }
+      { path: 'chat-logs', name: 'AdminChatLogs', component: () => import('../views/admin/ChatLogs.vue') },
+      { path: 'updates', name: 'AdminUpdates', component: () => import('../views/admin/Updates.vue') }
     ]
   },
   {

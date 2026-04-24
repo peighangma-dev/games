@@ -150,4 +150,17 @@ router.post('/news', adminAuth, logAction('create_news'), adminCtrl.createNews);
 router.put('/news/:id', adminAuth, logAction('update_news'), adminCtrl.updateNews);
 router.delete('/news/:id', adminAuth, logAction('delete_news'), adminCtrl.deleteNews);
 
+// ==================== 系统更新管理 ====================
+router.get('/updates', adminAuth, adminCtrl.getUpdates);
+router.get('/updates/latest', adminAuth, adminCtrl.getLatestVersion);
+router.get('/updates/check', adminCtrl.checkUpdate);
+router.get('/updates/:id', adminAuth, adminCtrl.getUpdateDetail);
+router.post('/updates', adminAuth, logAction('create_update'), adminCtrl.createUpdate);
+router.put('/updates/:id', adminAuth, logAction('update_update'), adminCtrl.updateUpdate);
+router.delete('/updates/:id', adminAuth, logAction('delete_update'), adminCtrl.deleteUpdate);
+router.post('/updates/:id/release', adminAuth, logAction('release_update'), adminCtrl.releaseUpdate);
+router.post('/updates/:id/push', adminAuth, logAction('push_update'), adminCtrl.pushUpdate);
+router.get('/updates/push-logs', adminAuth, adminCtrl.getPushLogs);
+router.put('/updates/push-logs/:id', adminAuth, logAction('update_push_log'), adminCtrl.updatePushStatus);
+
 module.exports = router;

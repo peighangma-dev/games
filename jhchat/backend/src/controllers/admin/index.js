@@ -19,6 +19,7 @@ const ConfigController = require('./ConfigController');
 const RoomController = require('./RoomController');
 const StatisticsController = require('./StatisticsController');
 const NewsController = require('./NewsController');
+const UpdateController = require('./UpdateController');
 
 module.exports = {
   // 仪表盘
@@ -142,5 +143,18 @@ module.exports = {
   getNewsDetail: NewsController.getNewsDetail,
   createNews: NewsController.createNews,
   updateNews: NewsController.updateNews,
-  deleteNews: NewsController.deleteNews
+  deleteNews: NewsController.deleteNews,
+  
+  // 系统更新管理
+  getUpdates: UpdateController.getUpdates,
+  getUpdateDetail: UpdateController.getUpdateDetail,
+  getLatestVersion: UpdateController.getLatestVersion,
+  checkUpdate: UpdateController.checkUpdate,
+  createUpdate: UpdateController.createUpdate,
+  updateUpdate: UpdateController.updateUpdate,
+  deleteUpdate: UpdateController.deleteUpdate,
+  releaseUpdate: UpdateController.releaseUpdate,
+  pushUpdate: UpdateController.pushUpdate,
+  getPushLogs: UpdateController.getPushLogs,
+  updatePushStatus: UpdateController.updatePushStatus
 };
