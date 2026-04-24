@@ -19,6 +19,12 @@ router.post('/server/clear-cache', adminAuth, logAction('clear_cache'), adminCtr
 // ==================== 用户管理 ====================
 router.get('/users', adminAuth, adminCtrl.getUsers);
 router.get('/users/:id', adminAuth, adminCtrl.getUserDetail);
+router.put('/users/:id', adminAuth, logAction('update_user'), adminCtrl.updateUser);
+router.delete('/users/:id', adminAuth, logAction('delete_user'), adminCtrl.deleteUser);
+router.post('/users/:id/ban', adminAuth, logAction('ban_user'), adminCtrl.banUser);
+router.post('/users/:id/unban', adminAuth, logAction('unban_user'), adminCtrl.unbanUser);
+router.post('/users/:id/kick', adminAuth, logAction('kick_user'), adminCtrl.kickUser);
+router.post('/users/:id/reset-password', adminAuth, logAction('reset_password'), adminCtrl.resetPassword);
 
 // ==================== 管理员管理 ====================
 router.get('/managers', adminAuth, adminCtrl.getManagers);

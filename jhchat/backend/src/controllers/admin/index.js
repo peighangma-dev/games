@@ -27,13 +27,19 @@ module.exports = {
   getChartData: DashboardController.getChartData,
   
   // 服务器状态
-  getServerInfo: ServerController.getStatus,
+  getServerInfo: DashboardController.getServerInfo,
   getCacheStats: ServerController.getCacheStats,
   clearCache: ServerController.clearCache,
   
   // 用户管理
   getUsers: UserController.getUsers,
   getUserDetail: UserController.getUserDetail,
+  updateUser: UserController.updateUser,
+  deleteUser: UserController.deleteUser,
+  banUser: UserController.banUser,
+  unbanUser: UserController.unbanUser,
+  kickUser: UserController.kickUser,
+  resetPassword: UserController.resetPassword,
   getManagers: UserController.getManagers,
   
   // 藏经阁管理

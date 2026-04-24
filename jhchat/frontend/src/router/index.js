@@ -190,6 +190,7 @@ const routes = [
     children: [
       {
         path: '',
+        name: 'MobileHome',
         redirect: '/mobile/chat'
       },
       {
