@@ -64,15 +64,21 @@
           </div>
           <div class="info-item">
             <span class="info-label">数据库：</span>
-            <span :class="['status-badge', serverInfo.database?.status === 'connected' ? 'success' : 'danger']">
-              {{ serverInfo.database?.status === 'connected' ? '已连接' : '未连接' }}
-            </span>
+            <div class="status-info">
+              <span :class="['status-badge', serverInfo.database?.status === 'connected' ? 'success' : 'danger']">
+                {{ serverInfo.database?.status === 'connected' ? '已连接' : '未连接' }}
+              </span>
+              <span class="info-sub">{{ serverInfo.database?.host }}/{{ serverInfo.database?.name }}</span>
+            </div>
           </div>
           <div class="info-item">
             <span class="info-label">Redis：</span>
-            <span :class="['status-badge', serverInfo.redis?.status === 'connected' ? 'success' : 'danger']">
-              {{ serverInfo.redis?.status === 'connected' ? '已连接' : '未连接' }}
-            </span>
+            <div class="status-info">
+              <span :class="['status-badge', serverInfo.redis?.status === 'connected' ? 'success' : serverInfo.redis?.status === 'not_configured' ? 'default' : 'danger']">
+                {{ serverInfo.redis?.status === 'connected' ? '已连接' : serverInfo.redis?.status === 'not_configured' ? '未配置' : '未连接' }}
+              </span>
+              <span class="info-sub">{{ serverInfo.redis?.host }}</span>
+            </div>
           </div>
           <div class="info-item">
             <span class="info-label">Node 版本：</span>
@@ -81,6 +87,10 @@
           <div class="info-item">
             <span class="info-label">内存使用：</span>
             <span class="info-value">{{ formatMemoryUsage(serverInfo.memory) }}</span>
+          </div>
+          <div class="info-item" v-if="serverInfo.pid">
+            <span class="info-label">进程 ID：</span>
+            <span class="info-value">{{ serverInfo.pid }}</span>
           </div>
         </div>
       </div>
@@ -249,9 +259,11 @@ const formatBytes = (bytes) => {
 const formatMemoryUsage = (memory) => {
   if (!memory) return '0 MB'
   // process.memoryUsage() 返回的是字节
-  const mb = (memory.heap_used || memory.heapUsed || 0) / 1024 / 1024
-  const totalMb = (memory.heap_total || memory.heapTotal || 0) / 1024 / 1024
-  return `${mb.toFixed(1)} MB / ${totalMb.toFixed(0)} MB`
+  const heapUsed = memory.heap_used || memory.heapUsed || 0
+  const heapTotal = memory.heap_total || memory.heapTotal || 0
+  const usedMb = (heapUsed / 1024 / 1024).toFixed(1)
+  const totalMb = (heapTotal / 1024 / 1024).toFixed(0)
+  return `${usedMb} MB / ${totalMb} MB`
 }
 
 const loadDashboardData = async () => {
@@ -588,6 +600,18 @@ onUnmounted(() => {
   color: #e0e0e0;
   font-size: 14px;
   font-weight: 500;
+}
+
+.status-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+}
+
+.info-sub {
+  color: #808080;
+  font-size: 12px;
 }
 
 .quick-actions {

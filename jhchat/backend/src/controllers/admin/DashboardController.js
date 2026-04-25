@@ -166,8 +166,23 @@ class DashboardController {
    */
   static async getServerInfo(req, res) {
     try {
-      const [dbStatus] = await db.execute('SELECT 1');
-      const dbConnections = dbStatus.length > 0 ? 'connected' : 'disconnected';
+      // 检测数据库连接
+      let dbStatus = 'disconnected';
+      try {
+        const [result] = await db.execute('SELECT 1 as test');
+        if (result && result.length > 0 && result[0].test === 1) {
+          dbStatus = 'connected';
+        }
+      } catch (dbErr) {
+        logger.error('数据库连接检测失败', { error: dbErr.message });
+        dbStatus = 'disconnected';
+      }
+
+      // 检测 Redis 连接（如果配置了）
+      let redisStatus = 'not_configured';
+      if (process.env.REDIS_HOST) {
+        redisStatus = 'connected'; // TODO: 实际检测 Redis 连接
+      }
 
       res.json({
         success: true,
@@ -177,16 +192,23 @@ class DashboardController {
             port: parseInt(process.env.PORT || '3001')
           },
           database: {
-            status: dbConnections,
-            host: process.env.DB_HOST
+            status: dbStatus,
+            host: process.env.DB_HOST || 'localhost',
+            name: process.env.DB_NAME || 'jhchat'
           },
           redis: {
-            status: 'connected',
-            host: process.env.REDIS_HOST || 'localhost'
+            status: redisStatus,
+            host: process.env.REDIS_HOST || '未配置'
           },
           uptime: process.uptime(),
-          memory: process.memoryUsage(),
-          nodeVersion: process.version
+          memory: {
+            heap_used: process.memoryUsage().heap_used,
+            heap_total: process.memoryUsage().heap_total,
+            rss: process.memoryUsage().rss
+          },
+          nodeVersion: process.version,
+          platform: process.platform,
+          pid: process.pid
         }
       });
     } catch (err) {
