@@ -178,15 +178,24 @@ sync_frontend() {
 }
 
 install_backend_deps() {
+    info "配置 npm 镜像源（使用腾讯云）..."
+    npm config set registry https://mirrors.cloud.tencent.com/npm/
+    
     info "安装后端依赖..."
     cd "${BACKEND_DIR}"
+    npm cache clean --force
     npm install --production
     success "后端依赖安装完成"
 }
 
 install_frontend_deps() {
+    info "配置 npm 镜像源（使用腾讯云）..."
+    npm config set registry https://mirrors.cloud.tencent.com/npm/
+    
     info "安装前端依赖..."
     cd "${FRONTEND_DIR}"
+    npm cache clean --force
+    rm -rf node_modules package-lock.json
     npm install
     success "前端依赖安装完成"
 }
