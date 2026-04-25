@@ -33,20 +33,21 @@ class DashboardController {
             startTime: new Date(Date.now() - process.uptime() * 1000).toISOString()
           },
           users: {
-            online: onlineCount[0].count,
-            total: totalUsers[0].count,
-            newToday: todayUsers[0].count,
-            newThisMonth: monthUsers[0].count
+            online: onlineCount[0].count || 0,
+            total: totalUsers[0].count || 0,
+            newToday: todayUsers[0].count || 0,
+            newThisMonth: monthUsers[0].count || 0
           },
           chat: {
-            messagesToday: chatToday[0].count,
-            messagesTotal: chatTotal[0].count
+            messagesToday: chatToday[0].count || 0,
+            messagesTotal: chatTotal[0].count || 0
           },
           economy: {
             totalSilver: economy[0].total || 0,
             avgSilver: Math.floor(economy[0].avg || 0),
             totalDeposit: deposit[0].total || 0
-          }
+          },
+          roomCount: 0
         }
       });
     } catch (err) {

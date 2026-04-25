@@ -60,23 +60,27 @@
         <div class="server-info">
           <div class="info-item">
             <span class="info-label">运行时间：</span>
-            <span class="info-value">{{ formatUptime(serverInfo.uptime) }}</span>
+            <span class="info-value">{{ formatUptime(serverInfo.uptime || 0) }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">数据库：</span>
-            <span class="status-badge success">已连接</span>
+            <span :class="['status-badge', serverInfo.database?.status === 'connected' ? 'success' : 'danger']">
+              {{ serverInfo.database?.status === 'connected' ? '已连接' : '未连接' }}
+            </span>
           </div>
           <div class="info-item">
             <span class="info-label">Redis：</span>
-            <span class="status-badge success">已连接</span>
+            <span :class="['status-badge', serverInfo.redis?.status === 'connected' ? 'success' : 'danger']">
+              {{ serverInfo.redis?.status === 'connected' ? '已连接' : '未连接' }}
+            </span>
           </div>
           <div class="info-item">
             <span class="info-label">Node 版本：</span>
-            <span class="info-value">{{ serverInfo.nodeVersion }}</span>
+            <span class="info-value">{{ serverInfo.nodeVersion || '-' }}</span>
           </div>
           <div class="info-item">
             <span class="info-label">内存使用：</span>
-            <span class="info-value">{{ formatBytes(serverInfo.memory?.used_heap_size) }}</span>
+            <span class="info-value">{{ formatMemoryUsage(serverInfo.memory) }}</span>
           </div>
         </div>
       </div>
@@ -242,6 +246,14 @@ const formatBytes = (bytes) => {
   return `${mb.toFixed(1)} MB`
 }
 
+const formatMemoryUsage = (memory) => {
+  if (!memory) return '0 MB'
+  // process.memoryUsage() 返回的是字节
+  const mb = (memory.heap_used || memory.heapUsed || 0) / 1024 / 1024
+  const totalMb = (memory.heap_total || memory.heapTotal || 0) / 1024 / 1024
+  return `${mb.toFixed(1)} MB / ${totalMb.toFixed(0)} MB`
+}
+
 const loadDashboardData = async () => {
   try {
     const [overviewRes, realtimeRes, serverRes] = await Promise.all([
@@ -251,10 +263,17 @@ const loadDashboardData = async () => {
     ])
 
     if (overviewRes.data.success) {
+      const overviewData = overviewRes.data.data
       stats.value = {
-        ...overviewRes.data.data.users,
-        ...overviewRes.data.data.chat,
-        ...overviewRes.data.data.economy,
+        onlineUsers: overviewData.users?.online || 0,
+        totalUsers: overviewData.users?.total || 0,
+        newToday: overviewData.users?.newToday || 0,
+        newThisMonth: overviewData.users?.newThisMonth || 0,
+        messagesToday: overviewData.chat?.messagesToday || 0,
+        messagesTotal: overviewData.chat?.messagesTotal || 0,
+        totalSilver: overviewData.economy?.totalSilver || 0,
+        avgSilver: overviewData.economy?.avgSilver || 0,
+        totalDeposit: overviewData.economy?.totalDeposit || 0,
         roomCount: realtimeRes.data?.data?.byRoom?.length || 0
       }
     }
