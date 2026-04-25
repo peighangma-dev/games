@@ -87,10 +87,20 @@
                   class="btn-sm btn-success" 
                   title="发布">🚀</button>
                 <button 
-                  v-if="update.status === 'released'" 
+                  v-if="update.status === 'released' && !hasPackage(update)"
+                  @click="generatePackage(update)" 
+                  class="btn-sm btn-warning" 
+                  title="生成更新包">📦</button>
+                <button 
+                  v-if="update.status === 'released' && hasPackage(update)"
                   @click="pushUpdate(update)" 
                   class="btn-sm btn-primary" 
-                  title="推送">📤</button>
+                  title="推送更新">📤</button>
+                <button 
+                  v-if="update.status === 'released' && hasPackage(update)"
+                  @click="downloadPackage(update)" 
+                  class="btn-sm" 
+                  title="下载更新包">⬇️</button>
                 <button @click="deleteUpdate(update)" class="btn-sm btn-danger" title="删除">🗑️</button>
               </div>
             </td>
@@ -381,8 +391,29 @@ const releaseUpdate = async (update) => {
     }
   } catch (error) {
     console.error('发布更新失败:', error)
-    alert('日发布更新失败：' + error.message)
+    alert('发布更新失败：' + error.message)
   }
+}
+
+const generatePackage = async (update) => {
+  if (!confirm(`确定要为 ${update.version} 生成更新包吗？`)) return
+  
+  try {
+    const res = await api.post('/admin/updates/generate-package', {
+      update_id: update.id
+    })
+    if (res.data.success) {
+      alert(`更新包生成成功！\n文件：${res.data.data.package_file}\n大小：${(res.data.data.package_size / 1024).toFixed(2)} KB`)
+      loadUpdates()
+    }
+  } catch (error) {
+    console.error('生成更新包失败:', error)
+    alert('生成更新包失败：' + (error.response?.data?.message || error.message))
+  }
+}
+
+const downloadPackage = (update) => {
+  window.open(`/api/admin/updates/packages/${update.id}/download`, '_blank')
 }
 
 const pushUpdate = (update) => {
@@ -396,7 +427,8 @@ const pushUpdate = (update) => {
     server_url: serverUrl || null
   }).then(res => {
     if (res.data.success) {
-      alert(res.data.message)
+      alert(`推送任务已创建！\n\n生产端执行以下命令一键安装更新:\n\n` +
+            `curl -s ${window.location.origin}/api/updates/latest.sh | bash -s -- ${window.location.origin} ${update.version}`)
       viewDetail(update)
     }
   }).catch(error => {
@@ -510,6 +542,11 @@ const parseJson = (str) => {
   } catch {
     return []
   }
+}
+
+const hasPackage = (update) => {
+  const metadata = parseJson(update.metadata)
+  return !!(metadata && metadata.package_file)
 }
 
 const formatDate = (date) => {

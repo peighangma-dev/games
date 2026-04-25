@@ -20,6 +20,8 @@ const RoomController = require('./RoomController');
 const StatisticsController = require('./StatisticsController');
 const NewsController = require('./NewsController');
 const UpdateController = require('./UpdateController');
+const UpdatePackageController = require('./UpdatePackageController');
+const UpdateScriptController = require('./UpdateScriptController');
 
 module.exports = {
   // 仪表盘
@@ -156,5 +158,15 @@ module.exports = {
   releaseUpdate: UpdateController.releaseUpdate,
   pushUpdate: UpdateController.pushUpdate,
   getPushLogs: UpdateController.getPushLogs,
-  updatePushStatus: UpdateController.updatePushStatus
+  updatePushStatus: UpdateController.updatePushStatus,
+  
+  // 更新包管理
+  generatePackage: UpdatePackageController.generatePackage,
+  getAvailablePackages: UpdatePackageController.getAvailablePackages,
+  getPackages: UpdatePackageController.getPackages,
+  downloadPackage: UpdatePackageController.downloadPackage,
+  recordInstallation: UpdatePackageController.recordInstallation,
+  
+  // 更新脚本
+  getUpdateScript: UpdateScriptController.generateScript
 };

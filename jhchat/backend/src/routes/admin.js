@@ -154,8 +154,14 @@ router.delete('/news/:id', adminAuth, logAction('delete_news'), adminCtrl.delete
 router.get('/updates', adminAuth, adminCtrl.getUpdates);
 router.get('/updates/latest', adminAuth, adminCtrl.getLatestVersion);
 router.get('/updates/check', adminCtrl.checkUpdate);
+router.get('/updates/available', adminCtrl.getAvailablePackages);
+router.get('/updates/packages', adminAuth, adminCtrl.getPackages);
+router.get('/updates/packages/:id/download', adminCtrl.downloadPackage);
+router.get('/updates/latest.sh', adminCtrl.getUpdateScript);
 router.get('/updates/:id', adminAuth, adminCtrl.getUpdateDetail);
 router.post('/updates', adminAuth, logAction('create_update'), adminCtrl.createUpdate);
+router.post('/updates/generate-package', adminAuth, logAction('generate_package'), adminCtrl.generatePackage);
+router.post('/updates/:id/install', adminCtrl.recordInstallation);
 router.put('/updates/:id', adminAuth, logAction('update_update'), adminCtrl.updateUpdate);
 router.delete('/updates/:id', adminAuth, logAction('delete_update'), adminCtrl.deleteUpdate);
 router.post('/updates/:id/release', adminAuth, logAction('release_update'), adminCtrl.releaseUpdate);
