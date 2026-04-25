@@ -137,7 +137,7 @@ exports.register = async (req, res) => {
     
     // 验证用户名必须是纯中文
     const chineseUsername = username.trim();
-    if (!/^[一 - 龟]+$/.test(chineseUsername)) {
+    if (!/^[\u4e00-\u9fff]+$/.test(chineseUsername)) {
       return res.status(400).json({ success: false, message: '用户名必须是纯中文，不允许使用拼音、数字或符号' });
     }
     if (chineseUsername.length < 2 || chineseUsername.length > 10) {

@@ -123,7 +123,7 @@ function validate() {
   if (!form.username.trim()) {
     errors.username = '请输入用户名'
     valid = false
-  } else if (!/^[一 - 龟]+$/.test(form.username.trim())) {
+  } else if (!/^[\u4e00-\u9fff]+$/.test(form.username.trim())) {
     errors.username = '用户名必须是纯中文，不允许使用拼音、数字或符号'
     valid = false
   } else if (form.username.length < 2 || form.username.length > 10) {

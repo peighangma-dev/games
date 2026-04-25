@@ -169,9 +169,10 @@ app.use((req, res) => {
 const { startRandomEventScheduler } = require('./socket');
 
 const PORT = process.env.PORT || 3001;
+const HOST = process.env.HOST || '0.0.0.0';
 
 // 先启动服务器监听
-server.listen(PORT, () => {
+server.listen(PORT, HOST, () => {
   logger.info(`服务器运行在端口 ${PORT}`);
   logger.info('服务启动完成', {
     port: PORT,
