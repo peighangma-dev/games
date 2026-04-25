@@ -60,6 +60,7 @@
               <td>{{ formatDate(user.last_login_at) }}</td>
               <td>
                 <button @click="editUser(user)" class="btn btn-sm btn-info">编辑</button>
+                <button @click="showResetPassword(user)" class="btn btn-sm btn-warning">重置密码</button>
                 <button @click="deleteUser(user.id)" class="btn btn-sm btn-danger">删除</button>
               </td>
             </tr>
@@ -126,6 +127,40 @@
         </div>
       </div>
     </div>
+
+    <!-- 重置密码对话框 -->
+    <div v-if="resetPasswordUser" class="modal-overlay" @click="resetPasswordUser = null">
+      <div class="modal" @click.stop>
+        <h4>重置密码：{{ resetPasswordUser.username }}</h4>
+        <div class="form-group">
+          <label>新密码:</label>
+          <input 
+            v-model="passwordForm.newPassword" 
+            type="text" 
+            placeholder="输入新密码（至少 3 位）"
+            class="form-input" 
+            autofocus
+          />
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" v-model="passwordForm.forceChange" />
+            强制下次登录修改密码
+          </label>
+        </div>
+        <div class="form-group">
+          <label>
+            <input type="checkbox" v-model="passwordForm.notify" checked />
+            发送站内通知
+          </label>
+        </div>
+        <p class="warning-text">⚠️ 此操作将立即修改用户密码，请谨慎操作！</p>
+        <div class="modal-actions">
+          <button @click="confirmResetPassword" class="btn btn-warning">确认重置</button>
+          <button @click="resetPasswordUser = null" class="btn">取消</button>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -144,6 +179,13 @@ const editingUser = ref(null)
 const editForm = ref({})
 const showBatchDelete = ref(false)
 const days = ref(30)
+
+const resetPasswordUser = ref(null)
+const passwordForm = ref({
+  newPassword: '',
+  forceChange: false,
+  notify: true
+})
 
 const statusMap = {
   normal: '正常',
@@ -225,7 +267,37 @@ async function confirmBatchDelete() {
       loadUsers()
     }
   } catch (e) {
-    alert('批量删除失败: ' + (e.message || '未知错误'))
+    alert('批量删除失败：' + (e.message || '未知错误'))
+  }
+}
+
+function showResetPassword(user) {
+  resetPasswordUser.value = user
+  passwordForm.value = {
+    newPassword: '',
+    forceChange: false,
+    notify: true
+  }
+}
+
+async function confirmResetPassword() {
+  if (!passwordForm.value.newPassword || passwordForm.value.newPassword.length < 3) {
+    alert('密码长度至少 3 位')
+    return
+  }
+  try {
+    const res = await api.post(`/admin/users/${resetPasswordUser.value.id}/reset-password`, {
+      new_password: passwordForm.value.newPassword,
+      force_change: passwordForm.value.forceChange,
+      notify: passwordForm.value.notify
+    })
+    if (res.success) {
+      alert(`密码已重置为：${passwordForm.value.newPassword}`)
+      resetPasswordUser.value = null
+      loadUsers()
+    }
+  } catch (e) {
+    alert('重置密码失败：' + (e.message || '未知错误'))
   }
 }
 
@@ -265,4 +337,5 @@ onMounted(() => loadUsers())
 .form-group label { display: block; color: #aaa; margin-bottom: 6px; font-size: 14px; }
 .form-input { width: 100%; padding: 8px; border: 1px solid #444; background: rgba(0,0,0,0.3); color: #fff; border-radius: 4px; }
 .modal-actions { display: flex; gap: 12px; justify-content: flex-end; margin-top: 20px; }
+.warning-text { color: #e74c3c; font-size: 12px; margin-top: 12px; padding: 8px; background: rgba(231,76,60,0.1); border-radius: 4px; border-left: 2px solid #e74c3c; }
 </style>
