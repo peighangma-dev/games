@@ -107,6 +107,7 @@
               <el-menu-item index="/admin/config">全局配置</el-menu-item>
               <el-menu-item index="/admin/rooms">房间管理</el-menu-item>
               <el-menu-item index="/admin/cache">清理缓存</el-menu-item>
+              <el-menu-item index="/admin/updates">更新管理</el-menu-item>
             </el-sub-menu>
 
             <!-- 安全管控 -->

@@ -49,6 +49,34 @@
     </div>
 
     <div class="dashboard-grid">
+      <!-- 系统更新提示 -->
+      <div class="card update-alert-card" v-if="hasUpdate">
+        <div class="card-header update-header">
+          <span>📦 系统更新</span>
+          <el-tag :type="updateInfo.priority === 'critical' ? 'danger' : updateInfo.priority === 'high' ? 'warning' : 'info'">
+            {{ updateInfo.priority === 'critical' ? '紧急' : updateInfo.priority === 'high' ? '重要' : '推荐' }}
+          </el-tag>
+        </div>
+        
+        <div class="update-content">
+          <div class="update-version">
+            <span class="version-label">最新版本：</span>
+            <span class="version-number">{{ updateInfo.version }}</span>
+          </div>
+          <div class="update-title">{{ updateInfo.title }}</div>
+          <div class="update-description">{{ updateInfo.description }}</div>
+          
+          <div class="update-actions">
+            <button @click="goToUpdatePage" class="btn btn-primary">
+              🚀 前往更新
+            </button>
+            <button @click="dismissUpdate" class="btn" v-if="!updateInfo.force_update">
+              ⏸️ 稍后处理
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="card server-status-card">
         <div class="card-header">
           <span>🖥️ 服务器状态</span>
@@ -205,8 +233,11 @@
 
 <script setup>
 import { ref, onMounted, onUnmounted } from 'vue'
+import { useRouter } from 'vue-router'
 import * as echarts from 'echarts'
 import api from '../../utils/api'
+
+const router = useRouter()
 
 const loading = ref(false)
 const serverStatus = ref('online')
@@ -234,6 +265,17 @@ const chartLoaded = ref(false)
 const userChartRef = ref(null)
 const chatChartRef = ref(null)
 const maxRoomCapacity = ref(100)
+
+// 系统更新相关
+const hasUpdate = ref(false)
+const updateInfo = ref({
+  version: '',
+  title: '',
+  description: '',
+  priority: 'normal',
+  force_update: false
+})
+const dismissedUpdate = ref(null)
 
 let userChart = null
 let chatChart = null
@@ -417,6 +459,51 @@ const refreshData = () => {
   })
 }
 
+// 检查系统更新
+const checkForUpdates = async () => {
+  try {
+    const res = await api.get('/admin/updates/latest')
+    if (res.data.success && res.data.data) {
+      const latestVersion = res.data.data
+      // 检查是否 dismissed
+      if (dismissedUpdate.value === latestVersion.version) {
+        return
+      }
+      
+      // 获取当前版本（从配置中读取）
+      const currentVersion = localStorage.getItem('current_version') || 'v1.0.0'
+      
+      // 简单比较版本号
+      if (latestVersion.version !== currentVersion && latestVersion.status === 'released') {
+        hasUpdate.value = true
+        updateInfo.value = {
+          version: latestVersion.version,
+          title: latestVersion.title,
+          description: latestVersion.description || '',
+          priority: latestVersion.priority,
+          force_update: !!latestVersion.force_update
+        }
+      }
+    }
+  } catch (error) {
+    console.error('检查更新失败:', error)
+    // 沉默失败，不影响正常使用
+  }
+}
+
+const goToUpdatePage = () => {
+  router.push('/admin/updates')
+}
+
+const dismissUpdate = () => {
+  if (updateInfo.value.force_update) {
+    alert('强制更新不可跳过')
+    return
+  }
+  dismissedUpdate.value = updateInfo.value.version
+  hasUpdate.value = false
+}
+
 const broadcastMessage = async () => {
   const content = prompt('请输入公告内容：')
   if (content) {
@@ -451,6 +538,7 @@ onMounted(() => {
   loadDashboardData()
   loadChartData()
   loadChatChartData()
+  checkForUpdates()
   
   refreshTimer = setInterval(() => {
     loadDashboardData()
@@ -621,6 +709,55 @@ onUnmounted(() => {
 .quick-actions {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+// 系统更新提示样式
+.update-alert-card {
+  background: linear-gradient(135deg, rgba(64, 158, 255, 0.15) 0%, rgba(102, 126, 234, 0.1) 100%);
+  border: 1px solid rgba(64, 158, 255, 0.3);
+}
+
+.update-header {
+  color: #409EFF;
+}
+
+.update-content {
+  padding: 8px 0;
+}
+
+.update-version {
+  margin-bottom: 12px;
+}
+
+.version-label {
+  color: #a0a0a0;
+  font-size: 14px;
+}
+
+.version-number {
+  color: #409EFF;
+  font-size: 18px;
+  font-weight: bold;
+  font-family: monospace;
+}
+
+.update-title {
+  font-size: 16px;
+  font-weight: bold;
+  color: #fff;
+  margin-bottom: 8px;
+}
+
+.update-description {
+  color: #ccc;
+  font-size: 14px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.update-actions {
+  display: flex;
   gap: 12px;
 }
 
