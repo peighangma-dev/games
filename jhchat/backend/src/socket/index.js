@@ -16,6 +16,18 @@ async function getNextLineNo(roomId) {
 }
 
 async function broadcastMessage(io, roomId, msg) {
+  // 私聊：禁止对自己发送（在插入数据库之前检查）
+  if (msg.is_private && msg.sender === msg.receiver) {
+    const senderSocket = await findUserSocket(io, msg.sender);
+    if (senderSocket) {
+      io.to(senderSocket).emit('chat:system', {
+        content: '不能对自己发送私聊消息',
+        type: 'private_message_self_error'
+      });
+    }
+    return { success: false, message: '不能对自己发送私聊消息' };
+  }
+
   const lineNo = await getNextLineNo(roomId);
   const [result] = await db.execute(
     `INSERT INTO chat_messages (room_id, line_no, is_action, is_private, sender, receiver, sender_color, msg_color, action_word, content)
@@ -43,18 +55,6 @@ async function broadcastMessage(io, roomId, msg) {
   console.log(`[消息] 发送消息 - 私聊:${msg.is_private}, 发送者:${msg.sender}, 接收者:${msg.receiver}`);
 
   if (msg.is_private) {
-    // 私聊：禁止对自己发送
-    if (msg.sender === msg.receiver) {
-      const senderSocket = await findUserSocket(io, msg.sender);
-      if (senderSocket) {
-        io.to(senderSocket).emit('chat:system', {
-          content: '不能对自己发送私聊消息',
-          type: 'private_message_self_error'
-        });
-      }
-      return; // 不保存到数据库
-    }
-    
     // 私聊：发送给发送者和接收者，不论是否在同一个房间
     const senderSocket = await findUserSocket(io, msg.sender);
     const receiverSocket = await findUserSocket(io, msg.receiver);
@@ -142,9 +142,9 @@ module.exports = function(io) {
         }
 
         await db.execute(
-          `INSERT INTO online_users (user_id, username, room_id, avatar, gender, sect, socket_id)
-           VALUES (?, ?, ?, ?, ?, ?, ?)`,
-          [userId, username, roomId, socket.data.avatar || '', socket.data.gender, socket.data.sect || '无', socket.id]
+          `INSERT INTO online_users (user_id, username, room_id, avatar, gender, sect, grade, socket_id)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+          [userId, username, roomId, socket.data.avatar || '', socket.data.gender, socket.data.sect || '无', socket.data.grade || 1, socket.id]
         );
 
         socket.join(`room_${roomId}`);
@@ -255,10 +255,6 @@ module.exports = function(io) {
         });
       } catch (err) {
         console.error('chat:action 错误:', err);
-      }
-    });
-      } catch (err) {
-        console.error('chat:action错误:', err);
       }
     });
 
