@@ -53,7 +53,7 @@
             <tr v-for="item in items" :key="item.id">
               <td>{{ item.id }}</td>
               <td><strong>{{ item.name }}</strong></td>
-              <td>{{ item.type || '-' }}</td>
+              <td>{{ getTypeName(item.type) }}</td>
               <td>{{ item.owner || '无' }}</td>
               <td>{{ item.attack }}</td>
               <td>{{ item.defense }}</td>
@@ -78,6 +78,19 @@ import { ref, onMounted } from 'vue'
 import api from '../../utils/api'
 
 const items = ref([])
+
+const typeMap = {
+  weapon: '武器',
+  armor: '防具',
+  hidden_weapon: '暗器',
+  medicine: '药品',
+  other: '其他'
+}
+
+const getTypeName = (type) => {
+  if (!type) return '-'
+  return typeMap[type] || type
+}
 
 const addForm = ref({
   name: '',
