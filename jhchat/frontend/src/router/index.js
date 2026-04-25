@@ -263,7 +263,8 @@ router.beforeEach(async (to, from, next) => {
   
   if (to.meta.requiresAdmin) {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
-    // 如果 faction 不存在，先同步用户信息
+    
+    // 如果 faction 缺失，同步用户信息
     if (!user.faction) {
       try {
         const res = await fetch('/api/users/me', {
@@ -272,13 +273,16 @@ router.beforeEach(async (to, from, next) => {
         const data = await res.json()
         if (data.success) {
           localStorage.setItem('user', JSON.stringify(data.data))
-          next()
-          return
+          Object.assign(user, data.data)
         }
-      } catch (e) {}
+      } catch (e) {
+        console.error('同步用户信息失败:', e)
+      }
     }
+    
     // 检查管理员权限
-    if (!user || (user.grade || 0) < 6 || user.faction !== '六扇门') {
+    if ((user.grade || 0) < 6 || user.faction !== '六扇门') {
+      alert('权限不足：需要管理员权限\n\n当前用户：' + (user.username || '未登录') + '\n等级：' + (user.grade || 0) + '\n派系：' + (user.faction || '未知'))
       return next('/main')
     }
   }
