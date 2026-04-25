@@ -77,7 +77,7 @@
           <div style="flex: 1"></div>
           <div>
             <label style="color: #aaa; font-size: 13px; margin-right: 8px">每页显示:</label>
-            <select v-model.number="pagination.pageSize" @change="loadSkills" class="form-select" style="width: 80px; display: inline-block;">
+            <select v-model.number="pagination.pageSize" @change="onPageSizeChange" class="form-select" style="width: 80px; display: inline-block;">
               <option :value="10">10</option>
               <option :value="20">20</option>
               <option :value="50">50</option>
@@ -159,32 +159,32 @@
       <!-- 分页 -->
       <div class="pagination-bar">
         <button 
-          @click="pagination.page = 1" 
+          @click="goToPage(1)" 
           :disabled="pagination.page === 1"
           class="btn btn-sm"
         >
           ⏮️ 首页
         </button>
         <button 
-          @click="pagination.page--" 
+          @click="goToPage(pagination.page - 1)" 
           :disabled="pagination.page === 1"
           class="btn btn-sm"
         >
           ◀️ 上一页
         </button>
         <span style="color: #aaa; font-size: 13px; margin: 0 12px">
-          第 {{ pagination.page }} 页 / 共 {{ Math.ceil(pagination.total / pagination.pageSize) }} 页
+          第 {{ pagination.page }} 页 / 共 {{ totalPages }} 页
         </span>
         <button 
-          @click="pagination.page++" 
-          :disabled="pagination.page >= Math.ceil(pagination.total / pagination.pageSize)"
+          @click="goToPage(pagination.page + 1)" 
+          :disabled="pagination.page >= totalPages"
           class="btn btn-sm"
         >
           下一页 ▶️
         </button>
         <button 
-          @click="pagination.page = Math.ceil(pagination.total / pagination.pageSize)" 
-          :disabled="pagination.page >= Math.ceil(pagination.total / pagination.pageSize)"
+          @click="goToPage(totalPages)" 
+          :disabled="pagination.page >= totalPages"
           class="btn btn-sm"
         >
           末页 ⏭️
@@ -324,6 +324,18 @@ const allSelected = computed(() => {
   return skills.length > 0 && selectedIds.value.length === skills.length
 })
 
+const totalPages = computed(() => {
+  return Math.ceil(pagination.total / pagination.pageSize) || 1
+})
+
+const goToPage = (page) => {
+  const maxPage = totalPages.value
+  if (page < 1) page = 1
+  if (page > maxPage) page = maxPage
+  pagination.page = page
+  loadSkills()
+}
+
 const loadSkills = async () => {
   loading.value = true
   try {
@@ -435,6 +447,11 @@ const resetFilter = () => {
     sect: '',
     type: ''
   })
+  pagination.page = 1
+  loadSkills()
+}
+
+const onPageSizeChange = () => {
   pagination.page = 1
   loadSkills()
 }
