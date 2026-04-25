@@ -64,8 +64,8 @@
             </thead>
             <tbody>
               <tr v-for="ban in permBans" :key="ban.id">
-                <td><code>{{ ban.ip_pattern }}</code></td>
-                <td>{{ formatDate(ban.created_at) }}</td>
+                <td><code>{{ ban.ip_pattern || ban.ip || '-' }}</code></td>
+                <td>{{ formatDate(ban.created_at || ban.locked_at) }}</td>
                 <td>
                   <button @click="deletePermBan(ban.id)" class="btn btn-sm btn-danger">解封</button>
                 </td>
@@ -99,13 +99,19 @@ async function loadIps() {
   try {
     if (currentUser.grade >= 8) {
       const res = await api.get('/admin/ip-locks')
-      if (res.success) tempLocks.value = res.data || []
+      if (res.success) {
+        tempLocks.value = res.data?.locks || []
+      }
     }
     if (currentUser.grade >= 10) {
       const res = await api.get('/admin/ip-bans')
-      if (res.success) permBans.value = res.data || []
+      if (res.success) {
+        // ip-bans 返回的也是 locks 字段，但字段名是 ip_pattern 和 created_at
+        permBans.value = res.data?.bans || res.data?.locks || []
+      }
     }
   } catch (e) {
+    console.error('加载 IP 列表失败:', e)
     alert('加载失败：' + (e.message || '未知错误'))
   }
 }
