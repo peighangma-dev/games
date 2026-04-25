@@ -6,3 +6,6 @@ dist/
 jhchat1/
 jhchat/backend/uploads/avatars/*
 !jhchat/backend/uploads/avatars/.gitkeep
+jhchat/database/*.sql.backup*
+jhchat/database/*.backup*
+backup/
