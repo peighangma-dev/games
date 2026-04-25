@@ -3,7 +3,7 @@ const path = require('path');
 const fs = require('fs');
 
 // 确保上传目录存在
-const uploadDir = process.env.UPLOAD_DIR || 'uploads/avatars';
+const uploadDir = process.env.UPLOAD_DIR || path.join(__dirname, '../../uploads/avatars');
 if (!fs.existsSync(uploadDir)) {
   fs.mkdirSync(uploadDir, { recursive: true });
 }

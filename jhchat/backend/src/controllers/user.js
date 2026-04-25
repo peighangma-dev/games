@@ -30,11 +30,12 @@ exports.updateMe = async (req, res) => {
 exports.uploadAvatar = async (req, res) => {
   try {
     if (!req.file) return res.status(400).json({ success: false, message: '请选择文件' });
-    const avatarPath = req.file.filename;
+    const avatarPath = `uploads/avatars/${req.file.filename}`;
     await db.execute('UPDATE users SET avatar = ? WHERE id = ?', [avatarPath, req.user.id]);
     res.json({ success: true, data: { avatar: avatarPath } });
   } catch (err) {
-    res.status(500).json({ success: false, message: '上传失败' });
+    console.error('uploadAvatar error:', err.message);
+    res.status(500).json({ success: false, message: '上传失败：' + err.message });
   }
 };
 

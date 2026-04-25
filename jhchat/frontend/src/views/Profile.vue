@@ -10,7 +10,7 @@
         <div class="profile-card card">
           <div class="avatar-section">
             <div class="avatar-box">
-              <img v-if="profile.avatar" :src="profile.avatar" alt="头像" class="avatar-img" />
+              <img v-if="profile.avatar" :src="getAvatarUrl(profile.avatar)" alt="头像" class="avatar-img" />
               <div v-else class="avatar-placeholder">无头像</div>
             </div>
             <div class="avatar-actions">
@@ -141,6 +141,13 @@ function statusText(status) {
   return map[status] || '正常'
 }
 
+function getAvatarUrl(avatar) {
+  if (!avatar) return null
+  if (avatar.startsWith('http://') || avatar.startsWith('https://')) return avatar
+  let relative = avatar.replace(/^\/?uploads\/avatars\//, '')
+  return `/uploads/avatars/${relative}`
+}
+
 async function loadProfile() {
   try {
     const res = await api.get('/users/me')
@@ -151,6 +158,12 @@ async function loadProfile() {
 async function uploadAvatar(e) {
   const file = e.target.files?.[0]
   if (!file) return
+  
+  if (file.size > 5 * 1024 * 1024) {
+    alert('文件过大，请上传小于 5MB 的图片')
+    return
+  }
+  
   const formData = new FormData()
   formData.append('avatar', file)
   try {
@@ -158,9 +171,12 @@ async function uploadAvatar(e) {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
     if (res.success) {
-      await loadProfile()
+      profile.value.avatar = res.data.avatar
+      alert('头像上传成功')
     }
-  } catch (err) {}
+  } catch (err) {
+    alert('上传失败：' + (err.message || '未知错误'))
+  }
 }
 
 async function changePassword() {
