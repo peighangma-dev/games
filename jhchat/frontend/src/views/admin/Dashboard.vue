@@ -274,8 +274,8 @@ const loadDashboardData = async () => {
       api.get('/admin/server/status')
     ])
 
-    if (overviewRes.data.success) {
-      const overviewData = overviewRes.data.data
+    if (overviewRes.success) {
+      const overviewData = overviewRes.data
       stats.value = {
         onlineUsers: overviewData.users?.online || 0,
         totalUsers: overviewData.users?.total || 0,
@@ -286,22 +286,26 @@ const loadDashboardData = async () => {
         totalSilver: overviewData.economy?.totalSilver || 0,
         avgSilver: overviewData.economy?.avgSilver || 0,
         totalDeposit: overviewData.economy?.totalDeposit || 0,
-        roomCount: realtimeRes.data?.data?.byRoom?.length || 0
+        roomCount: realtimeRes.data?.byRoom?.length || 0
       }
     }
 
-    if (realtimeRes.data.success) {
-      realtimeData.value = realtimeRes.data.data
+    if (realtimeRes.success) {
+      realtimeData.value = realtimeRes.data
     }
 
-    if (serverRes.data.success) {
-      serverInfo.value = serverRes.data.data
-      serverStatus.value = serverRes.data.data.http?.status === 'online' ? 'online' : 'offline'
+    if (serverRes.success) {
+      serverInfo.value = serverRes.data
+      serverStatus.value = serverRes.data.http?.status === 'online' ? 'online' : 'offline'
     }
 
     chartLoaded.value = true
   } catch (error) {
     console.error('加载仪表盘数据失败:', error)
+    // 显示错误信息便于调试
+    if (error.message) {
+      console.error('错误详情:', error.message)
+    }
   }
 }
 
