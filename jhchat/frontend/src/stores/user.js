@@ -23,6 +23,8 @@ export const useUserStore = defineStore('user', {
         this.user = res.data.user
         localStorage.setItem('token', res.data.token)
         localStorage.setItem('user', JSON.stringify(res.data.user))
+        // 登录后重新获取最新的用户资料
+        await this.fetchProfile()
       }
       return res
     },
@@ -45,6 +47,16 @@ export const useUserStore = defineStore('user', {
     async fetchOnlineUsers() {
       const res = await api.get('/users/online')
       if (res.success) this.onlineUsers = res.data
+    },
+    // 验证并同步用户信息（用于修复旧登录态缺少 faction 的问题）
+    async syncUserInfo() {
+      try {
+        const res = await api.get('/users/me')
+        if (res.success) {
+          this.user = res.data
+          localStorage.setItem('user', JSON.stringify(res.data))
+        }
+      } catch (e) {}
     }
   }
 })

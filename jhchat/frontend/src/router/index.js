@@ -255,20 +255,35 @@ const router = createRouter({
   routes
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const token = localStorage.getItem('token')
   if (to.meta.requiresAuth && !token) {
-    next('/login')
-  } else if (to.meta.requiresAdmin) {
-    const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (!user || (user.grade || 0) < 6 || user.faction !== '六扇门') {
-      next('/main')
-    } else {
-      next()
-    }
-  } else {
-    next()
+    return next('/login')
   }
+  
+  if (to.meta.requiresAdmin) {
+    const user = JSON.parse(localStorage.getItem('user') || '{}')
+    // 如果 faction 不存在，先同步用户信息
+    if (!user.faction) {
+      try {
+        const res = await fetch('/api/users/me', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        })
+        const data = await res.json()
+        if (data.success) {
+          localStorage.setItem('user', JSON.stringify(data.data))
+          next()
+          return
+        }
+      } catch (e) {}
+    }
+    // 检查管理员权限
+    if (!user || (user.grade || 0) < 6 || user.faction !== '六扇门') {
+      return next('/main')
+    }
+  }
+  
+  next()
 })
 
 export default router
