@@ -116,7 +116,14 @@ async function createTempLock() {
     return
   }
   try {
-    const res = await api.post('/admin/ip-locks', { ip: tempIp.value, hours: tempHours.value })
+    // 计算过期时间（当前时间 + 小时数）
+    const expiresAt = new Date()
+    expiresAt.setHours(expiresAt.getHours() + parseInt(tempHours.value || 24))
+    
+    const res = await api.post('/admin/ip-locks', { 
+      ip: tempIp.value, 
+      expires_at: expiresAt.toISOString() 
+    })
     if (res.success) {
       alert('IP 已临时封锁')
       tempIp.value = ''
