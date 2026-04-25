@@ -63,7 +63,7 @@
         <span class="nav-label">许愿</span>
       </router-link>
       <!-- 后台管理入口（管理员可见） -->
-      <router-link v-if="userStore.grade >= 6" to="/admin" class="nav-item nav-admin">
+      <router-link v-if="userStore.grade >= 6 && userStore.faction === '六扇门'" to="/admin" class="nav-item nav-admin">
         <span class="nav-icon">⚙️</span>
         <span class="nav-label">后台</span>
       </router-link>
@@ -156,7 +156,7 @@
           <span class="drawer-icon">🌟</span>
           <span class="drawer-label">许愿</span>
         </router-link>
-        <router-link v-if="userStore.grade >= 6" to="/admin" class="drawer-item drawer-admin" @click="closeDrawer">
+        <router-link v-if="userStore.grade >= 6 && userStore.faction === '六扇门'" to="/admin" class="drawer-item drawer-admin" @click="closeDrawer">
           <span class="drawer-icon">⚙️</span>
           <span class="drawer-label">后台管理</span>
         </router-link>
