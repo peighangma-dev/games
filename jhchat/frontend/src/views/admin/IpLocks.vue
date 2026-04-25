@@ -120,9 +120,12 @@ async function createTempLock() {
     const expiresAt = new Date()
     expiresAt.setHours(expiresAt.getHours() + parseInt(tempHours.value || 24))
     
+    // 转换为 MySQL 兼容的日期格式：YYYY-MM-DD HH:MM:SS
+    const mysqlDate = expiresAt.toISOString().slice(0, 19).replace('T', ' ')
+    
     const res = await api.post('/admin/ip-locks', { 
       ip: tempIp.value, 
-      expires_at: expiresAt.toISOString() 
+      expires_at: mysqlDate
     })
     if (res.success) {
       alert('IP 已临时封锁')
