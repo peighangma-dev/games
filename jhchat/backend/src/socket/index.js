@@ -43,6 +43,18 @@ async function broadcastMessage(io, roomId, msg) {
   console.log(`[消息] 发送消息 - 私聊:${msg.is_private}, 发送者:${msg.sender}, 接收者:${msg.receiver}`);
 
   if (msg.is_private) {
+    // 私聊：禁止对自己发送
+    if (msg.sender === msg.receiver) {
+      const senderSocket = await findUserSocket(io, msg.sender);
+      if (senderSocket) {
+        io.to(senderSocket).emit('chat:system', {
+          content: '不能对自己发送私聊消息',
+          type: 'private_message_self_error'
+        });
+      }
+      return; // 不保存到数据库
+    }
+    
     // 私聊：发送给发送者和接收者，不论是否在同一个房间
     const senderSocket = await findUserSocket(io, msg.sender);
     const receiverSocket = await findUserSocket(io, msg.receiver);
