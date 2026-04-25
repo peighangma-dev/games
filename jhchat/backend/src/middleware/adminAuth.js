@@ -97,8 +97,8 @@ function adminAuth(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     
-    // 检查是否为管理员 (grade >= 6 且属于逍遥派)
-    if (req.user.grade < 6 || req.user.faction !== '逍遥派') {
+    // 检查是否为管理员 (grade >= 6 且属于六扇门)
+    if (req.user.grade < 6 || req.user.faction !== '六扇门') {
       logger.warn('未授权的管理访问', {
         userId: req.user.id,
         username: req.user.username,

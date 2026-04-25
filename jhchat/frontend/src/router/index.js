@@ -261,7 +261,7 @@ router.beforeEach((to, from, next) => {
     next('/login')
   } else if (to.meta.requiresAdmin) {
     const user = JSON.parse(localStorage.getItem('user') || '{}')
-    if (user.grade < 6 || user.faction !== '逍遥派') {
+    if (user.grade < 6 || user.faction !== '六扇门') {
       next('/main')
     } else {
       next()

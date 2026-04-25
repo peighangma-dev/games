@@ -48,7 +48,7 @@ async function seed() {
   const adminPwd = await encryptPassword('admin123');
   await db.execute(
     `INSERT INTO users (username, password, gender, status, grade, faction, sect_title, all_value, silver, charm)
-     VALUES ('站长', ?, 'male', 'normal', 10, '逍遥派', '掌门', 99999, 9999999, 999)
+     VALUES ('站长', ?, 'male', 'normal', 10, '六扇门', '掌门', 99999, 9999999, 999)
      ON DUPLICATE KEY UPDATE username = username`,
     [adminPwd]
   );
@@ -68,7 +68,7 @@ async function seed() {
   console.log('聊天房间初始化完成');
 
   const sects = [
-    ['逍遥派', '站长', '笑傲江湖，逍遥自在', '逍遥派门规', 'both'],
+    ['六扇门', '站长', '笑傲江湖，逍遥自在', '六扇门门规', 'both'],
     ['少林派', null, '天下武功出少林', '少林门规', 'male'],
     ['峨眉派', null, '峨眉天下秀', '峨眉门规', 'female'],
     ['武当派', null, '太极生两仪', '武当门规', 'both'],

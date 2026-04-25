@@ -43,7 +43,7 @@
           </select>
           <select v-model="filterForm.sect" class="form-select" style="width: 120px;">
             <option value="">全部门派</option>
-            <option value="逍遥派">逍遥派</option>
+            <option value="六扇门">六扇门</option>
             <option value="少林派">少林派</option>
             <option value="武当派">武当派</option>
             <option value="峨眉派">峨眉派</option>
@@ -214,7 +214,7 @@
             <label style="min-width: 90px;">门派:</label>
             <select v-model="form.sect" class="form-select" style="flex: 1;">
               <option value="通用">通用</option>
-              <option value="逍遥派">逍遥派</option>
+              <option value="六扇门">六扇门</option>
               <option value="少林派">少林派</option>
               <option value="武当派">武当派</option>
               <option value="峨眉派">峨眉派</option>

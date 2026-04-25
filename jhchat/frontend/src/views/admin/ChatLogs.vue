@@ -9,7 +9,7 @@
           <input v-model="filterForm.username" type="text" placeholder="用户名" class="form-input" style="width: 150px;" />
           <select v-model="filterForm.room" class="form-select" style="width: 120px;">
             <option value="">全部房间</option>
-            <option value="逍遥派">逍遥派</option>
+            <option value="六扇门">六扇门</option>
             <option value="少林派">少林派</option>
             <option value="武当派">武当派</option>
             <option value="其他">其他</option>

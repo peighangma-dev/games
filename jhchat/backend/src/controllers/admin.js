@@ -94,7 +94,7 @@ exports.addManager = async (req, res) => {
     if (users.length === 0) return res.status(404).json({ success: false, message: '用户不存在' });
     const newGrade = grade || 6;
     if (newGrade >= req.user.grade) return res.status(403).json({ success: false, message: '不能设置高于自身的等级' });
-    await db.execute('UPDATE users SET grade = ?, faction = ? WHERE id = ?', [newGrade, faction || '逍遥派', users[0].id]);
+    await db.execute('UPDATE users SET grade = ?, faction = ? WHERE id = ?', [newGrade, faction || '六扇门', users[0].id]);
     res.json({ success: true, message: '管理员已添加' });
   } catch (err) {
     res.status(500).json({ success: false, message: '添加管理员失败' });

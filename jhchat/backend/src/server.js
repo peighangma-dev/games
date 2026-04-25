@@ -168,12 +168,9 @@ app.use((req, res) => {
 
 const { startRandomEventScheduler } = require('./socket');
 
-require('./socket')(io);
-
-// 启动随机事件定时器
-startRandomEventScheduler(io);
-
 const PORT = process.env.PORT || 3001;
+
+// 先启动服务器监听
 server.listen(PORT, () => {
   logger.info(`服务器运行在端口 ${PORT}`);
   logger.info('服务启动完成', {
@@ -181,5 +178,11 @@ server.listen(PORT, () => {
     env: process.env.NODE_ENV || 'development'
   });
 });
+
+// 初始化 Socket.IO 和随机事件
+require('./socket')(io);
+
+// 启动随机事件定时器
+startRandomEventScheduler(io);
 
 module.exports = { app, server, io };

@@ -15,7 +15,7 @@
             <option :value="9">等级 9 (超级管理员)</option>
           </select>
           <select v-model="addForm.faction" class="form-select">
-            <option value="逍遥派">逍遥派</option>
+            <option value="六扇门">六扇门</option>
             <option value="无">无</option>
           </select>
           <button @click="addManager" class="btn btn-primary">添加</button>
@@ -72,7 +72,7 @@
         <div class="form-group">
           <label>帮派:</label>
           <select v-model="editForm.faction" class="form-input">
-            <option value="逍遥派">逍遥派</option>
+            <option value="六扇门">六扇门</option>
             <option value="无">无</option>
           </select>
         </div>
@@ -97,7 +97,7 @@ const currentUser = JSON.parse(localStorage.getItem('user') || '{}')
 const addForm = ref({
   username: '',
   grade: 6,
-  faction: '逍遥派'
+  faction: '六扇门'
 })
 
 async function loadManagers() {

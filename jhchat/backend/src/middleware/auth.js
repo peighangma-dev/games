@@ -16,7 +16,7 @@ function auth(req, res, next) {
 
 function adminAuth(req, res, next) {
   auth(req, res, () => {
-    if (req.user.grade < 6 || req.user.faction !== '逍遥派') {
+    if (req.user.grade < 6 || req.user.faction !== '六扇门') {
       return res.status(403).json({ success: false, message: '权限不足' });
     }
     next();
@@ -25,7 +25,7 @@ function adminAuth(req, res, next) {
 
 function superAdminAuth(req, res, next) {
   auth(req, res, () => {
-    if (req.user.grade < 10 || req.user.faction !== '逍遥派') {
+    if (req.user.grade < 10 || req.user.faction !== '六扇门') {
       return res.status(403).json({ success: false, message: '需要站长权限' });
     }
     next();

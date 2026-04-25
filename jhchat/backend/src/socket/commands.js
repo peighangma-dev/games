@@ -27,7 +27,7 @@ const handlers = {
   },
 
   'acupoint': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     if (!(await isOnline(target))) return { success: false, message: '目标不在线' };
@@ -35,7 +35,7 @@ const handlers = {
   },
 
   'arrest': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { minGrade: 6, faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { minGrade: 6, faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     const t = await getUser(target);
@@ -50,7 +50,7 @@ const handlers = {
   },
 
   'jail': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { minGrade: 8, faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { minGrade: 8, faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     await db.execute("UPDATE users SET status = 'jailed', jailed_at = NOW() WHERE username = ?", [target]);
@@ -58,7 +58,7 @@ const handlers = {
   },
 
   'warn': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     return { success: true, message: `对${target}发出了警告`, effect: 'warn', target };
@@ -221,7 +221,7 @@ const handlers = {
   },
 
   'check-ip': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { minGrade: 7, faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { minGrade: 7, faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     const t = await getUser(target);
@@ -256,7 +256,7 @@ const handlers = {
   },
 
   'mute': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     const duration = parseInt(args?.duration) || 10;
@@ -268,7 +268,7 @@ const handlers = {
   },
 
   'unmute': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     await db.execute('DELETE FROM mute_list WHERE username = ?', [target]);
@@ -276,7 +276,7 @@ const handlers = {
   },
 
   'ban-fight': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     const [online] = await db.execute('SELECT room_id FROM online_users WHERE username = ?', [target]);
@@ -286,7 +286,7 @@ const handlers = {
   },
 
   'allow-fight': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     await db.execute('DELETE FROM fight_bans WHERE username = ?', [target]);
@@ -338,7 +338,7 @@ const handlers = {
   },
 
   'kick': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { minGrade: 9, faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { minGrade: 9, faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     if (!target) return { success: false, message: '请指定目标' };
     if (!(await isOnline(target))) return { success: false, message: '目标不在线' };
@@ -476,7 +476,7 @@ const handlers = {
   },
 
   'bulletin': async (target, args, ctx) => {
-    const permErr = checkPermission(ctx, { faction: '逍遥派' });
+    const permErr = checkPermission(ctx, { faction: '六扇门' });
     if (permErr) return { success: false, message: permErr };
     const msg = args?.message || '';
     if (!msg) return { success: false, message: '请输入公告内容' };

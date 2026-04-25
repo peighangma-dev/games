@@ -71,9 +71,9 @@ INSERT INTO `system_updates` (`version`, `version_code`, `title`, `description`,
  'major', 'normal', 0, 'released', NOW(), 0, '["all"]', 'system'),
 
 ('v1.1.0', 10100, '管理后台增强', '完善管理后台功能', 
- '["添加用户管理模块", "添加数据仪表盘", "优化权限控制", "修复已知 bug"],',
- 'minor', 'normal', 0, 'released', NOW(), 0, '["admin","backend"], 'admin'),
+ '["添加用户管理模块", "添加数据仪表盘", "优化权限控制", "修复已知 bug"]',
+ 'minor', 'normal', 0, 'released', NOW(), 0, '["admin","backend"]', 'admin'),
 
 ('v1.1.1', 10101, '管理后台 API 修复', '修复用户管理相关 API 问题',
  '["添加用户更新 API 路由", "修复服务器状态接口映射", "修复 Vue Router 警告", "修复数据库连接问题"]',
- 'patch', 'high', 0, 'released', NOW(), 0, '["admin","backend","frontend"], 'admin');
+ 'patch', 'high', 0, 'released', NOW(), 0, '["admin","backend","frontend"]', 'admin');
