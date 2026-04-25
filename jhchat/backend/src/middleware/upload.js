@@ -16,8 +16,8 @@ const allowedMimeTypes = {
   'image/webp': '.webp'
 };
 
-// 文件大小限制 (默认 5MB)
-const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 5 * 1024 * 1024;
+// 文件大小限制 (2MB)
+const MAX_FILE_SIZE = parseInt(process.env.MAX_FILE_SIZE) || 2 * 1024 * 1024;
 
 // 存储配置
 const storage = multer.diskStorage({
@@ -68,7 +68,7 @@ const handleUploadError = (err, req, res, next) => {
     if (err.code === 'LIMIT_FILE_SIZE') {
       return res.status(400).json({
         success: false,
-        message: `文件过大，最大允许 ${MAX_FILE_SIZE / 1024 / 1024}MB`
+        message: `文件过大，最大允许 2MB`
       });
     }
     if (err.code === 'LIMIT_FILE_COUNT') {
@@ -86,7 +86,7 @@ const handleUploadError = (err, req, res, next) => {
   if (err.code === 'INVALID_FILE_TYPE') {
     return res.status(400).json({
       success: false,
-      message: '不允许的文件类型，只允许 JPG, PNG, GIF, WebP'
+      message: '不允许的文件类型，只允许 JPG, PNG, GIF'
     });
   }
   

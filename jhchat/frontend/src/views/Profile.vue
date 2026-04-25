@@ -159,8 +159,8 @@ async function uploadAvatar(e) {
   const file = e.target.files?.[0]
   if (!file) return
   
-  if (file.size > 5 * 1024 * 1024) {
-    alert('文件过大，请上传小于 5MB 的图片')
+  if (file.size > 2 * 1024 * 1024) {
+    alert('文件过大，请上传小于 2MB 的图片')
     return
   }
   
