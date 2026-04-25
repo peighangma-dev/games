@@ -900,6 +900,11 @@ function sendMessage() {
     const cmd = parts[0]
     const target = parts.slice(1).join(' ')
     if (commands.value.includes(cmd)) {
+      // 检查是否对自己使用命令（如果有目标）
+      if (target && target === userStore.username) {
+        alert('不能对自己使用此命令')
+        return
+      }
       socket.emit('chat:command', {
         command: cmd,
         target: target,
@@ -912,6 +917,15 @@ function sendMessage() {
   }
 
   if (showSlashMenu.value && slashCommand.value) {
+    // 检查是否对自己使用命令
+    if (cmdTarget.value && cmdTarget.value === userStore.username) {
+      alert('不能对自己使用此命令')
+      slashCommand.value = ''
+      cmdTarget.value = ''
+      inputText.value = ''
+      charCount.value = 0
+      return
+    }
     socket.emit('chat:command', {
       command: slashCommand.value,
       target: cmdTarget.value,
@@ -941,6 +955,13 @@ function sendAction() {
   if (!actionWord.value) return
   const socket = getSocket()
   if (!socket) return
+  
+  // 检查是否对自己发送动作
+  if (receiver.value && receiver.value !== '所有人' && receiver.value === userStore.username) {
+    alert('不能对自己执行动作')
+    return
+  }
+  
   socket.emit('chat:action', {
     actionName: actionWord.value,
     receiver: receiver.value || '所有人'

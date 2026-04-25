@@ -44,7 +44,7 @@ exports.getMessages = async (req, res) => {
 exports.getRoomOnline = async (req, res) => {
   try {
     const [users] = await db.execute(
-      'SELECT user_id, username, gender, sect, avatar FROM online_users WHERE room_id = ? ORDER BY username',
+      'SELECT o.user_id, o.username, o.gender, o.sect, o.avatar, u.grade FROM online_users o LEFT JOIN users u ON o.user_id = u.id WHERE o.room_id = ? ORDER BY o.username',
       [req.params.id]
     );
     res.json({ success: true, data: users });

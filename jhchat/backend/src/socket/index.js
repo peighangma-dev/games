@@ -150,7 +150,7 @@ module.exports = function(io) {
         socket.join(`room_${roomId}`);
 
         const [online] = await db.execute(
-          'SELECT user_id, username, gender, sect, avatar FROM online_users WHERE room_id = ? ORDER BY username',
+          'SELECT o.user_id, o.username, o.gender, o.sect, o.avatar, u.grade FROM online_users o LEFT JOIN users u ON o.user_id = u.id WHERE o.room_id = ? ORDER BY o.username',
           [roomId]
         );
         io.to(`room_${roomId}`).emit('room:onlineUpdate', { roomId, users: online });
@@ -225,6 +225,15 @@ module.exports = function(io) {
         if (onlineUser.length === 0) return;
         const roomId = onlineUser[0].room_id;
 
+        // 检查是否对自己发送动作
+        if (data.receiver && data.receiver !== '所有人' && data.receiver === username) {
+          socket.emit('chat:system', {
+            content: '不能对自己执行动作',
+            type: 'action_self_error'
+          });
+          return;
+        }
+
         const [actions] = await db.execute(
           'SELECT template FROM chat_actions WHERE name = ?', [data.actionName]
         );
@@ -244,6 +253,10 @@ module.exports = function(io) {
           action_word: '',
           content
         });
+      } catch (err) {
+        console.error('chat:action 错误:', err);
+      }
+    });
       } catch (err) {
         console.error('chat:action错误:', err);
       }
@@ -289,7 +302,7 @@ module.exports = function(io) {
         io.to(`room_${oldRoomId}`).emit('room:onlineUpdate', { roomId: oldRoomId, users: oldOnline });
 
         const [newOnline] = await db.execute(
-          'SELECT user_id, username, gender, sect, avatar FROM online_users WHERE room_id = ? ORDER BY username',
+          'SELECT o.user_id, o.username, o.gender, o.sect, o.avatar, u.grade FROM online_users o LEFT JOIN users u ON o.user_id = u.id WHERE o.room_id = ? ORDER BY o.username',
           [newRoomId]
         );
         io.to(`room_${newRoomId}`).emit('room:onlineUpdate', { roomId: newRoomId, users: newOnline });
@@ -314,7 +327,7 @@ module.exports = function(io) {
           await sendSystemMessage(io, roomId, `<b>${username}</b> 离开了笑傲江湖`);
 
           const [online] = await db.execute(
-            'SELECT user_id, username, gender, sect, avatar FROM online_users WHERE room_id = ? ORDER BY username',
+            'SELECT o.user_id, o.username, o.gender, o.sect, o.avatar, u.grade FROM online_users o LEFT JOIN users u ON o.user_id = u.id WHERE o.room_id = ? ORDER BY o.username',
             [roomId]
           );
           io.to(`room_${roomId}`).emit('room:onlineUpdate', { roomId, users: online });
