@@ -20,9 +20,9 @@
               <th>任务名称</th>
               <th style="width: 120px;">类型</th>
               <th>任务描述</th>
+              <th style="width: 100px;">难度</th>
               <th style="width: 100px;">银两奖励</th>
               <th style="width: 100px;">经验奖励</th>
-              <th style="width: 80px;">前置任务</th>
               <th style="width: 80px;">目标</th>
               <th style="width: 80px;">状态</th>
               <th style="width: 180px;">操作</th>
@@ -38,18 +38,22 @@
                 </span>
               </td>
               <td>{{ quest.description }}</td>
+              <td>
+                <span :class="['difficulty-badge', 'diff-'+quest.difficulty]">
+                  {{ getDifficultyName(quest.difficulty) }}
+                </span>
+              </td>
               <td class="price">{{ quest.reward_silver }} 银</td>
               <td>{{ quest.reward_exp }} EXP</td>
-              <td style="text-align: center;">{{ quest.prerequisite || '-' }}</td>
               <td style="text-align: center;">{{ quest.objective_count }}</td>
               <td style="text-align: center;">
                 <button 
                   @click="toggleQuestStatus(quest)" 
-                  :class="['status-btn', quest.active ? 'status-active' : 'status-inactive']"
-                  :title="quest.active ? '点击停用' : '点击启用'"
+                  :class="['status-btn', quest.is_active ? 'status-active' : 'status-inactive']"
+                  :title="quest.is_active ? '点击停用' : '点击启用'"
                   style="width: 100%; padding: 6px 0; border: none; border-radius: 4px; cursor: pointer; font-size: 12px;"
                 >
-                  {{ quest.active ? '✅' : '❌' }}
+                  {{ quest.is_active ? '✅' : '❌' }}
                 </button>
               </td>
               <td>
@@ -77,15 +81,27 @@
             <label style="min-width: 100px;">任务类型:</label>
             <div style="display: flex; gap: 16px;">
               <label style="color: #fff; cursor: pointer;">
-                <input type="radio" v-model="form.type" value="daily" /> <span style="color: #27ae60">每日任务</span>
-              </label>
-              <label style="color: #fff; cursor: pointer;">
                 <input type="radio" v-model="form.type" value="main" /> <span style="color: #3498db">主线任务</span>
               </label>
               <label style="color: #fff; cursor: pointer;">
-                <input type="radio" v-model="form.type" value="branch" /> <span style="color: #9b59b6">支线任务</span>
+                <input type="radio" v-model="form.type" value="side" /> <span style="color: #9b59b6">支线任务</span>
+              </label>
+              <label style="color: #fff; cursor: pointer;">
+                <input type="radio" v-model="form.type" value="daily" /> <span style="color: #27ae60">每日任务</span>
+              </label>
+              <label style="color: #fff; cursor: pointer;">
+                <input type="radio" v-model="form.type" value="hidden" /> <span style="color: #e74c3c">隐藏任务</span>
               </label>
             </div>
+          </div>
+          <div class="form-row">
+            <label style="min-width: 100px;">任务难度:</label>
+            <select v-model="form.difficulty" class="form-select" style="flex: 1;">
+              <option value="easy">简单</option>
+              <option value="medium">普通</option>
+              <option value="hard">困难</option>
+              <option value="extreme">极难</option>
+            </select>
           </div>
           <div class="form-row">
             <label style="min-width: 100px;">任务描述:</label>
@@ -98,10 +114,12 @@
           <div class="form-row">
             <label style="min-width: 100px;">目标类型:</label>
             <select v-model="form.objective_type" class="form-select" style="flex: 1;">
-              <option value="chat">💬 聊天</option>
-              <option value="combat">⚔️ 战斗</option>
+              <option value="kill">⚔️ 战斗</option>
               <option value="collect">📦 收集</option>
+              <option value="talk">💬 对话</option>
               <option value="explore">🗺️ 探索</option>
+              <option value="craft">🔨 制作</option>
+              <option value="train">🧘 修炼</option>
             </select>
           </div>
           <div class="form-row">
@@ -148,10 +166,11 @@ const isEdit = ref(false)
 const form = reactive({
   id: null,
   name: '',
-  type: 'daily',
+  type: 'side',
+  difficulty: 'easy',
   description: '',
   prerequisite: '',
-  objective_type: 'chat',
+  objective_type: 'talk',
   objective_count: 1,
   reward_silver: 500,
   reward_exp: 100,
@@ -162,9 +181,20 @@ const getTypeName = (type) => {
   const names = {
     'main': '主线任务',
     'daily': '每日任务',
-    'branch': '支线任务'
+    'side': '支线任务',
+    'hidden': '隐藏任务'
   }
   return names[type] || type
+}
+
+const getDifficultyName = (difficulty) => {
+  const names = {
+    'easy': '简单',
+    'medium': '普通',
+    'hard': '困难',
+    'extreme': '极难'
+  }
+  return names[difficulty] || difficulty
 }
 
 const loadQuests = async () => {
@@ -185,10 +215,11 @@ const showCreateDialog = () => {
   Object.assign(form, {
     id: null,
     name: '',
-    type: 'daily',
+    type: 'side',
+    difficulty: 'easy',
     description: '',
     prerequisite: '',
-    objective_type: 'chat',
+    objective_type: 'talk',
     objective_count: 1,
     reward_silver: 500,
     reward_exp: 100,
@@ -235,10 +266,10 @@ const submitForm = async () => {
 
 const toggleQuestStatus = async (row) => {
   try {
-    await api.put(`/admin/quests/${row.id}`, { active: row.active })
+    await api.put(`/admin/quests/${row.id}`, { is_active: row.is_active })
     alert('状态已更新')
   } catch (error) {
-    row.active = !row.active
+    row.is_active = !row.is_active
     alert('更新失败：' + (error.message || '未知错误'))
   }
 }
@@ -287,7 +318,12 @@ onMounted(() => {
 .type-badge { padding: 4px 8px; border-radius: 4px; font-size: 12px; }
 .type-main { background: #3498db; color: #fff; }
 .type-daily { background: #27ae60; color: #fff; }
-.type-branch { background: #9b59b6; color: #fff; }
+.type-side { background: #9b59b6; color: #fff; }
+.type-hidden { background: #e74c3c; color: #fff; }
+.diff-easy { background: #27ae60; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.diff-medium { background: #3498db; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.diff-hard { background: #e67e22; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
+.diff-extreme { background: #e74c3c; color: #fff; padding: 4px 8px; border-radius: 4px; font-size: 12px; }
 .price { color: #f39c12; font-weight: bold; }
 .status-btn { transition: all 0.3s; }
 .status-active { background: rgba(39, 174, 96, 0.3); border: 1px solid #27ae60; }

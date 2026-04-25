@@ -9,7 +9,6 @@
     <div class="stats-bar" v-if="sectStats.total_sects">
       <span class="stat-item">门派总数：<strong>{{ sectStats.total_sects }}</strong></span>
       <span class="stat-item">总成员数：<strong>{{ sectStats.total_members || 0 }}</strong></span>
-      <span class="stat-item">总资金：<strong>{{ sectStats.total_fund || 0 }}</strong> 两</span>
       <span class="stat-item">待审批申请：<strong>{{ sectStats.pending_applications || 0 }}</strong></span>
     </div>
 
@@ -19,7 +18,6 @@
         <div class="sect-header">
           <div class="sect-title-row">
             <span class="sect-name">{{ sect.name }}</span>
-            <span :class="['status-tag', sect.status]">{{ statusText(sect.status) }}</span>
           </div>
           <span :class="['gender-tag', sect.fit_gender]">
             {{ genderText(sect.fit_gender) }}
@@ -28,10 +26,7 @@
         
         <div class="sect-info">
           <p><strong>掌门：</strong>{{ sect.leader || '暂无' }}</p>
-          <p><strong>等级：</strong>Lv.{{ sect.level }}</p>
           <p><strong>人数：</strong>{{ sect.actual_member_count || sect.member_count || 0 }} 人</p>
-          <p><strong>资金：</strong>{{ sect.fund || 0 }} 两</p>
-          <p><strong>经验：</strong>{{ sect.exp || 0 }}</p>
           <p v-if="sect.slogan"><strong>口号：</strong>{{ sect.slogan }}</p>
           <p v-if="sect.description"><strong>简介：</strong>{{ sect.description }}</p>
         </div>
@@ -107,11 +102,6 @@
               <option value="female">仅收女弟子</option>
             </select>
           </div>
-          
-          <div class="form-group half" v-if="!isEditMode">
-            <label>初始等级:</label>
-            <input v-model.number="form.level" type="number" min="1" max="10" class="form-input" />
-          </div>
         </div>
 
         <div class="modal-actions">
@@ -144,20 +134,10 @@ const form = reactive({
   slogan: '',
   description: '',
   rules: '',
-  fit_gender: 'both',
-  level: 1
+  fit_gender: 'both'
 })
 
 const isEditMode = computed(() => !!form.id)
-
-const statusText = (status) => {
-  const map = {
-    active: '活跃',
-    inactive: '未激活',
-    closed: '已关闭'
-  }
-  return map[status] || status
-}
 
 const genderText = (gender) => {
   const map = {
@@ -196,7 +176,6 @@ const resetForm = () => {
   form.description = ''
   form.rules = ''
   form.fit_gender = 'both'
-  form.level = 1
   editingSect.value = null
 }
 
@@ -215,7 +194,6 @@ const editSect = (row) => {
   form.description = row.description || ''
   form.rules = row.rules || ''
   form.fit_gender = row.fit_gender || 'both'
-  form.level = row.level || 1
   dialogVisible.value = true
 }
 
@@ -341,28 +319,6 @@ onMounted(() => {
   font-size: 18px;
   font-weight: bold;
   color: #fff;
-}
-
-.status-tag {
-  padding: 2px 8px;
-  border-radius: 10px;
-  font-size: 11px;
-  font-weight: bold;
-}
-
-.status-tag.active {
-  background: rgba(100, 200, 100, 0.3);
-  color: #8f8;
-}
-
-.status-tag.inactive {
-  background: rgba(200, 150, 50, 0.3);
-  color: #fa0;
-}
-
-.status-tag.closed {
-  background: rgba(150, 150, 150, 0.3);
-  color: #aaa;
 }
 
 .gender-tag {

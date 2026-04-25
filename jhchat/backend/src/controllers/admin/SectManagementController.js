@@ -15,7 +15,7 @@ class SectManagementController {
                (SELECT COUNT(*) FROM users u WHERE u.sect = s.name AND u.status != 'dead') as actual_member_count,
                (SELECT SUM(silver) FROM users WHERE sect = s.name) as total_silver
         FROM sects s 
-        ORDER BY s.level DESC, s.exp DESC, s.member_count DESC
+        ORDER BY s.member_count DESC, s.created_at DESC
       `);
       
       res.json({ success: true, data: sects });
@@ -86,7 +86,7 @@ class SectManagementController {
    */
   static async createSect(req, res) {
     try {
-      const { name, leader, slogan, description, rules, fit_gender, level } = req.body;
+      const { name, leader, slogan, description, rules, fit_gender } = req.body;
       
       // 检查是否已存在
       const [existing] = await db.execute('SELECT id FROM sects WHERE name = ?', [name]);
@@ -96,14 +96,29 @@ class SectManagementController {
       
       // 插入新门派
       await db.execute(`
-        INSERT INTO sects (name, leader, slogan, description, rules, fit_gender, level, member_count, status)
-        VALUES (?, ?, ?, ?, ?, ?, ?, 0, 'active')
-      `, [name, leader || null, slogan || null, description || null, rules || null, fit_gender || 'both', level || 1]);
+        INSERT INTO sects (name, leader, slogan, description, rules, fit_gender, member_count, fund)
+        VALUES (?, ?, ?, ?, ?, ?, 0, 0)
+      `, [name, leader || null, slogan || null, description || null, rules || null, fit_gender || 'both']);
+      
+      // 创建默认职位
+      const [result] = await db.execute('SELECT LAST_INSERT_ID() as id');
+      const sectId = result[0].id;
+      
+      await db.execute(`
+        INSERT INTO sect_positions (sect_id, position_name, position_rank, description, min_grade, min_contribution, salary_amount)
+        VALUES 
+        (?, '掌门', 100, '一派之主，统御全派', 10, 10000, 5000),
+        (?, '长老', 80, '门派长老，协助掌门管理', 8, 5000, 2000),
+        (?, '护法', 60, '门派护法，维护门派秩序', 6, 2000, 1000),
+        (?, '核心弟子', 40, '门派核心成员', 4, 500, 300),
+        (?, '普通弟子', 20, '门派正式成员', 2, 100, 100),
+        (?, '入门弟子', 10, '刚入门的弟子', 1, 0, 50)
+      `, [sectId, sectId, sectId, sectId, sectId, sectId]);
       
       // 记录日志
       await db.execute(
-        "INSERT INTO sect_logs (sect_name, username, action, details) VALUES (?, ?, 'create', ?)",
-        [name, req.user.username, JSON.stringify({ leader, fit_gender })]
+        "INSERT INTO sect_logs (sect_id, sect_name, username, action, details) VALUES (?, ?, ?, 'create', ?)",
+        [sectId, name, req.user.username, JSON.stringify({ leader, fit_gender })]
       );
       
       res.json({ success: true, message: `门派"${name}"创建成功` });
@@ -119,7 +134,7 @@ class SectManagementController {
   static async updateSect(req, res) {
     try {
       const { id } = req.params;
-      const { name, leader, slogan, description, rules, fit_gender, level, exp, fund, status } = req.body;
+      const { name, leader, slogan, description, rules, fit_gender, exp, fund } = req.body;
       
       const [sects] = await db.execute('SELECT * FROM sects WHERE id = ?', [id]);
       if (sects.length === 0) {
@@ -130,16 +145,11 @@ class SectManagementController {
       const fields = [];
       const values = [];
       
-      if (name !== undefined) { fields.push('name = ?'); values.push(name); }
       if (leader !== undefined) { fields.push('leader = ?'); values.push(leader); }
       if (slogan !== undefined) { fields.push('slogan = ?'); values.push(slogan); }
       if (description !== undefined) { fields.push('description = ?'); values.push(description); }
       if (rules !== undefined) { fields.push('rules = ?'); values.push(rules); }
       if (fit_gender !== undefined) { fields.push('fit_gender = ?'); values.push(fit_gender); }
-      if (level !== undefined) { fields.push('level = ?'); values.push(level); }
-      if (exp !== undefined) { fields.push('exp = ?'); values.push(exp); }
-      if (fund !== undefined) { fields.push('fund = ?'); values.push(fund); }
-      if (status !== undefined) { fields.push('status = ?'); values.push(status); }
       
       if (fields.length === 0) {
         return res.status(400).json({ success: false, message: '没有要更新的字段' });
@@ -455,9 +465,17 @@ class SectManagementController {
         SELECT 
           (SELECT COUNT(*) FROM sects) as total_sects,
           (SELECT SUM(member_count) FROM sects) as total_members,
-          (SELECT SUM(fund) FROM sects) as total_fund,
-          (SELECT COUNT(*) FROM sect_applications WHERE status = 'pending') as pending_applications
+          (SELECT SUM(fund) FROM sects) as total_fund
       `);
+      
+      // 检查 sect_applications 表是否存在
+      try {
+        const [apps] = await db.execute("SELECT COUNT(*) as count FROM sect_applications WHERE status = 'pending'");
+        stats[0].pending_applications = apps[0].count;
+      } catch (err) {
+        // 表不存在时默认为 0
+        stats[0].pending_applications = 0;
+      }
       
       res.json({ success: true, data: stats[0] });
     } catch (err) {
