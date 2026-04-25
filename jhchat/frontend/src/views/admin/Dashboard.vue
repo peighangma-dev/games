@@ -712,7 +712,7 @@ onUnmounted(() => {
   gap: 12px;
 }
 
-// 系统更新提示样式
+/* 系统更新提示样式 */
 .update-alert-card {
   background: linear-gradient(135deg, rgba(64, 158, 255, 0.15) 0%, rgba(102, 126, 234, 0.1) 100%);
   border: 1px solid rgba(64, 158, 255, 0.3);
