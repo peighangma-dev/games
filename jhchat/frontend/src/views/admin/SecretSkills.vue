@@ -17,6 +17,10 @@
           <span class="stat-label">📄 秘籍总数</span>
           <span class="stat-value">{{ stats.total }}</span>
         </div>
+        <div class="stat-item grad-jue">
+          <span class="stat-label">👑 绝学秘籍</span>
+          <span class="stat-value">{{ stats.gradeJue }}</span>
+        </div>
         <div class="stat-item grad-a">
           <span class="stat-label">⭐ 甲级秘籍</span>
           <span class="stat-value">{{ stats.gradeA }}</span>
@@ -37,6 +41,7 @@
           <input v-model="filterForm.name" type="text" placeholder="秘籍名称" class="form-input" style="width: 150px;" />
           <select v-model="filterForm.grade" class="form-select" style="width: 100px;">
             <option value="">全部等级</option>
+            <option value="绝">绝学</option>
             <option value="甲">甲级</option>
             <option value="乙">乙级</option>
             <option value="丙">丙级</option>
@@ -200,6 +205,9 @@
             <label style="min-width: 90px;">秘籍等级:</label>
             <div style="display: flex; gap: 16px;">
               <label style="color: #fff; cursor: pointer;">
+                <input type="radio" v-model="form.grade" value="绝" /> <span style="color: #ffd700">绝学</span>
+              </label>
+              <label style="color: #fff; cursor: pointer;">
                 <input type="radio" v-model="form.grade" value="甲" /> <span style="color: #f5576c">甲级</span>
               </label>
               <label style="color: #fff; cursor: pointer;">
@@ -283,7 +291,7 @@ import api from '../../utils/api'
 const loading = ref(false)
 const submitting = ref(false)
 const skills = ref([])
-const stats = ref({ total: 0, gradeA: 0, gradeB: 0, gradeC: 0 })
+const stats = ref({ total: 0, gradeJue: 0, gradeA: 0, gradeB: 0, gradeC: 0 })
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const selectedIds = ref([])
@@ -340,7 +348,7 @@ const loadStats = async () => {
   try {
     const res = await api.get('/admin/secret-skills/stats')
     if (res.success) {
-      stats.value = res.data || { total: 0, gradeA: 0, gradeB: 0, gradeC: 0 }
+      stats.value = res.data || { total: 0, gradeJue: 0, gradeA: 0, gradeB: 0, gradeC: 0 }
     }
   } catch (error) {
     console.error('加载统计数据失败:', error)
@@ -481,6 +489,7 @@ onMounted(() => {
 .subsection-title { color: #f39c12; font-size: 14px; margin: 0; }
 .stats-row { display: flex; gap: 16px; margin-bottom: 20px; }
 .stat-item { flex: 1; background: rgba(255,255,255,0.05); border-radius: 6px; padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; border: 1px solid rgba(255,255,255,0.1); }
+.stat-item.grad-jue { background: linear-gradient(135deg, rgba(255,215,0,0.2), rgba(255,193,7,0.15)); border-color: rgba(255,215,0,0.4); }
 .stat-item.grad-a { background: linear-gradient(135deg, rgba(245,147,251,0.15), rgba(245,87,108,0.15)); border-color: rgba(245,87,108,0.3); }
 .stat-item.grad-b { background: linear-gradient(135deg, rgba(246,211,101,0.15), rgba(253,160,133,0.15)); border-color: rgba(253,160,133,0.3); }
 .stat-item.grad-c { background: linear-gradient(135deg, rgba(132,250,176,0.15), rgba(141,211,244,0.15)); border-color: rgba(141,211,244,0.3); }
