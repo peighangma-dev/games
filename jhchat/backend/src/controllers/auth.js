@@ -1,6 +1,6 @@
 const db = require('../config/db');
 const jwt = require('jsonwebtoken');
-const { hashPassword, verifyPassword } = require('../utils/password');
+const { hashPassword: encryptPassword, verifyPassword } = require('../utils/password');
 const { generateToken } = require('../utils/jwt');
 const { getConfig, incrementStat } = require('../config/configManager');
 const { logger } = require('../utils/logger');
