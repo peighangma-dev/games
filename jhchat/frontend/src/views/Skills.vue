@@ -155,12 +155,12 @@
               </div>
               <div class="stat-box">
                 <div class="stat-icon">💪</div>
-                <div class="stat-label">总内力加成</div>
+                <div class="stat-label">内力加成</div>
                 <div class="stat-value">+{{ totalNeiliBonus }}</div>
               </div>
               <div class="stat-box">
                 <div class="stat-icon">🏃</div>
-                <div class="stat-label">总轻功加成</div>
+                <div class="stat-label">轻功加成</div>
                 <div class="stat-value">+{{ totalSpeedBonus }}</div>
               </div>
             </div>
@@ -225,126 +225,140 @@
             <div class="preview-tip">💡 预测值 = 当前属性 + 未习武功中可学习部分的总加成</div>
           </div>
 
-          <div class="skill-filter">
-            <label>类型筛选：</label>
-            <select v-model="secretFilter" class="filter-select">
-              <option value="all">全部</option>
-              <option value="neili">内功类</option>
-              <option value="speed">轻功类</option>
-              <option value="both">全能类</option>
-            </select>
-            
-            <label>稀有度：</label>
-            <select v-model="secretRarity" class="filter-select">
-              <option value="all">全部</option>
-              <option value="common">普通</option>
-              <option value="uncommon">稀有</option>
-              <option value="rare">珍贵</option>
-              <option value="epic">史诗</option>
-              <option value="legendary">传说</option>
-            </select>
-            
-            <label>状态：</label>
-            <select v-model="secretStatus" class="filter-select">
-              <option value="all">全部</option>
-              <option value="learnable">可学习</option>
-              <option value="learned">已习得</option>
-              <option value="locked">等级不足</option>
-            </select>
-            
-            <label>排序：</label>
-            <select v-model="secretSort" class="filter-select">
-              <option value="level">按等级</option>
-              <option value="price">按价格</option>
-              <option value="bonus">按加成</option>
-            </select>
+          <!-- 筛选器 -->
+          <div class="skill-filter card">
+            <div class="filter-row">
+              <div class="filter-group">
+                <label class="filter-label">📂 类型</label>
+                <select v-model="secretFilter" class="filter-select">
+                  <option value="all">全部</option>
+                  <option value="neili">内功</option>
+                  <option value="speed">轻功</option>
+                  <option value="both">全能</option>
+                </select>
+              </div>
+              
+              <div class="filter-group">
+                <label class="filter-label">💎 稀有度</label>
+                <select v-model="secretRarity" class="filter-select">
+                  <option value="all">全部</option>
+                  <option value="common">普通</option>
+                  <option value="uncommon">稀有</option>
+                  <option value="rare">珍贵</option>
+                  <option value="epic">史诗</option>
+                  <option value="legendary">传说</option>
+                </select>
+              </div>
+              
+              <div class="filter-group">
+                <label class="filter-label">📊 状态</label>
+                <select v-model="secretStatus" class="filter-select">
+                  <option value="all">全部</option>
+                  <option value="learnable">可学习</option>
+                  <option value="learned">已习得</option>
+                  <option value="locked">未达成</option>
+                </select>
+              </div>
+              
+              <div class="filter-group">
+                <label class="filter-label">🔄 排序</label>
+                <select v-model="secretSort" class="filter-select">
+                  <option value="level">等级↑</option>
+                  <option value="price">价格↑</option>
+                  <option value="bonus">加成↑</option>
+                </select>
+              </div>
+            </div>
           </div>
 
-          <div v-for="s in filteredSecretSkills" :key="s.id" class="card skill-card secret-card" :class="{ 'learned': hasLearned(s.name), 'affordable': canAfford(s), 'locked': !canMeetLevelRequirement(s) }">
-            <div class="skill-rarity-indicator" :class="s.rarity"></div>
-            <div class="skill-header">
-              <div class="skill-name-box">
-                <span class="skill-name">{{ s.name }}</span>
-                <span :class="['skill-level-badge', 'level-' + s.level]">Lv.{{ s.level }}</span>
-                <span v-if="hasLearned(s.name)" class="learned-badge">✅ 已习得</span>
-              </div>
-              <div class="skill-price" :class="{ 'can-afford': canAfford(s) }">💰 {{ formatPrice(s.price) }}</div>
-            </div>
-            
-            <div v-if="s.description" class="skill-description">
-              <span class="desc-icon">📜</span>
-              <span class="desc-text">{{ s.description }}</span>
-            </div>
-            
-            <div class="skill-bonus">
-              <span v-if="s.neili_bonus > 0" class="bonus-neili">
-                👁️ 内力 +{{ s.neili_bonus }}
-              </span>
-              <span v-if="s.speed_bonus > 0" class="bonus-speed">
-                🏃 轻功 +{{ s.speed_bonus }}
-              </span>
-              <span v-if="!s.neili_bonus && !s.speed_bonus" class="bonus-none">
-                ❓ 神秘效果
-              </span>
-            </div>
-            
-            <div class="skill-meta">
-              <span class="meta-rarity" :class="s.rarity">{{ getRarityName(s.rarity) }}</span>
-              <span class="meta-type">{{ getSkillType(s) }}</span>
-            </div>
-            
-            <div class="skill-actions">
-              <button v-if="!hasLearned(s.name)" class="btn btn-sm btn-learn" @click="learnSkill(s)" :disabled="!canLearnSkill(s)">
-                {{ !canMeetLevelRequirement(s) ? `🔒 需要 Lv.${s.level}` : (!canAfford(s) ? '💰 银两不足' : '📖 学习') }}
-              </button>
-              <button v-else class="btn btn-sm btn-learned" disabled>
-                ✅ 已习得
-              </button>
-              <button class="btn btn-sm btn-detail" @click="showSkillDetail(s)">
-                ℹ️ 详情
-              </button>
-            </div>
-            
-            <!-- 详情弹窗 -->
-            <div v-if="selectedSkill && selectedSkill.id === s.id" class="skill-detail-modal" @click.self="selectedSkill = null">
-              <div class="detail-content">
-                <div class="detail-header">
-                  <h3>{{ selectedSkill.name }}</h3>
-                  <button class="close-btn" @click="selectedSkill = null">×</button>
+          <!-- 武功卡片列表 -->
+          <div class="skills-grid">
+            <div v-for="s in filteredSecretSkills" :key="s.id" class="card skill-card secret-card" :class="{ 'learned': hasLearned(s.name), 'affordable': canAfford(s), 'locked': !canMeetLevelRequirement(s) }">
+              <div class="skill-rarity-indicator" :class="s.rarity"></div>
+              <div class="skill-header">
+                <div class="skill-name-box">
+                  <span class="skill-name">{{ s.name }}</span>
+                  <span :class="['skill-level-badge', 'level-' + s.level]">Lv.{{ s.level }}</span>
+                  <span v-if="hasLearned(s.name)" class="learned-badge">✅</span>
                 </div>
-                <div class="detail-body">
-                  <div class="detail-row">
-                    <span class="detail-label">等级要求：</span>
-                    <span class="detail-value">Lv.{{ selectedSkill.level }}</span>
+                <div class="skill-price" :class="{ 'can-afford': canAfford(s) }">{{ formatPrice(s.price) }}两</div>
+              </div>
+              
+              <div v-if="s.description" class="skill-description">
+                <span class="desc-icon">📜</span>
+                <span class="desc-text">{{ s.description }}</span>
+              </div>
+              
+              <div class="skill-bonus">
+                <span v-if="s.neili_bonus > 0" class="bonus-neili">
+                  👁️ +{{ s.neili_bonus }}
+                </span>
+                <span v-if="s.speed_bonus > 0" class="bonus-speed">
+                  🏃 +{{ s.speed_bonus }}
+                </span>
+                <span v-if="!s.neili_bonus && !s.speed_bonus" class="bonus-none">
+                  ❓ 神秘
+                </span>
+              </div>
+              
+              <div class="skill-meta">
+                <span class="meta-rarity" :class="s.rarity">{{ getRarityName(s.rarity) }}</span>
+                <span class="meta-type">{{ getSkillType(s) }}</span>
+              </div>
+              
+              <div class="skill-actions">
+                <button v-if="!hasLearned(s.name)" class="btn btn-sm btn-learn" @click="learnSkill(s)" :disabled="!canLearnSkill(s)">
+                  {{ !canMeetLevelRequirement(s) ? `需要 Lv.${s.level}` : (!canAfford(s) ? '银两不足' : '学习') }}
+                </button>
+                <button v-else class="btn btn-sm btn-learned" disabled>
+                  已习得
+                </button>
+                <button class="btn btn-sm btn-detail" @click="showSkillDetail(s)">
+                  详情
+                </button>
+              </div>
+              
+              <!-- 详情弹窗 -->
+              <div v-if="selectedSkill && selectedSkill.id === s.id" class="skill-detail-modal" @click.self="selectedSkill = null">
+                <div class="detail-content">
+                  <div class="detail-header">
+                    <h3>{{ selectedSkill.name }}</h3>
+                    <button class="close-btn" @click="selectedSkill = null">×</button>
                   </div>
-                  <div class="detail-row">
-                    <span class="detail-label">学习费用：</span>
-                    <span class="detail-value">{{ selectedSkill.price }} 两银子</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">稀有度：</span>
-                    <span class="detail-value" :class="selectedSkill.rarity">{{ getRarityName(selectedSkill.rarity) }}</span>
-                  </div>
-                  <div class="detail-row">
-                    <span class="detail-label">类型：</span>
-                    <span class="detail-value">{{ getSkillType(selectedSkill) }}</span>
-                  </div>
-                  <div class="detail-row bonuses">
-                    <span class="detail-label">属性加成：</span>
-                    <div class="bonus-list">
-                      <span v-if="selectedSkill.neili_bonus > 0" class="bonus-item neili">内力 +{{ selectedSkill.neili_bonus }}</span>
-                      <span v-if="selectedSkill.speed_bonus > 0" class="bonus-item speed">轻功 +{{ selectedSkill.speed_bonus }}</span>
+                  <div class="detail-body">
+                    <div class="detail-row">
+                      <span class="detail-label">等级要求</span>
+                      <span class="detail-value">Lv.{{ selectedSkill.level }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">学习费用</span>
+                      <span class="detail-value">{{ selectedSkill.price }} 两</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">稀有度</span>
+                      <span class="detail-value" :class="selectedSkill.rarity">{{ getRarityName(selectedSkill.rarity) }}</span>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">类型</span>
+                      <span class="detail-value">{{ getSkillType(selectedSkill) }}</span>
+                    </div>
+                    <div class="detail-row bonuses">
+                      <span class="detail-label">属性加成</span>
+                      <div class="bonus-list">
+                        <span v-if="selectedSkill.neili_bonus > 0" class="bonus-item neili">内力 +{{ selectedSkill.neili_bonus }}</span>
+                        <span v-if="selectedSkill.speed_bonus > 0" class="bonus-item speed">轻功 +{{ selectedSkill.speed_bonus }}</span>
+                      </div>
+                    </div>
+                    <div class="detail-row">
+                      <span class="detail-label">描述</span>
+                      <p class="detail-desc">{{ selectedSkill.description || '暂无描述' }}</p>
                     </div>
                   </div>
-                  <div class="detail-row">
-                    <span class="detail-label">描述：</span>
-                    <p class="detail-desc">{{ selectedSkill.description || '暂无描述' }}</p>
+                  <div v-if="!hasLearned(selectedSkill.name)" class="detail-footer">
+                    <button class="btn btn-primary btn-block" @click="learnSkill(selectedSkill)" :disabled="!canLearnSkill(selectedSkill)">
+                      立即学习
+                    </button>
                   </div>
-                </div>
-                <div v-if="!hasLearned(selectedSkill.name)" class="detail-footer">
-                  <button class="btn btn-primary btn-block" @click="learnSkill(selectedSkill)" :disabled="!canLearnSkill(selectedSkill)">
-                    立即学习
-                  </button>
                 </div>
               </div>
             </div>
@@ -1167,6 +1181,8 @@ onUnmounted(() => {
 /* 藏经阁统计卡片 */
 .secret-stats-card {
   margin-bottom: 20px;
+  background: linear-gradient(135deg, rgba(75, 135, 195, 0.1), rgba(75, 135, 195, 0.05));
+  border: 1px solid rgba(75, 135, 195, 0.3);
 }
 
 .stats-grid {
@@ -1177,28 +1193,126 @@ onUnmounted(() => {
 }
 
 .stat-box {
-  background: rgba(0, 0, 0, 0.2);
-  padding: 12px;
+  background: rgba(0, 0, 0, 0.3);
+  padding: 16px 12px;
   border-radius: 8px;
   text-align: center;
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(75, 135, 195, 0.2);
+  transition: all 0.3s;
+}
+
+.stat-box:hover {
+  border-color: rgba(75, 135, 195, 0.5);
+  transform: translateY(-2px);
 }
 
 .stat-icon {
-  font-size: 28px;
-  margin-bottom: 6px;
+  font-size: 32px;
+  margin-bottom: 8px;
 }
 
 .stat-label {
   color: #888;
   font-size: 12px;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .stat-value {
   color: #f0c040;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: bold;
+}
+
+/* 筛选器优化 */
+.skill-filter {
+  margin-bottom: 20px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(75, 135, 195, 0.2);
+}
+
+.filter-row {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 140px;
+  flex: 1;
+}
+
+.filter-label {
+  color: #7eb8da;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.filter-select {
+  padding: 8px 12px;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(75, 135, 195, 0.3);
+  border-radius: 6px;
+  color: #eee;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-select:hover {
+  border-color: rgba(75, 135, 195, 0.5);
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #4B87C3;
+  box-shadow: 0 0 0 2px rgba(75, 135, 195, 0.2);
+}
+
+/* 武功卡片网格 */
+.skills-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.secret-card {
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(135deg, rgba(30, 42, 58, 0.8), rgba(15, 26, 38, 0.8));
+  border: 1px solid rgba(75, 135, 195, 0.2);
+}
+
+.secret-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(75, 135, 195, 0.4);
+  box-shadow: 0 8px 24px rgba(75, 135, 195, 0.2);
+}
+
+.secret-card.learned {
+  opacity: 0.85;
+  background: linear-gradient(135deg, rgba(143, 201, 160, 0.1), rgba(74, 124, 89, 0.1));
+  border-color: rgba(143, 201, 160, 0.3);
+}
+
+.secret-card.affordable {
+  border-color: rgba(240, 192, 64, 0.4);
+}
+
+.secret-card.affordable:hover {
+  box-shadow: 0 8px 24px rgba(240, 192, 64, 0.25);
+}
+
+.secret-card.locked {
+  opacity: 0.6;
+  filter: grayscale(0.3);
 }
 
 /* 任务进度卡片 */
@@ -1347,65 +1461,42 @@ onUnmounted(() => {
 }
 
 /* 藏经阁卡片增强 */
-.secret-card {
-  position: relative;
-  overflow: hidden;
-  transition: all 0.3s;
-}
-
-.secret-card:hover {
-  transform: translateX(4px);
-}
-
-.secret-card.learned {
-  opacity: 0.7;
-  background: rgba(143, 201, 160, 0.1);
-  border-color: rgba(143, 201, 160, 0.3);
-}
-
-.secret-card.affordable {
-  border-color: rgba(240, 192, 64, 0.4);
-}
-
-.secret-card.locked {
-  opacity: 0.5;
-}
-
 .skill-rarity-indicator {
   position: absolute;
   left: 0;
   top: 0;
   bottom: 0;
-  width: 4px;
+  width: 5px;
 }
 
 .skill-rarity-indicator.common {
-  background: #6b7280;
+  background: linear-gradient(180deg, #6b7280, #4b5563);
 }
 
 .skill-rarity-indicator.uncommon {
-  background: #22c55e;
+  background: linear-gradient(180deg, #22c55e, #16a34a);
 }
 
 .skill-rarity-indicator.rare {
-  background: #3b82f6;
+  background: linear-gradient(180deg, #3b82f6, #2563eb);
 }
 
 .skill-rarity-indicator.epic {
-  background: #a855f7;
+  background: linear-gradient(180deg, #a855f7, #9333ea);
 }
 
 .skill-rarity-indicator.legendary {
-  background: linear-gradient(180deg, #fbbf24, #f59e0b);
+  background: linear-gradient(180deg, #fbbf24, #f59e0b, #d97706);
 }
 
 .skill-description {
   display: flex;
   gap: 8px;
-  padding: 8px 12px;
-  background: rgba(0, 0, 0, 0.15);
+  padding: 10px 12px;
+  background: rgba(0, 0, 0, 0.2);
   border-radius: 6px;
-  margin-bottom: 10px;
+  margin-bottom: 12px;
+  border: 1px solid rgba(75, 135, 195, 0.1);
 }
 
 .desc-icon {
@@ -1416,62 +1507,96 @@ onUnmounted(() => {
 .desc-text {
   color: #aaa;
   font-size: 12px;
-  line-height: 1.5;
+  line-height: 1.6;
+  flex: 1;
 }
 
-.skill-meta {
+.skill-bonus {
   display: flex;
   gap: 12px;
-  margin-bottom: 10px;
-  padding-top: 10px;
-  border-top: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 12px;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
 }
 
-.meta-rarity {
-  font-size: 11px;
-  padding: 2px 8px;
-  border-radius: 4px;
-  font-weight: bold;
-}
-
-.meta-rarity.common {
-  background: rgba(107, 114, 128, 0.2);
-  color: #9ca3af;
-}
-
-.meta-rarity.uncommon {
-  background: rgba(34, 197, 94, 0.2);
-  color: #4ade80;
-}
-
-.meta-rarity.rare {
-  background: rgba(59, 130, 246, 0.2);
-  color: #60a5fa;
-}
-
-.meta-rarity.epic {
-  background: rgba(168, 85, 247, 0.2);
-  color: #c084fc;
-}
-
-.meta-rarity.legendary {
-  background: linear-gradient(135deg, rgba(251, 191, 36, 0.3), rgba(245, 158, 11, 0.3));
-  color: #fff;
-}
-
-.meta-type {
-  font-size: 11px;
-  padding: 2px 8px;
-  background: rgba(126, 184, 218, 0.2);
-  border-radius: 4px;
+.bonus-neili {
   color: #7eb8da;
-  font-weight: bold;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: rgba(126, 184, 218, 0.1);
+  border-radius: 4px;
+}
+
+.bonus-speed {
+  color: #8fc9a0;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 4px 8px;
+  background: rgba(143, 201, 160, 0.1);
+  border-radius: 4px;
 }
 
 .bonus-none {
   color: #f88;
   font-size: 13px;
   font-style: italic;
+}
+
+.skill-meta {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.meta-rarity {
+  font-size: 11px;
+  font-weight: bold;
+  padding: 3px 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.2s;
+}
+
+.meta-rarity.common { 
+  color: #9ca3af;
+  border-color: rgba(156, 163, 175, 0.3);
+  background: rgba(156, 163, 175, 0.1);
+}
+.meta-rarity.uncommon { 
+  color: #4ade80;
+  border-color: rgba(74, 222, 128, 0.3);
+  background: rgba(74, 222, 128, 0.1);
+}
+.meta-rarity.rare { 
+  color: #60a5fa;
+  border-color: rgba(96, 165, 250, 0.3);
+  background: rgba(96, 165, 250, 0.1);
+}
+.meta-rarity.epic { 
+  color: #c084fc;
+  border-color: rgba(192, 132, 252, 0.3);
+  background: rgba(192, 132, 252, 0.1);
+}
+.meta-rarity.legendary { 
+  color: #fbbf24;
+  border-color: rgba(251, 191, 36, 0.4);
+  background: rgba(251, 191, 36, 0.15);
+  box-shadow: 0 0 8px rgba(251, 191, 36, 0.2);
+}
+
+.meta-type {
+  font-size: 11px;
+  color: #aaa;
+  padding: 3px 10px;
+  background: rgba(0, 0, 0, 0.3);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .skill-actions {
@@ -1487,10 +1612,22 @@ onUnmounted(() => {
   border: none;
   color: #fff;
   flex: 1;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .btn-learn:not(:disabled):hover {
   background: linear-gradient(135deg, rgba(126, 184, 218, 0.5), rgba(75, 135, 195, 0.5));
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(126, 184, 218, 0.3);
+}
+
+.btn-learn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .btn-learned {
@@ -1498,13 +1635,28 @@ onUnmounted(() => {
   border: 1px solid rgba(143, 201, 160, 0.4);
   color: #8fc9a0;
   flex: 1;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  cursor: not-allowed;
 }
 
 .btn-detail {
-  background: rgba(255, 255, 255, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.15);
   color: #ddd;
   flex-shrink: 0;
+  font-weight: 500;
+  font-size: 13px;
+  padding: 8px 12px;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.btn-detail:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .learned-badge {
@@ -1523,12 +1675,22 @@ onUnmounted(() => {
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(6px);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 2000;
+  animation: modalFadeIn 0.2s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .detail-content {
@@ -1539,20 +1701,23 @@ onUnmounted(() => {
   width: 90%;
   max-height: 80vh;
   overflow-y: auto;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
 }
 
 .detail-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
+  padding: 20px 24px;
   border-bottom: 1px solid rgba(126, 184, 218, 0.2);
+  background: rgba(0, 0, 0, 0.2);
 }
 
 .detail-header h3 {
   color: #7eb8da;
-  font-size: 20px;
+  font-size: 22px;
   margin: 0;
+  font-weight: bold;
 }
 
 .close-btn {
@@ -1573,14 +1738,15 @@ onUnmounted(() => {
 .close-btn:hover {
   background: rgba(255, 255, 255, 0.1);
   color: #fff;
+  transform: rotate(90deg);
 }
 
 .detail-body {
-  padding: 20px;
+  padding: 24px;
 }
 
 .detail-row {
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
 .detail-row:last-child {
@@ -1588,8 +1754,8 @@ onUnmounted(() => {
 }
 
 .detail-row.bonuses {
-  margin-top: 16px;
-  padding-top: 16px;
+  margin-top: 20px;
+  padding-top: 20px;
   border-top: 1px solid rgba(126, 184, 218, 0.2);
 }
 
@@ -1597,29 +1763,40 @@ onUnmounted(() => {
   color: #888;
   font-size: 13px;
   display: block;
-  margin-bottom: 6px;
+  margin-bottom: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
 }
 
 .detail-value {
   color: #ddd;
-  font-size: 15px;
+  font-size: 16px;
   font-weight: bold;
+  padding: 10px 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .detail-value.common { color: #9ca3af; }
 .detail-value.uncommon { color: #4ade80; }
 .detail-value.rare { color: #60a5fa; }
 .detail-value.epic { color: #c084fc; }
-.detail-value.legendary { color: #fbbf24; }
+.detail-value.legendary { 
+  color: #fbbf24;
+  text-shadow: 0 0 10px rgba(251, 191, 36, 0.4);
+}
 
 .detail-desc {
   color: #aaa;
-  font-size: 13px;
-  line-height: 1.6;
-  margin: 6px 0 0 0;
-  padding: 10px;
-  background: rgba(0, 0, 0, 0.2);
-  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.7;
+  margin: 0;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.05);
 }
 
 .bonus-list {
@@ -1629,32 +1806,43 @@ onUnmounted(() => {
 }
 
 .bonus-item {
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 13px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 14px;
   font-weight: bold;
+  border: 1px solid transparent;
 }
 
 .bonus-item.neili {
   background: rgba(126, 184, 218, 0.2);
   color: #7eb8da;
+  border-color: rgba(126, 184, 218, 0.3);
 }
 
 .bonus-item.speed {
   background: rgba(143, 201, 160, 0.2);
   color: #8fc9a0;
+  border-color: rgba(143, 201, 160, 0.3);
 }
 
 .detail-footer {
-  padding: 16px 20px;
+  padding: 16px 24px;
   border-top: 1px solid rgba(126, 184, 218, 0.2);
+  background: rgba(0, 0, 0, 0.15);
 }
 
 .btn-block {
   width: 100%;
-  padding: 12px;
+  padding: 14px;
   font-size: 16px;
   font-weight: bold;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.btn-block:not(:disabled):hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(75, 135, 195, 0.4);
 }
 
 /* 筛选器增强 */
@@ -1680,6 +1868,7 @@ onUnmounted(() => {
   color: #f88 !important;
 }
 
+/* 响应式设计 */
 @media (max-width: 768px) {
   .practice-options {
     grid-template-columns: 1fr;
@@ -1692,6 +1881,107 @@ onUnmounted(() => {
   
   .skill-filter {
     flex-wrap: wrap;
+  }
+  
+  /* 平板 - 武功卡片网格调整为 2 列 */
+  .skills-grid {
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 12px;
+  }
+  
+  /* 详情弹窗 */
+  .detail-content {
+    width: 95%;
+    max-height: 85vh;
+  }
+  
+  .detail-header {
+    padding: 16px 20px;
+  }
+  
+  .detail-body {
+    padding: 16px;
+  }
+  
+  .detail-footer {
+    padding: 16px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  /* 手机 - 武功卡片网格调整为单列 */
+  .skills-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+  
+  /* 统计卡片 */
+  .stat-card {
+    min-width: 100%;
+  }
+  
+  /* 筛选器 */
+  .filter-group {
+    min-width: 100%;
+    flex: none;
+  }
+  
+  /* 奖励卡片 */
+  .reward-preview {
+    flex-direction: column;
+  }
+  
+  .reward-item {
+    width: 100%;
+  }
+  
+  /* 详情弹窗 */
+  .detail-header h3 {
+    font-size: 18px;
+  }
+  
+  .detail-value {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+  
+  .bonus-list {
+    gap: 8px;
+  }
+  
+  .bonus-item {
+    flex: 1;
+    text-align: center;
+    font-size: 13px;
+    padding: 6px 12px;
+  }
+  
+  /* 卡片内稀有度标签和类型 */
+  .skill-meta {
+    justify-content: flex-start;
+  }
+  
+  .meta-rarity,
+  .meta-type {
+    font-size: 10px;
+    padding: 2px 8px;
+  }
+  
+  /* 卡片操作按钮 */
+  .skill-actions {
+    flex-wrap: wrap;
+  }
+  
+  .btn-learn,
+  .btn-learned,
+  .btn-detail {
+    font-size: 12px;
+    padding: 6px 10px;
+    flex: 1 1 100%;
+  }
+  
+  .btn-detail {
+    flex: 1;
   }
 }
 </style>

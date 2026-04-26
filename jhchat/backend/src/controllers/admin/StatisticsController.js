@@ -92,11 +92,13 @@ class StatisticsController {
         SELECT COUNT(*) as count FROM chat_messages
       `);
 
-      // 今日消息数
+      // 今日消息数（使用 DATE 函数）
       const [today] = await db.execute(`
         SELECT COUNT(*) as count FROM chat_messages 
         WHERE DATE(created_at) = CURDATE()
       `);
+
+      console.log('聊天统计查询成功:', { total: total[0].count, today: today[0].count });
 
       res.json({
         success: true,
@@ -107,9 +109,10 @@ class StatisticsController {
       });
     } catch (err) {
       console.error('获取聊天统计失败:', err.message);
+      console.error('详细错误:', err);
       res.status(500).json({
         success: false,
-        message: '获取聊天统计失败',
+        message: '获取聊天统计失败：' + err.message,
         data: { total: 0, today: 0 }
       });
     }

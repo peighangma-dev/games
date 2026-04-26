@@ -14,7 +14,7 @@
             <option :value="8">等级 8 (高级管理员)</option>
             <option :value="9">等级 9 (超级管理员)</option>
           </select>
-          <select v-model="addForm.faction" class="form-select">
+          <select v-model="addForm.faction" class="form-select" title="门派归属">
             <option value="六扇门">六扇门</option>
             <option value="无">无</option>
           </select>
@@ -30,8 +30,8 @@
               <th>ID</th>
               <th>用户名</th>
               <th>等级</th>
-              <th>帮派</th>
-              <th>门派身份</th>
+              <th>门派</th>
+              <th>身份</th>
               <th>操作</th>
             </tr>
           </thead>
@@ -42,8 +42,8 @@
               <td>
                 <span :class="['grade-badge', 'grade-' + mgr.grade]">{{ mgr.grade }}</span>
               </td>
-              <td>{{ mgr.faction || '无' }}</td>
-              <td>{{ mgr.sect_title || '无' }}</td>
+              <td>{{ mgr.faction === '六扇门' ? '六扇门' : '无' }}</td>
+              <td>{{ mgr.grade >= 6 ? '管理员' : '无' }}</td>
               <td>
                 <button @click="editManager(mgr)" class="btn btn-sm btn-info" :disabled="mgr.grade >= currentUser.grade">调整</button>
                 <button @click="removeManager(mgr.id)" class="btn btn-sm btn-danger" :disabled="mgr.grade >= currentUser.grade">开除</button>
@@ -70,7 +70,7 @@
           </select>
         </div>
         <div class="form-group">
-          <label>帮派:</label>
+          <label>门派:</label>
           <select v-model="editForm.faction" class="form-input">
             <option value="六扇门">六扇门</option>
             <option value="无">无</option>

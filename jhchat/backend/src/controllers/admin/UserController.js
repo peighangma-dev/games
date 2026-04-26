@@ -87,7 +87,8 @@ class UserController {
       const [users] = await db.execute(
         `SELECT id, username, gender, status, grade, sect, faction, silver, 
                 deposit, is_vip, vip_expires_at, registered_at, last_login_at,
-                last_login_ip, register_ip, neili, wugong, tili, attack_power
+                last_login_ip, register_ip, neili, wugong, tili, attack_power,
+                total_exp, monthly_exp, chat_minutes_today, chat_minutes_total
          FROM users 
          WHERE ${where} 
          ORDER BY ${orderField} ${orderDir} 
@@ -565,8 +566,13 @@ class UserController {
       const { id } = req.params;
       const { newPassword, notify = true, forceChange = false } = req.body;
 
+      // 调试日志
+      console.log('重置密码请求:', { id, newPassword: newPassword ? 'provided' : 'missing', newPasswordLength: newPassword?.length, notify, forceChange });
+      console.log('当前管理员:', req.user);
+
       // 验证新密码
       if (!newPassword || newPassword.length < 3) {
+        console.log('密码验证失败：长度不足');
         return res.status(400).json({
           success: false,
           message: '密码长度不能少于 3 位',
@@ -574,8 +580,12 @@ class UserController {
         });
       }
 
+      // 查询用户
       const [users] = await db.execute('SELECT id, username, grade FROM users WHERE id = ?', [id]);
+      console.log('查询结果:', users);
+      
       if (users.length === 0) {
+        console.log('用户不存在');
         return res.status(404).json({ 
           success: false, 
           message: '用户不存在',
@@ -586,7 +596,9 @@ class UserController {
       const user = users[0];
 
       // 权限检查
+      console.log('权限检查:', { userGrade: user.grade, adminGrade: req.user.grade });
       if (user.grade >= req.user.grade) {
+        console.log('权限不足');
         return res.status(403).json({
           success: false,
           message: '不能重置等级高于或等于自己的用户密码',
@@ -595,15 +607,21 @@ class UserController {
       }
 
       // 加密密码
+      console.log('开始加密密码...');
       const hashedPassword = await bcrypt.hash(newPassword, 10);
+      console.log('密码加密完成');
 
-      await db.execute(
+      // 更新数据库
+      console.log('开始更新数据库...');
+      const [updateResult] = await db.execute(
         'UPDATE users SET password = ?, force_password_change = ? WHERE id = ?',
         [hashedPassword, forceChange ? 1 : 0, id]
       );
+      console.log('数据库更新结果:', updateResult);
 
       // 发送通知
       if (notify) {
+        console.log('发送系统通知...');
         await db.execute(
           `INSERT INTO messages (receiver, sender, title, content, sent_at)
            VALUES (?, '系统', '密码重置通知', 
@@ -612,6 +630,7 @@ class UserController {
            NOW())`,
           [user.username, forceChange ? 1 : 0]
         );
+        console.log('通知发送完成');
       }
 
       logger.info('管理员重置用户密码', {
@@ -625,10 +644,11 @@ class UserController {
         message: `用户 ${user.username} 密码已重置${forceChange ? '，强制下次登录修改' : ''}`
       });
     } catch (err) {
-      logger.error('重置密码失败', { error: err.message });
+      logger.error('重置密码失败', { error: err.message, stack: err.stack });
+      console.error('重置密码异常:', err);
       res.status(500).json({ 
         success: false, 
-        message: '重置密码失败',
+        message: '重置密码失败：' + err.message,
         code: 'PASSWORD_RESET_ERROR'
       });
     }
@@ -851,6 +871,221 @@ class UserController {
       res.status(500).json({ 
         success: false, 
         message: '查询管理员列表失败' 
+      });
+    }
+  }
+
+  /**
+   * 添加管理员
+   */
+  static async createManager(req, res) {
+    try {
+      const { username, grade, faction } = req.body;
+
+      // 验证权限：只能授予低于自己等级的管理员
+      if (!grade || grade >= req.user.grade) {
+        return res.status(403).json({
+          success: false,
+          message: '权限不足：不能授予高于或等于自己等级的管理员职位',
+          code: 'GRADE_INSUFFICIENT'
+        });
+      }
+
+      // 验证用户名
+      if (!username) {
+        return res.status(400).json({
+          success: false,
+          message: '用户名不能为空',
+          code: 'USERNAME_REQUIRED'
+        });
+      }
+
+      // 查找用户
+      const [users] = await db.execute('SELECT id, username FROM users WHERE username = ?', [username]);
+      if (users.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: '用户不存在',
+          code: 'USER_NOT_FOUND'
+        });
+      }
+
+      const userId = users[0].id;
+
+      // 检查目标用户当前等级
+      const [currentUser] = await db.execute('SELECT grade FROM users WHERE id = ?', [userId]);
+      if (currentUser[0].grade >= req.user.grade) {
+        return res.status(403).json({
+          success: false,
+          message: '不能修改等级高于或等于自己的用户',
+          code: 'GRADE_INSUFFICIENT'
+        });
+      }
+
+      // 更新用户等级和门派（必须是六扇门）
+      await db.execute(
+        'UPDATE users SET grade = ?, faction = ? WHERE id = ?',
+        [grade, faction || '六扇门', userId]
+      );
+
+      logger.info('添加管理员', {
+        operator: req.user.username,
+        targetUser: username,
+        grade,
+        faction
+      });
+
+      res.json({
+        success: true,
+        message: `用户 ${username} 已被任命为管理员`
+      });
+    } catch (err) {
+      logger.error('添加管理员失败', { error: err.message });
+      res.status(500).json({
+        success: false,
+        message: '添加管理员失败：' + err.message,
+        code: 'CREATE_MANAGER_ERROR'
+      });
+    }
+  }
+
+  /**
+   * 更新管理员信息
+   */
+  static async updateManager(req, res) {
+    try {
+      const { id } = req.params;
+      const { grade, faction } = req.body;
+
+      // 验证权限
+      if (grade && grade >= req.user.grade) {
+        return res.status(403).json({
+          success: false,
+          message: '权限不足：不能授予高于或等于自己等级的管理员职位',
+          code: 'GRADE_INSUFFICIENT'
+        });
+      }
+
+      // 检查目标用户
+      const [users] = await db.execute('SELECT id, username, grade FROM users WHERE id = ?', [id]);
+      if (users.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: '用户不存在',
+          code: 'USER_NOT_FOUND'
+        });
+      }
+
+      const user = users[0];
+
+      // 不能修改等级高于或等于自己的用户
+      if (user.grade >= req.user.grade) {
+        return res.status(403).json({
+          success: false,
+          message: '不能修改等级高于或等于自己的用户',
+          code: 'GRADE_INSUFFICIENT'
+        });
+      }
+
+      // 构建更新 SQL
+      const updates = [];
+      const values = [];
+
+      if (grade !== undefined) {
+        updates.push('grade = ?');
+        values.push(grade);
+      }
+      if (faction !== undefined) {
+        updates.push('faction = ?');
+        values.push(faction);
+      }
+
+      if (updates.length === 0) {
+        return res.status(400).json({
+          success: false,
+          message: '没有要更新的字段',
+          code: 'NO_UPDATES'
+        });
+      }
+
+      values.push(id);
+      await db.execute(
+        `UPDATE users SET ${updates.join(', ')} WHERE id = ?`,
+        values
+      );
+
+      logger.info('更新管理员', {
+        operator: req.user.username,
+        targetUserId: id,
+        targetUsername: user.username,
+        grade,
+        faction
+      });
+
+      res.json({
+        success: true,
+        message: '管理员信息已更新'
+      });
+    } catch (err) {
+      logger.error('更新管理员失败', { error: err.message });
+      res.status(500).json({
+        success: false,
+        message: '更新管理员失败：' + err.message,
+        code: 'UPDATE_MANAGER_ERROR'
+      });
+    }
+  }
+
+  /**
+   * 删除管理员（开除）
+   */
+  static async deleteManager(req, res) {
+    try {
+      const { id } = req.params;
+
+      // 检查目标用户
+      const [users] = await db.execute('SELECT id, username, grade FROM users WHERE id = ?', [id]);
+      if (users.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: '用户不存在',
+          code: 'USER_NOT_FOUND'
+        });
+      }
+
+      const user = users[0];
+
+      // 不能修改等级高于或等于自己的用户
+      if (user.grade >= req.user.grade) {
+        return res.status(403).json({
+          success: false,
+          message: '不能修改等级高于或等于自己的用户',
+          code: 'GRADE_INSUFFICIENT'
+        });
+      }
+
+      // 降级为普通用户 (grade = 1)
+      await db.execute(
+        'UPDATE users SET grade = 1, faction = ? WHERE id = ?',
+        ['江湖浪子', id]
+      );
+
+      logger.info('删除管理员', {
+        operator: req.user.username,
+        targetUserId: id,
+        targetUsername: user.username
+      });
+
+      res.json({
+        success: true,
+        message: `管理员 ${user.username} 已被开除`
+      });
+    } catch (err) {
+      logger.error('删除管理员失败', { error: err.message });
+      res.status(500).json({
+        success: false,
+        message: '删除管理员失败：' + err.message,
+        code: 'DELETE_MANAGER_ERROR'
       });
     }
   }

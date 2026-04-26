@@ -206,14 +206,53 @@ module.exports = function(io) {
           content
         });
 
-        if (data.isPrivate) {
-          await db.execute(
-            'UPDATE users SET all_value = all_value + 1, month_value = month_value + 1 WHERE id = ?',
-            [userId]
-          );
+        // 检查用户等级配置
+        const [userInfo] = await db.execute(
+          `SELECT u.id, u.grade, u.chat_minutes_today, u.chat_minutes_total, u.total_exp, u.monthly_exp,
+                  lc.chat_exp_per_minute, lc.max_daily_chat_exp
+           FROM users u
+           LEFT JOIN user_level_config lc ON u.grade = lc.level
+           WHERE u.id = ?`,
+          [userId]
+        );
+        
+        if (userInfo.length > 0) {
+          const user = userInfo[0];
+          
+          // 计算今日已获得聊天经验
+          const todayExp = user.chat_minutes_today * user.chat_exp_per_minute;
+          const remainingDailyLimit = user.max_daily_chat_exp - todayExp;
+          
+          // 每分钟获得 1 次经验
+          let expGain = 0;
+          if (remainingDailyLimit > 0) {
+            expGain = Math.min(user.chat_exp_per_minute, remainingDailyLimit);
+            
+            // 更新用户经验
+            await db.execute(
+              `UPDATE users 
+               SET chat_minutes_today = chat_minutes_today + 1,
+                   chat_minutes_total = chat_minutes_total + 1,
+                   total_exp = total_exp + ?,
+                   monthly_exp = monthly_exp + ?,
+                   last_chat_time = NOW()
+               WHERE id = ?`,
+              [expGain, expGain, userId]
+            );
+            
+            // 记录经验日志
+            if (expGain > 0) {
+              const isDailyLimit = expGain < user.chat_exp_per_minute;
+              await db.execute(
+                `INSERT INTO chat_exp_logs (user_id, username, exp_gain, chat_minutes, is_daily_limit)
+                 VALUES (?, ?, ?, 1, ?)`,
+                [userId, username, expGain, isDailyLimit ? 1 : 0]
+              );
+            }
+          }
         }
       } catch (err) {
-        console.error('chat:message错误:', err);
+        console.error('chat:message 错误:', err);
       }
     });
 

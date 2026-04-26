@@ -30,10 +30,11 @@
               <th>性别</th>
               <th>等级</th>
               <th>门派</th>
-              <th>帮派</th>
               <th>身份</th>
               <th>银两</th>
-              <th>经验值</th>
+              <th>总经验</th>
+              <th>月经验</th>
+              <th>今日聊天</th>
               <th>状态</th>
               <th>注册时间</th>
               <th>最后登录</th>
@@ -46,11 +47,19 @@
               <td>{{ user.username }}</td>
               <td>{{ user.gender === 'male' ? '男' : '女' }}</td>
               <td><span class="grade-badge">{{ user.grade }}</span></td>
-              <td>{{ user.sect || '无' }}</td>
-              <td>{{ user.faction || '无' }}</td>
+              <td>
+                <div v-if="user.sect && user.sect !== '无'" class="sect-info">
+                  <div class="sect-name">{{ user.sect }}</div>
+                  <div v-if="user.faction && user.faction !== '无'" class="faction-name">{{ user.faction }}</div>
+                </div>
+                <span v-else-if="user.faction && user.faction !== '无'" class="faction-name">{{ user.faction }}</span>
+                <span v-else class="text-muted">无</span>
+              </td>
               <td>{{ user.sect_title || '无' }}</td>
               <td>{{ user.silver }}</td>
-              <td>{{ user.all_value }}</td>
+              <td><span class="exp-value">{{ user.total_exp || 0 }}</span></td>
+              <td><span class="exp-value monthly">{{ user.monthly_exp || 0 }}</span></td>
+              <td>{{ user.chat_minutes_today || 0 }}分钟</td>
               <td>
                 <span :class="['status-tag', user.status]">
                   {{ statusMap[user.status] || user.status }}
@@ -60,6 +69,7 @@
               <td>{{ formatDate(user.last_login_at) }}</td>
               <td>
                 <button @click="editUser(user)" class="btn btn-sm btn-info">编辑</button>
+                <button @click="showExpDetail(user)" class="btn btn-sm btn-success">经验详情</button>
                 <button @click="showResetPassword(user)" class="btn btn-sm btn-warning">重置密码</button>
                 <button @click="deleteUser(user.id)" class="btn btn-sm btn-danger">删除</button>
               </td>
@@ -99,7 +109,15 @@
         </div>
         <div class="form-group">
           <label>门派:</label>
-          <input v-model="editForm.sect" type="text" class="form-input" />
+          <input v-model="editForm.sect" type="text" placeholder="如：少林、武当" class="form-input" />
+        </div>
+        <div class="form-group">
+          <label>归属:</label>
+          <select v-model="editForm.faction" class="form-input">
+            <option value="无">无</option>
+            <option value="六扇门">六扇门</option>
+            <option value="江湖浪子">江湖浪子</option>
+          </select>
         </div>
         <div class="form-group">
           <label>VIP:</label>
@@ -228,6 +246,7 @@ function editUser(user) {
     silver: user.silver,
     status: user.status,
     sect: user.sect,
+    faction: user.faction,
     is_vip: user.is_vip
   }
 }
@@ -273,32 +292,13 @@ async function confirmBatchDelete() {
 
 function showResetPassword(user) {
   resetPasswordUser.value = user
-  passwordForm.value = {
-    newPassword: '',
-    forceChange: false,
-    notify: true
-  }
+  passwordForm.value.newPassword = 'admin' + Math.floor(Math.random() * 1000)
+  passwordForm.value.notify = true
+  passwordForm.value.forceChange = true
 }
 
-async function confirmResetPassword() {
-  if (!passwordForm.value.newPassword || passwordForm.value.newPassword.length < 3) {
-    alert('密码长度至少 3 位')
-    return
-  }
-  try {
-    const res = await api.post(`/admin/users/${resetPasswordUser.value.id}/reset-password`, {
-      new_password: passwordForm.value.newPassword,
-      force_change: passwordForm.value.forceChange,
-      notify: passwordForm.value.notify
-    })
-    if (res.success) {
-      alert(`密码已重置为：${passwordForm.value.newPassword}`)
-      resetPasswordUser.value = null
-      loadUsers()
-    }
-  } catch (e) {
-    alert('重置密码失败：' + (e.message || '未知错误'))
-  }
+function showExpDetail(user) {
+  alert(`用户：${user.username}\n总经验：${user.total_exp || 0}\n月经验：${user.monthly_exp || 0}\n今日聊天：${user.chat_minutes_today || 0}分钟\n累计聊天：${user.chat_minutes_total || 0}分钟`)
 }
 
 onMounted(() => loadUsers())
@@ -324,10 +324,16 @@ onMounted(() => loadUsers())
 .data-table th { color: #7eb8da; font-weight: 600; font-size: 14px; }
 .data-table td { font-size: 13px; }
 .grade-badge { background: #f0c040; color: #000; padding: 2px 8px; border-radius: 10px; font-size: 12px; font-weight: bold; }
+.exp-value { color: #8fc9a0; font-weight: bold; }
+.exp-value.monthly { color: #7eb8da; }
 .status-tag { padding: 2px 8px; border-radius: 3px; font-size: 12px; background: rgba(143,198,160,0.2); color: #8fc9a0; }
 .status-tag.jailed { background: rgba(230,126,34,0.2); color: #e67e22; }
 .status-tag.banned { background: rgba(231,76,60,0.2); color: #e74c3c; }
 .status-tag.dead { background: rgba(149,165,166,0.2); color: #95a5a6; }
+.text-muted { color: #888; }
+.sect-info { display: flex; flex-direction: column; gap: 2px; }
+.sect-name { font-weight: 600; color: #4B87C3; }
+.faction-name { font-size: 11px; color: #aaa; }
 .pagination { display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 16px; }
 .page-info { color: #aaa; }
 .modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
