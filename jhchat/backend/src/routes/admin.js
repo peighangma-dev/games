@@ -151,9 +151,13 @@ router.put('/news/:id', adminAuth, logAction('update_news'), adminCtrl.updateNew
 router.delete('/news/:id', adminAuth, logAction('delete_news'), adminCtrl.deleteNews);
 
 // ==================== 系统更新管理 ====================
+const updateAckCtrl = require('../controllers/update');
+
 router.get('/updates', adminAuth, adminCtrl.getUpdates);
 router.get('/updates/latest', adminAuth, adminCtrl.getLatestVersion);
 router.get('/updates/check', adminCtrl.checkUpdate);
+router.post('/updates/acknowledge', updateAckCtrl.acknowledge);
+router.get('/updates/acknowledge/history', adminAuth, updateAckCtrl.getAcknowledgeHistory);
 router.get('/updates/available', adminCtrl.getAvailablePackages);
 router.get('/updates/packages', adminAuth, adminCtrl.getPackages);
 router.get('/updates/packages/:id/download', adminCtrl.downloadPackage);

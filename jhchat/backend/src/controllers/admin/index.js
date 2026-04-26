@@ -22,6 +22,7 @@ const NewsController = require('./NewsController');
 const UpdateController = require('./UpdateController');
 const UpdatePackageController = require('./UpdatePackageController');
 const UpdateScriptController = require('./UpdateScriptController');
+const UpdateAcknowledgeController = require('../../controllers/update');
 
 module.exports = {
   // 仪表盘
@@ -168,5 +169,8 @@ module.exports = {
   recordInstallation: UpdatePackageController.recordInstallation,
   
   // 更新脚本
-  getUpdateScript: UpdateScriptController.generateScript
+  getUpdateScript: UpdateScriptController.generateScript,
+  
+  // 更新确认
+  getAcknowledgeHistory: UpdateAcknowledgeController.getAcknowledgeHistory
 };
