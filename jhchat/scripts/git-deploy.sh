@@ -106,8 +106,49 @@ install_dependencies() {
   success "依赖安装完成"
 }
 
-# 编译前端
-build_frontend() {
+# 执行数据库迁移
+run_migrations() {
+  log "检查数据库迁移..."
+  
+  local db_host="localhost"
+  local db_user="jhchat"
+  local db_password="JhChat@2026Secure!"
+  local db_name="jhchat"
+  
+  # 检查是否有新的迁移文件
+  local migration_dir="$PROD_DIR/backend/migrations"
+  
+  if [ -d "$migration_dir" ]; then
+    local migration_count=$(find "$migration_dir" -name "*.sql" -type f 2>/dev/null | wc -l)
+    
+    if [ "$migration_count" -gt 0 ]; then
+      log "发现 $migration_count 个迁移文件，准备执行..."
+      
+      for migration in "$migration_dir"/*.sql; do
+        if [ -f "$migration" ]; then
+          local filename=$(basename "$migration")
+          local migration_log="$PROD_DIR/backup/migration-$(date +%Y%m%d).log"
+          
+          # 执行迁移并记录日志
+          mysql -h "$db_host" -u "$db_user" -p"$db_password" "$db_name" < "$migration" 2>&1 | tee -a "$migration_log"
+          
+          if [ $? -eq 0 ]; then
+            log "✓ 执行迁移：$filename"
+          else
+            error "✗ 迁移失败：$filename"
+            return 1
+          fi
+        fi
+      done
+      
+      success "数据库迁移完成"
+    else
+      log "无需执行数据库迁移"
+    fi
+  else
+    log "未发现 migrations 目录"
+  fi
+}
   log "编译前端..."
   cd "$PROD_DIR/frontend"
   npm run build
@@ -213,10 +254,13 @@ main() {
   # 8. 修复脚本
   fix_scripts
   
-  # 9. 启动服务
+  # 9. 执行数据库迁移
+  run_migrations
+  
+  # 10. 启动服务
   start_service
   
-  # 10. 更新版本号
+  # 11. 更新版本号
   cd "$PROD_DIR"
   local new_version=$(git -C "$GIT_REPO_DIR" describe --tags --always 2>/dev/null || echo "v1.2.0")
   echo "$new_version" > VERSION

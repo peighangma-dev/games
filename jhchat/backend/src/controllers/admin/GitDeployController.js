@@ -92,6 +92,53 @@ class GitDeployController {
       );
       log('✓ 脚本修复完成');
 
+      // 步骤 9: 执行数据库迁移
+      log('步骤 9: 执行数据库迁移...');
+      
+      try {
+        const fs = require('fs');
+        const path = require('path');
+        const { execSync } = require('child_process');
+        
+        // 从环境变量读取数据库配置
+        const dotenv = require('dotenv');
+        const envPath = path.join(prodDir, 'backend', '.env');
+        const envConfig = dotenv.config({ path: envPath }).parsed || {};
+        
+        const dbConfig = {
+          host: envConfig.DB_HOST || 'localhost',
+          user: envConfig.DB_USER || 'jhchat',
+          password: envConfig.DB_PASSWORD || 'JhChat@2026Secure!',
+          database: envConfig.DB_NAME || 'jhchat'
+        };
+        
+        const migrationDir = `${prodDir}/backend/migrations`;
+        
+        if (fs.existsSync(migrationDir)) {
+          const migrations = fs.readdirSync(migrationDir).filter(f => f.endsWith('.sql'));
+          
+          if (migrations.length > 0) {
+            log(`发现 ${migrations.length} 个迁移文件`);
+            
+            for (const migration of migrations) {
+              const migrationPath = `${migrationDir}/${migration}`;
+              execSync(
+                `mysql -h ${dbConfig.host} -u ${dbConfig.user} -p${dbConfig.password} ${dbConfig.database} < "${migrationPath}"`,
+                { stdio: 'pipe' }
+              );
+              log(`✓ 执行迁移：${migration}`);
+            }
+            
+            log('✓ 数据库迁移完成');
+          } else {
+            log('无需执行数据库迁移');
+          }
+        }
+      } catch (error) {
+        logger.warn('数据库迁移执行失败', { error: error.message });
+        // 不中断部署，继续执行
+      }
+
       // 步骤 9: 启动服务
       log('步骤 9: 启动服务...');
       await execPromise(`cd ${prodDir}/backend && nohup npm run dev > backend.log 2>&1 &`);
