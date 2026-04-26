@@ -47,7 +47,7 @@ async function seed() {
 
   const adminPwd = await encryptPassword('admin123');
   await db.execute(
-    `INSERT INTO users (username, password, gender, status, grade, faction, sect_title, all_value, silver, charm)
+    `INSERT INTO users (username, password, gender, status, grade, faction, sect_title, total_exp, silver, charm)
      VALUES ('站长', ?, 'male', 'normal', 10, '六扇门', '掌门', 99999, 9999999, 999)
      ON DUPLICATE KEY UPDATE username = username`,
     [adminPwd]

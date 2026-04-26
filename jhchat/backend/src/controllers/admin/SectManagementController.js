@@ -47,7 +47,7 @@ class SectManagementController {
           SUM(CASE WHEN gender = 'female' THEN 1 ELSE 0 END) as female_count,
           AVG(grade) as avg_grade,
           SUM(silver) as total_silver,
-          SUM(all_value) as total_exp
+          SUM(total_exp) as total_exp
         FROM users 
         WHERE sect = ? AND status != 'dead'
       `, [sect.name]);
@@ -239,11 +239,11 @@ class SectManagementController {
       const params = search ? [`%${search}%`, `%${search}%`] : [];
       
       const [members] = await db.execute(`
-        SELECT id, username, gender, sect_title, sect_position, grade, all_value, silver, 
+        SELECT id, username, gender, sect_title, sect_position, grade, total_exp, silver, 
                sect_contribution, status, last_login_at, registered_at
         FROM users 
         WHERE sect = ? ${searchCondition} AND status != 'dead'
-        ORDER BY grade DESC, sect_position DESC, all_value DESC
+        ORDER BY grade DESC, sect_position DESC, total_exp DESC
         LIMIT ? OFFSET ?
       `, [sectName, ...params, parseInt(limit), offset]);
       
@@ -347,7 +347,7 @@ class SectManagementController {
       const offset = (page - 1) * limit;
       
       const [applications] = await db.execute(`
-        SELECT a.*, u.avatar, u.grade, u.all_value, u.gender
+        SELECT a.*, u.avatar, u.grade, u.total_exp, u.gender
         FROM sect_applications a
         LEFT JOIN users u ON a.user_id = u.id
         WHERE a.sect_id = ? ${status !== 'all' ? 'AND a.status = ?' : ''}

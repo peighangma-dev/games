@@ -383,7 +383,7 @@ exports.work = async (req, res) => {
     
     // 更新用户状态
     await db.execute(
-      'UPDATE users SET silver = silver + ?, tili = tili - ?, all_value = all_value + ? WHERE id = ?',
+      'UPDATE users SET silver = silver + ?, tili = tili - ?, total_exp = total_exp + ? WHERE id = ?',
       [reward, job.stamina_cost, Math.floor(reward / 10), req.user.id]
     );
     

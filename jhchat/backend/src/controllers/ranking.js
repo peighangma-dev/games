@@ -5,7 +5,7 @@ exports.getComprehensiveRanking = async (req, res) => {
   try {
     const [rankings] = await db.execute(
       `SELECT id, username, sect, grade, 
-              (all_value + silver + deposit + wugong + neili) as totalScore
+              (total_exp + silver + deposit + wugong + neili) as totalScore
        FROM users
        WHERE status != 'dead'
        ORDER BY totalScore DESC
@@ -85,10 +85,10 @@ exports.getNeiliRanking = async (req, res) => {
 exports.getLevelRanking = async (req, res) => {
   try {
     const [rankings] = await db.execute(
-      `SELECT id, username, sect, grade, all_value
+      `SELECT id, username, sect, grade, total_exp
        FROM users
        WHERE status != 'dead'
-       ORDER BY grade DESC, all_value DESC
+       ORDER BY grade DESC, total_exp DESC
        LIMIT 50`
     );
     

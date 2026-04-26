@@ -29,8 +29,8 @@ exports.members = async (req, res) => {
     const [sects] = await db.execute('SELECT id FROM sects WHERE name = ?', [req.params.name]);
     if (sects.length === 0) return res.status(404).json({ success: false, message: '门派不存在' });
     const [members] = await db.execute(
-      `SELECT id, username, gender, sect_title, grade, all_value, last_login_at
-       FROM users WHERE sect = ? ORDER BY grade DESC, all_value DESC`,
+      `SELECT id, username, gender, sect_title, grade, total_exp, last_login_at
+       FROM users WHERE sect = ? ORDER BY grade DESC, total_exp DESC`,
       [req.params.name]
     );
     res.json({ success: true, data: members });
@@ -462,10 +462,10 @@ exports.sectMembersWithPage = async (req, res) => {
     }
     
     const [members] = await db.execute(
-      `SELECT id, username, gender, sect_title, grade, all_value, last_login_at, avatar
+      `SELECT id, username, gender, sect_title, grade, total_exp, last_login_at, avatar
        FROM users 
        WHERE sect = ? 
-       ORDER BY grade DESC, all_value DESC 
+       ORDER BY grade DESC, total_exp DESC 
        LIMIT ? OFFSET ?`,
       [req.params.name, parseInt(limit), offset]
     );

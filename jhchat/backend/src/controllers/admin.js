@@ -9,7 +9,7 @@ exports.getUsers = async (req, res) => {
     if (search) { where += ' AND username LIKE ?'; params.push(`%${search}%`); }
     if (status) { where += ' AND status = ?'; params.push(status); }
     const [users] = await db.execute(
-      `SELECT id, username, gender, status, grade, sect, faction, silver, all_value, registered_at, last_login_at
+      `SELECT id, username, gender, status, grade, sect, faction, silver, total_exp, registered_at, last_login_at
        FROM users WHERE ${where} ORDER BY id DESC LIMIT ? OFFSET ?`,
       [...params, parseInt(limit), offset]
     );

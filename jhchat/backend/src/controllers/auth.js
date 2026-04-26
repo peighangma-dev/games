@@ -323,10 +323,10 @@ async function checkLevelUp(user) {
   }
 
   let newGrade = user.grade;
-  if (newGrade < 2 && user.all_value >= thresholds[0]) newGrade = 2;
-  if (newGrade < 3 && user.all_value >= thresholds[1]) newGrade = 3;
-  if (newGrade < 4 && user.all_value >= thresholds[2]) newGrade = 4;
-  if (newGrade < 5 && user.all_value >= thresholds[3]) newGrade = 5;
+  if (newGrade < 2 && user.total_exp >= thresholds[0]) newGrade = 2;
+  if (newGrade < 3 && user.total_exp >= thresholds[1]) newGrade = 3;
+  if (newGrade < 4 && user.total_exp >= thresholds[2]) newGrade = 4;
+  if (newGrade < 5 && user.total_exp >= thresholds[3]) newGrade = 5;
 
   if (newGrade > user.grade) {
     await db.execute('UPDATE users SET grade = ? WHERE id = ?', [newGrade, user.id]);

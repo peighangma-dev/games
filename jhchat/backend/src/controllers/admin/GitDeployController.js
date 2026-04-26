@@ -242,24 +242,12 @@ class GitDeployController {
         { encoding: 'utf8' }
       ).trim();
 
-      // 获取最新提交
-      const latestCommit = execSync(
-        `cd ${gitRepoDir} && git log --oneline -1`,
-        { encoding: 'utf8' }
-      ).trim();
-
-      // 检查是否有未推送的提交
-      const aheadBehind = execSync(
-        `cd ${gitRepoDir} && git status --short`,
-        { encoding: 'utf8' }
-      ).trim();
-
       res.json({
         success: true,
         data: {
           currentBranch,
           latestCommit,
-          hasUncommittedChanges: !!aheadBehind,
+          hasUncommittedChanges: !!hasChanges,
           repoDir: gitRepoDir
         }
       });

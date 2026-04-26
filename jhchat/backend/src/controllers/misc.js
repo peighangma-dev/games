@@ -2,9 +2,9 @@ const db = require('../config/db');
 
 exports.rankings = async (req, res) => {
   try {
-    const { type = 'all_value' } = req.query;
-    const allowedTypes = ['all_value', 'silver', 'grade', 'wugong', 'neili', 'charm', 'attack_power'];
-    const sortField = allowedTypes.includes(type) ? type : 'all_value';
+    const { type = 'total_exp' } = req.query;
+    const allowedTypes = ['total_exp', 'silver', 'grade', 'wugong', 'neili', 'charm', 'attack_power'];
+    const sortField = allowedTypes.includes(type) ? type : 'total_exp';
     const [users] = await db.execute(
       `SELECT id, username, gender, sect, grade, ${sortField} as value, avatar
        FROM users WHERE status != 'dead' ORDER BY ${sortField} DESC LIMIT 50`
@@ -64,8 +64,8 @@ exports.postVote = async (req, res) => {
     if (config.length === 0) return res.status(400).json({ success: false, message: '投票未开放' });
     const now = new Date();
     if (config[0].end_time && now > new Date(config[0].end_time)) return res.status(400).json({ success: false, message: '投票已结束' });
-    const [users] = await db.execute('SELECT all_value FROM users WHERE id = ?', [req.user.id]);
-    if (users[0].all_value < (config[0].min_exp || 300)) return res.status(403).json({ success: false, message: '经验不足，无法投票' });
+    const [users] = await db.execute('SELECT total_exp FROM users WHERE id = ?', [req.user.id]);
+    if (users[0].total_exp < (config[0].min_exp || 300)) return res.status(403).json({ success: false, message: '经验不足，无法投票' });
     await db.execute('INSERT INTO poll_votes (voter, candidate_id) VALUES (?, ?)', [req.user.username, candidateId]);
     await db.execute('UPDATE poll_candidates SET vote_count = vote_count + 1 WHERE id = ?', [candidateId]);
     res.json({ success: true, message: '投票成功' });
@@ -175,7 +175,7 @@ exports.claimBounty = async (req, res) => {
     if (success) {
       await db.execute('UPDATE bounties SET is_completed = 1 WHERE id = ?', [bounty.id]);
       const reward = victims[0].grade * 500;
-      await db.execute('UPDATE users SET silver = silver + ?, all_value = all_value + ? WHERE id = ?', [reward, 50, req.user.id]);
+      await db.execute('UPDATE users SET silver = silver + ?, total_exp = total_exp + ? WHERE id = ?', [reward, 50, req.user.id]);
       return res.json({ success: true, data: { success: true, reward } });
     }
     res.json({ success: true, data: { success: false, message: '猎杀失败' } });

@@ -95,7 +95,7 @@ exports.practice = async (req, res) => {
     
     // 获取用户信息
     const [users] = await db.execute(
-      `SELECT id, username, neili, tili, wugong, all_value, grade, 
+      `SELECT id, username, neili, tili, wugong, total_exp, grade, 
               last_practice_at, practice_count_today, practice_exp_total
        FROM users 
        WHERE id = ?`,
@@ -187,7 +187,7 @@ exports.practice = async (req, res) => {
       `UPDATE users 
        SET neili = neili - ?, 
            tili = GREATEST(0, tili - ?), 
-           all_value = all_value + ?,
+           total_exp = total_exp + ?,
            practice_exp_total = practice_exp_total + ?,
            last_practice_at = NOW(),
            practice_count_today = ?

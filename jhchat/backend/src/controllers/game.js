@@ -343,7 +343,7 @@ exports.hunt = async (req, res) => {
       if (rand <= 0) { huntResult = animals[i]; break; }
     }
     if (huntResult.value > 0) {
-      await db.execute('UPDATE users SET silver = silver + ?, all_value = all_value + ? WHERE id = ?', [huntResult.value, huntResult.exp, req.user.id]);
+      await db.execute('UPDATE users SET silver = silver + ?, total_exp = total_exp + ? WHERE id = ?', [huntResult.value, huntResult.exp, req.user.id]);
     }
     res.json({ success: true, data: { hunt: huntResult.name, value: huntResult.value, exp: huntResult.exp } });
   } catch (err) {
@@ -388,7 +388,7 @@ exports.exam = async (req, res) => {
     if (!answer) return res.json({ success: true, data: { question: poem.question, poemId: poem.id } });
     if (answer === poem.answer) {
       const reward = 100 + Math.floor(Math.random() * 200);
-      await db.execute('UPDATE users SET silver = silver + ?, all_value = all_value + ? WHERE id = ?', [reward, 10, req.user.id]);
+      await db.execute('UPDATE users SET silver = silver + ?, total_exp = total_exp + ? WHERE id = ?', [reward, 10, req.user.id]);
       return res.json({ success: true, data: { correct: true, reward } });
     }
     res.json({ success: true, data: { correct: false, correctAnswer: poem.answer } });
