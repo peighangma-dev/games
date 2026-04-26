@@ -6,7 +6,8 @@
 set -e
 
 # 配置
-GIT_REPO_DIR="/www/wwwroot/games/jhchat"
+GIT_REPO_DIR="/www/wwwroot/games"
+GIT_SUBDIR="jhchat"
 PROD_DIR="/www/wwwroot/jhchat"
 BACKUP_DIR="$PROD_DIR/backup"
 LOG_FILE="$PROD_DIR/deploy.log"
@@ -85,9 +86,9 @@ pull_git_code() {
 sync_code() {
   log "同步代码到生产目录..."
   
-  rsync -av --delete "$GIT_REPO_DIR/backend/" "$PROD_DIR/backend/"
-  rsync -av --delete "$GIT_REPO_DIR/frontend/" "$PROD_DIR/frontend/"
-  rsync -av --delete "$GIT_REPO_DIR/scripts/" "$PROD_DIR/scripts/"
+  rsync -av --delete "$GIT_REPO_DIR/$GIT_SUBDIR/backend/" "$PROD_DIR/backend/"
+  rsync -av --delete "$GIT_REPO_DIR/$GIT_SUBDIR/frontend/" "$PROD_DIR/frontend/"
+  rsync -av --delete "$GIT_REPO_DIR/$GIT_SUBDIR/scripts/" "$PROD_DIR/scripts/"
   
   success "代码同步完成"
 }

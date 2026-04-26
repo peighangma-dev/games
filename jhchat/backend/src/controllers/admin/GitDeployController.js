@@ -27,7 +27,8 @@ class GitDeployController {
     };
 
     try {
-      const gitRepoDir = '/www/wwwroot/games/jhchat';
+      const gitRepoDir = '/www/wwwroot/games';
+      const gitSubdir = 'jhchat';
       const prodDir = '/www/wwwroot/jhchat';
       const branch = '260413-feat-jhchat-refactor';
 
@@ -65,9 +66,9 @@ class GitDeployController {
 
       // 步骤 5: 同步代码到生产目录
       log('步骤 5: 同步代码到生产目录...');
-      await execPromise(`rsync -av --delete ${gitRepoDir}/backend/ ${prodDir}/backend/`);
-      await execPromise(`rsync -av --delete ${gitRepoDir}/frontend/ ${prodDir}/frontend/`);
-      await execPromise(`rsync -av --delete ${gitRepoDir}/scripts/ ${prodDir}/scripts/`);
+      await execPromise(`rsync -av --delete ${gitRepoDir}/${gitSubdir}/backend/ ${prodDir}/backend/`);
+      await execPromise(`rsync -av --delete ${gitRepoDir}/${gitSubdir}/frontend/ ${prodDir}/frontend/`);
+      await execPromise(`rsync -av --delete ${gitRepoDir}/${gitSubdir}/scripts/ ${prodDir}/scripts/`);
       log('✓ 代码同步完成');
 
       // 步骤 6: 安装后端依赖
