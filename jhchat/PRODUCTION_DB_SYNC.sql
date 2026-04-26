@@ -5,7 +5,7 @@
 -- 使用：mysql -u jhchat -p'密码' jhchat < PRODUCTION_DB_SYNC.sql
 -- =====================================================
 
--- 1. 等级配置表
+-- 1. 等级配置表（如果不存在则创建）
 CREATE TABLE IF NOT EXISTS `user_level_config` (
   `id` INT UNSIGNED NOT NULL AUTO_INCREMENT,
   `level` TINYINT UNSIGNED NOT NULL COMMENT '等级 (1-10)',
@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS `user_level_config` (
   UNIQUE KEY `uk_level` (`level`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户等级配置';
 
--- 初始化等级配置
+-- 初始化等级配置（如果已有配置则忽略）
 INSERT INTO `user_level_config` (`level`, `required_exp`, `max_daily_chat_exp`, `chat_exp_per_minute`, `can_be_admin`, `min_register_days`, `min_total_exp`) VALUES
 (1, 0, 100, 1, 0, 0, 0),
 (2, 1000, 200, 2, 0, 0, 0),
@@ -67,20 +67,70 @@ CREATE TABLE IF NOT EXISTS `admin_applications` (
   KEY `idx_status` (`status`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='管理员申请记录';
 
--- 4. 用户表经验字段（如不存在则添加）
-ALTER TABLE users 
-ADD COLUMN IF NOT EXISTS `chat_minutes_today` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '今日聊天分钟数' AFTER `practice_exp_total`,
-ADD COLUMN IF NOT EXISTS `chat_minutes_total` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT '累计聊天分钟数' AFTER `chat_minutes_today`,
-ADD COLUMN IF NOT EXISTS `last_chat_time` DATETIME DEFAULT NULL COMMENT '最后聊天时间' AFTER `chat_minutes_total`;
+-- 4. 用户表新字段（分别添加，避免语法错误）
+-- 注意：MySQL 5.7 不支持 IF NOT EXISTS，需要手动检查
 
--- 确保经验字段存在（重命名/兼容）
+-- 添加 chat_minutes_today 字段
+SET @dbname = DATABASE();
+SET @tablename = 'users';
+SET @columnname = 'chat_minutes_today';
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname)
+  ) > 0,
+  'SELECT 1',
+  CONCAT('ALTER TABLE ', @tablename, ' ADD COLUMN `', @columnname, '` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT \'今日聊天分钟数\' AFTER `practice_exp_total`')
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- 添加 chat_minutes_total 字段
+SET @columnname = 'chat_minutes_total';
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname)
+  ) > 0,
+  'SELECT 1',
+  CONCAT('ALTER TABLE ', @tablename, ' ADD COLUMN `', @columnname, '` INT UNSIGNED NOT NULL DEFAULT 0 COMMENT \'累计聊天分钟数\' AFTER `chat_minutes_today`')
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- 添加 last_chat_time 字段
+SET @columnname = 'last_chat_time';
+SET @preparedStatement = (SELECT IF(
+  (
+    SELECT COUNT(*) FROM INFORMATION_SCHEMA.COLUMNS
+    WHERE
+      (table_name = @tablename)
+      AND (table_schema = @dbname)
+      AND (column_name = @columnname)
+  ) > 0,
+  'SELECT 1',
+  CONCAT('ALTER TABLE ', @tablename, ' ADD COLUMN `', @columnname, '` DATETIME DEFAULT NULL COMMENT \'最后聊天时间\' AFTER `chat_minutes_total`')
+));
+PREPARE alterIfNotExists FROM @preparedStatement;
+EXECUTE alterIfNotExists;
+DEALLOCATE PREPARE alterIfNotExists;
+
+-- 确保经验字段类型正确
 ALTER TABLE users 
 MODIFY COLUMN `all_value` BIGINT NOT NULL DEFAULT 0 COMMENT '总经验值',
 MODIFY COLUMN `month_value` BIGINT NOT NULL DEFAULT 0 COMMENT '月度经验值';
 
--- 添加经验字段索引（如不存在）
-ALTER TABLE users ADD INDEX IF NOT EXISTS `idx_total_exp` (`all_value`);
-ALTER TABLE users ADD INDEX IF NOT EXISTS `idx_monthly_exp` (`month_value`);
+-- 添加经验字段索引（如果不存在）
+ALTER TABLE users ADD INDEX `idx_total_exp` (`all_value`);
+ALTER TABLE users ADD INDEX `idx_monthly_exp` (`month_value`);
 
 -- =====================================================
 -- 同步完成
