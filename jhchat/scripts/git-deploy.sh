@@ -6,7 +6,7 @@
 set -e
 
 # 配置
-GIT_REPO_DIR="/www/wwwroot/games"
+GIT_REPO_DIR="/www/wwwroot/games/jhchat"
 PROD_DIR="/www/wwwroot/jhchat"
 BACKUP_DIR="$PROD_DIR/backup"
 LOG_FILE="$PROD_DIR/deploy.log"

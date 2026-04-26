@@ -27,7 +27,7 @@ class GitDeployController {
     };
 
     try {
-      const gitRepoDir = '/www/wwwroot/games';
+      const gitRepoDir = '/www/wwwroot/games/jhchat';
       const prodDir = '/www/wwwroot/jhchat';
       const branch = '260413-feat-jhchat-refactor';
 
@@ -173,14 +173,24 @@ class GitDeployController {
    */
   static async checkGitStatus(req, res) {
     try {
-      const gitRepoDir = '/www/wwwroot/games';
+      const gitRepoDir = '/www/wwwroot/games/jhchat';
       const branch = '260413-feat-jhchat-refactor';
 
-      const { execSync } = require('child_process');
-      
       // 获取当前分支
       const currentBranch = execSync(
         `cd ${gitRepoDir} && git branch --show-current`,
+        { encoding: 'utf8' }
+      ).trim();
+
+      // 获取最新提交
+      const latestCommit = execSync(
+        `cd ${gitRepoDir} && git log --oneline -1`,
+        { encoding: 'utf8' }
+      ).trim();
+
+      // 检查是否有未提交的更改
+      const hasChanges = execSync(
+        `cd ${gitRepoDir} && git status --short`,
         { encoding: 'utf8' }
       ).trim();
 
