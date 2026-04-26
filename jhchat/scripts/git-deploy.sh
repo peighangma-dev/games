@@ -97,7 +97,7 @@ sync_code() {
 install_dependencies() {
   log "安装后端依赖..."
   cd "$PROD_DIR/backend"
-  npm install --production
+  npm install  # 不添加--production，需要安装 nodemon 等 dev 依赖
   
   log "安装前端依赖..."
   cd "$PROD_DIR/frontend"
