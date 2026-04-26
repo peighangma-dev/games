@@ -84,11 +84,15 @@ class UserController {
       const orderField = allowedOrders.includes(orderBy) ? orderBy : 'id';
       const orderDir = order.toUpperCase() === 'ASC' ? 'ASC' : 'DESC';
 
+      // 兼容生产端旧字段名（all_value, month_value）
       const [users] = await db.execute(
         `SELECT id, username, gender, status, grade, sect, faction, silver, 
                 deposit, is_vip, vip_expires_at, registered_at, last_login_at,
                 last_login_ip, register_ip, neili, wugong, tili, attack_power,
-                total_exp, monthly_exp, chat_minutes_today, chat_minutes_total
+                COALESCE(total_exp, all_value, 0) as total_exp,
+                COALESCE(monthly_exp, month_value, 0) as monthly_exp,
+                COALESCE(chat_minutes_today, 0) as chat_minutes_today,
+                COALESCE(chat_minutes_total, 0) as chat_minutes_total
          FROM users 
          WHERE ${where} 
          ORDER BY ${orderField} ${orderDir} 
