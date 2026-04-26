@@ -138,25 +138,18 @@ echo "✓ 备份完成：$BACKUP_DIR"
 #### 步骤 3: 从 Git 拉取最新代码
 
 ```bash
-cd /www/wwwroot/jhchat
+# 进入 Git 仓库目录
+cd /www/wwwroot/games
 
-# 切换到前端目录，拉取最新代码
-cd frontend
+# 拉取最新代码
 git fetch origin
 git checkout 260413-feat-jhchat-refactor
 git pull origin 260413-feat-jhchat-refactor
 
-# 切换到后端目录，拉取最新代码
-cd ../backend
-git fetch origin
-git checkout 260413-feat-jhchat-refactor
-git pull origin 260413-feat-jhchat-refactor
-
-# 切换到 scripts 目录，拉取最新代码
-cd ../scripts
-git fetch origin
-git checkout 260413-feat-jhchat-refactor
-git pull origin 260413-feat-jhchat-refactor
+# 同步到生产环境目录（如需要）
+rsync -av backend/ /www/wwwroot/jhchat/backend/
+rsync -av frontend/ /www/wwwroot/jhchat/frontend/
+rsync -av scripts/ /www/wwwroot/jhchat/scripts/
 ```
 
 #### 步骤 4: 安装依赖
