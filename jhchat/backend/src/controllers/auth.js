@@ -227,7 +227,7 @@ exports.login = async (req, res) => {
       return res.status(403).json({ success: false, message: '您的IP已被封禁' });
     }
 
-    const [users] = await db.execute('SELECT * FROM users WHERE username = ? AND status != ?', [username, 'dead']);
+    const [users] = await db.execute('SELECT *, COALESCE(total_exp, all_value, 0) as total_exp FROM users WHERE username = ? AND status != ?', [username, 'dead']);
     if (users.length === 0) {
       // 登录失败：用户不存在
       await recordLoginLog(null, username, ip, 'failed', '用户不存在');

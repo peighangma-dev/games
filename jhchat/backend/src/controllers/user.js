@@ -5,7 +5,9 @@ exports.getMe = async (req, res) => {
     const userId = req.user?.id || 0;
     const [users] = await db.execute(
       `SELECT id, username, gender, avatar, status, neili, wugong, tili, attack, defense, charm, attack_power,
-        spouse, is_vip, silver, sect, faction, sect_title, deposit, grade, total_exp, monthly_exp,
+        spouse, is_vip, silver, sect, faction, sect_title, deposit, grade, 
+        COALESCE(total_exp, all_value, 0) as total_exp, 
+        COALESCE(monthly_exp, month_value, 0) as monthly_exp,
         job, master, vip_expires_at, registered_at, last_login_at
        FROM users WHERE id = ?`, [userId]
     );
@@ -66,7 +68,8 @@ exports.getUser = async (req, res) => {
   try {
     const [users] = await db.execute(
       `SELECT id, username, gender, avatar, status, neili, wugong, tili, attack, defense, charm,
-        attack_power, spouse, is_vip, silver, sect, faction, sect_title, grade, total_exp, registered_at
+        attack_power, spouse, is_vip, silver, sect, faction, sect_title, grade, 
+        COALESCE(total_exp, all_value, 0) as total_exp, registered_at
        FROM users WHERE username = ?`, [req.params.name]
     );
     if (users.length === 0) return res.status(404).json({ success: false, message: '用户不存在' });
