@@ -149,8 +149,12 @@ run_migrations() {
     log "未发现 migrations 目录"
   fi
 }
+
+# 编译前端
+build_frontend() {
   log "编译前端..."
   cd "$PROD_DIR/frontend"
+  npm install
   npm run build
   
   success "前端编译完成"
