@@ -23,6 +23,7 @@ const UpdateController = require('./UpdateController');
 const UpdatePackageController = require('./UpdatePackageController');
 const UpdateScriptController = require('./UpdateScriptController');
 const UpdateAcknowledgeController = require('../../controllers/update');
+const GitDeployController = require('./GitDeployController');
 
 module.exports = {
   // 仪表盘
@@ -172,5 +173,9 @@ module.exports = {
   getUpdateScript: UpdateScriptController.generateScript,
   
   // 更新确认
-  getAcknowledgeHistory: UpdateAcknowledgeController.getAcknowledgeHistory
+  getAcknowledgeHistory: UpdateAcknowledgeController.getAcknowledgeHistory,
+  
+  // Git 部署
+  gitSync: GitDeployController.gitSync,
+  checkGitStatus: GitDeployController.checkGitStatus
 };

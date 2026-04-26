@@ -2,9 +2,14 @@
   <div class="updates-page">
     <div class="page-header">
       <h3 class="section-title">📦 系统更新管理</h3>
-      <button @click="showCreateModal = true" class="btn btn-primary">
-        ➕ 创建更新
-      </button>
+      <div class="header-actions">
+        <button @click="checkAndDeploy" class="btn btn-success" :disabled="deploying">
+          {{ deploying ? '⏳ 部署中...' : '🚀 一键检测并更新' }}
+        </button>
+        <button @click="showCreateModal = true" class="btn btn-primary">
+          ➕ 创建更新
+        </button>
+      </div>
     </div>
 
     <div class="filter-bar">
@@ -435,6 +440,32 @@ const pushUpdate = (update) => {
     console.error('推送更新失败:', error)
     alert('推送更新失败：' + error.message)
   })
+}
+
+const deploying = ref(false)
+
+const checkAndDeploy = async () => {
+  if (!confirm('确定要检测并部署最新版本吗？\n\n此操作将：\n1. 检查 Git 仓库最新代码\n2. 自动备份当前版本\n3. 拉取最新代码\n4. 安装依赖并编译\n5. 重启服务\n\n是否继续？')) return
+  
+  deploying.value = true
+  
+  try {
+    // 调用后端部署 API
+    const res = await api.post('/admin/deploy/git-sync')
+    
+    if (res.data.success) {
+      alert('✅ 部署完成！\n\n' + res.data.message)
+      loadUpdates()
+    } else {
+      alert('❌ 部署失败：' + res.data.message)
+    }
+  } catch (error) {
+    console.error('部署失败:', error)
+    const errorMsg = error.response?.data?.message || error.message
+    alert('❌ 部署失败：' + errorMsg)
+  } finally {
+    deploying.value = false
+  }
 }
 
 const deleteUpdate = async (update) => {

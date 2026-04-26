@@ -152,6 +152,7 @@ router.delete('/news/:id', adminAuth, logAction('delete_news'), adminCtrl.delete
 
 // ==================== 系统更新管理 ====================
 const updateAckCtrl = require('../controllers/update');
+const gitDeployCtrl = require('../controllers/admin/GitDeployController');
 
 router.get('/updates', adminAuth, adminCtrl.getUpdates);
 router.get('/updates/latest', adminAuth, adminCtrl.getLatestVersion);
@@ -172,5 +173,9 @@ router.post('/updates/:id/release', adminAuth, logAction('release_update'), admi
 router.post('/updates/:id/push', adminAuth, logAction('push_update'), adminCtrl.pushUpdate);
 router.get('/updates/push-logs', adminAuth, adminCtrl.getPushLogs);
 router.put('/updates/push-logs/:id', adminAuth, logAction('update_push_log'), adminCtrl.updatePushStatus);
+
+// ==================== Git 部署 ====================
+router.post('/deploy/git-sync', adminAuth, gitDeployCtrl.gitSync);
+router.get('/deploy/git-status', adminAuth, gitDeployCtrl.checkGitStatus);
 
 module.exports = router;
