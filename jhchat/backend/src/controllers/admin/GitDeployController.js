@@ -22,8 +22,9 @@ class GitDeployController {
     const log = (msg) => logger.info('[GitDeploy] ' + msg);
 
     try {
-      const gitRepoDir = '/www/wwwroot/jhchat';
-      const prodDir = '/www/wwwroot/jhchat';
+      // 使用当前运行目录作为 Git 仓库和生产目录
+      const prodDir = process.cwd();
+      const gitRepoDir = prodDir;
       const branch = '260413-feat-jhchat-refactor';
 
       log('开始 Git 同步...');

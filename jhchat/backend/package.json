@@ -5,7 +5,7 @@
   "main": "src/server.js",
   "scripts": {
     "start": "node src/server.js",
-    "dev": "nodemon src/server.js",
+    "dev": "node src/server.js",
     "init-db": "node src/scripts/init-db.js",
     "seed": "node src/scripts/seed.js",
     "migrate": "node scripts/create-admin-action-logs-table.js",
