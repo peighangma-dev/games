@@ -28,6 +28,9 @@ router.post('/users/:id/reset-password', adminAuth, logAction('reset_password'),
 
 // ==================== 管理员管理 ====================
 router.get('/managers', adminAuth, adminCtrl.getManagers);
+router.post('/managers', adminAuth, logAction('create_manager'), adminCtrl.createManager);
+router.put('/managers/:id', adminAuth, logAction('update_manager'), adminCtrl.updateManager);
+router.delete('/managers/:id', adminAuth, logAction('delete_manager'), adminCtrl.deleteManager);
 
 // ==================== 藏经阁管理 ====================
 router.get('/secret-skills/stats', adminAuth, adminCtrl.getSecretSkillsStats);

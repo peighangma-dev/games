@@ -46,6 +46,9 @@ module.exports = {
   kickUser: UserController.kickUser,
   resetPassword: UserController.resetPassword,
   getManagers: UserController.getManagers,
+  createManager: UserController.createManager,
+  updateManager: UserController.updateManager,
+  deleteManager: UserController.deleteManager,
   
   // 藏经阁管理
   getSecretSkills: SecretSkillController.getSecretSkills,
