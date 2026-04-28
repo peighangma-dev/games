@@ -2,7 +2,7 @@
   <div class="sects-page">
     <div class="page-header">
       <h3 class="section-title">⚔️ 门派管理</h3>
-      <button @click="showCreateDialog = true" class="btn btn-primary">+ 创建门派</button>
+      <button @click="showCreate" class="btn btn-primary">+ 创建门派</button>
     </div>
 
     <!-- 统计信息 -->
@@ -58,7 +58,7 @@
     <div v-if="sects.length === 0" class="empty-text">暂无门派数据</div>
 
     <!-- 创建/编辑对话框 -->
-    <div v-if="dialogVisible" class="modal-overlay" @click="dialogVisible = false">
+    <div v-if="dialogVisible || showCreateDialog" class="modal-overlay" @click="dialogVisible = false; showCreateDialog = false">
       <div class="modal" @click.stop>
         <h4>{{ isEditMode ? '编辑门派' : '创建新门派' }}</h4>
         
