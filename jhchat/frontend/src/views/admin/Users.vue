@@ -297,6 +297,24 @@ function showResetPassword(user) {
   passwordForm.value.forceChange = true
 }
 
+async function confirmResetPassword() {
+  if (!passwordForm.value.newPassword || passwordForm.value.newPassword.length < 3) {
+    alert('密码长度不能少于 3 位')
+    return
+  }
+  
+  try {
+    const res = await api.post(`/admin/users/${resetPasswordUser.value.id}/reset-password`, passwordForm.value)
+    if (res.success) {
+      alert(`密码已重置为：${passwordForm.value.newPassword}`)
+      resetPasswordUser.value = null
+      passwordForm.value.newPassword = ''
+    }
+  } catch (e) {
+    alert('重置密码失败：' + (e.message || '未知错误'))
+  }
+}
+
 function showExpDetail(user) {
   alert(`用户：${user.username}\n总经验：${user.total_exp || 0}\n月经验：${user.monthly_exp || 0}\n今日聊天：${user.chat_minutes_today || 0}分钟\n累计聊天：${user.chat_minutes_total || 0}分钟`)
 }
