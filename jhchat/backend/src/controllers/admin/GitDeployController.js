@@ -22,8 +22,7 @@ class GitDeployController {
     const log = (msg) => logger.info('[GitDeploy] ' + msg);
 
     try {
-      const gitRepoDir = '/www/wwwroot/games';
-      const gitSubdir = 'jhchat';
+      const gitRepoDir = '/www/wwwroot/jhchat';
       const prodDir = '/www/wwwroot/jhchat';
       const branch = '260413-feat-jhchat-refactor';
 
@@ -32,7 +31,7 @@ class GitDeployController {
       // 1. 检查 Git 仓库
       log('1. 检查 Git 仓库...');
       const gitStatus = await execPromise(`cd ${gitRepoDir} && git rev-parse --git-dir`);
-      log('✓ Git 仓库存在: ' + gitStatus.trim());
+      log('✓ Git 仓库存在：' + gitStatus.trim());
 
       // 2. 拉取最新代码
       log('2. 拉取最新代码...');
@@ -56,11 +55,8 @@ class GitDeployController {
       await execPromise(`cp -r ${prodDir}/dist ${backupDir}/dist 2>/dev/null || true`);
       log('✓ 备份完成');
 
-      // 4. 同步代码
-      log('4. 同步代码...');
-      await execPromise(`rsync -av ${gitRepoDir}/${gitSubdir}/backend/src/ ${prodDir}/backend/src/`);
-      await execPromise(`rsync -av ${gitRepoDir}/${gitSubdir}/frontend/ ${prodDir}/frontend/`);
-      log('✓ 代码同步完成');
+      // 4. 同步代码（本地就是 Git 仓库，无需 rsync）
+      log('4. 代码已在正确位置，跳过同步...');
 
       // 5. 安装依赖并构建
       log('5. 安装依赖...');
