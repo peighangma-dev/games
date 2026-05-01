@@ -66,6 +66,9 @@ import BlackjackGame from '../components/games/BlackjackGame.vue'
 import DiceGame from '../components/games/DiceGame.vue'
 import FishingGame from '../components/games/FishingGame.vue'
 import GameStats from '../components/games/GameStats.vue'
+import HighLowGame from '../components/games/HighLowGame.vue'
+import HuntingGame from '../components/games/HuntingGame.vue'
+import OthelloGame from '../components/games/OthelloGame.vue'
 
 const userStore = useUserStore()
 const currentGame = ref(null)
@@ -87,20 +90,45 @@ function getGameTitle(id) {
 
 function getGameComponent(id) {
   const components = {
-    blackjack: BlackjackGame,
-    dice: DiceGame,
-    fish: FishingGame
+    fish: FishingGame,
+    high: HighLowGame,
+    hunt: HuntingGame,
+    othello: OthelloGame
   }
   return components[id] || null
 }
 
 function openGame(name) {
   createClickEffect(event)
+  playSound('select')
   currentGame.value = name
 }
 
 function closeGame() {
+  playSound('back')
   currentGame.value = null
+}
+
+// 音效系统
+const sounds = {
+  select: new Audio('/sounds/select.mp3'),
+  back: new Audio('/sounds/back.mp3'),
+  win: new Audio('/sounds/win.mp3'),
+  lose: new Audio('/sounds/lose.mp3'),
+  coin: new Audio('/sounds/coin.mp3')
+}
+
+function playSound(name) {
+  try {
+    const sound = sounds[name]
+    if (sound) {
+      sound.volume = 0.3
+      sound.currentTime = 0
+      sound.play().catch(() => {}) // 忽略自动播放错误
+    }
+  } catch (e) {
+    // 音效文件不存在时忽略
+  }
 }
 
 // 创建点击特效
@@ -196,9 +224,26 @@ onMounted(() => {
 /* 游戏列表 */
 .game-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 20px;
   padding: 20px;
+}
+
+.game-card {
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  border-radius: 15px;
+  background: linear-gradient(135deg, rgba(30, 30, 50, 0.8), rgba(15, 23, 30, 0.8));
+  border: 2px solid rgba(75, 135, 195, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: cardEntrance 0.6s ease-out backwards;
+}
+
+.game-card:hover {
+  transform: translateY(-8px) scale(1.02);
+  border-color: rgba(126, 184, 218, 0.6);
+  box-shadow: 0 15px 35px rgba(75, 135, 195, 0.3);
 }
 
 .game-card {

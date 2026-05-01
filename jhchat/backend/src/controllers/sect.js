@@ -608,7 +608,7 @@ exports.getSkills = async (req, res) => {
       `SELECT ss.*, sp.position_name as required_position
        FROM secret_skills ss
        LEFT JOIN sect_positions sp ON ss.id = sp.id
-       WHERE ss.sect = ? OR ss.sect = '全门派' OR ss.sect = '通用'
+       WHERE ss.sect = ? OR ss.sect = '通用'
        ORDER BY ss.level ASC, ss.price DESC`,
       [req.user.sect]
     );
@@ -646,7 +646,7 @@ exports.learnSkill = async (req, res) => {
     
     // 查询技能
     const [skills] = await db.execute(
-      'SELECT * FROM secret_skills WHERE id = ? AND (sect = ? OR sect = "全门派")',
+      'SELECT * FROM secret_skills WHERE id = ? AND (sect = ? OR sect = "通用")',
       [skillId, req.user.sect]
     );
     
@@ -709,31 +709,42 @@ exports.getTasks = async (req, res) => {
       return res.status(400).json({ success: false, message: '您还没有加入任何门派' });
     }
     
-    const [tasks] = await db.execute(
-      `SELECT id, name as title, description, type as quest_type, reward_exp, reward_silver, reward_neili
-       FROM quests 
-       WHERE type IN ('daily', 'side')
-       ORDER BY reward_exp DESC, reward_silver DESC
-       LIMIT 20`,
-      []
-    );
+    const { type } = req.query; // daily, side, all
     
-    // 查询用户已完成的任务
-    const [completed] = await db.execute(
-      'SELECT quest_id, completed_at FROM user_quests WHERE user_id = ?',
-      [req.user.id]
-    );
+    let query = `
+      SELECT q.id, q.name as title, q.description, q.type as quest_type, 
+             q.difficulty, q.reward_exp, q.reward_silver, q.reward_neili,
+             q.max_progress, q.objective_type, q.objective_target,
+             COALESCE(p.progress, 0) as progress,
+             COALESCE(p.status, 'active') as status,
+             p.completed_at
+      FROM quests q
+      LEFT JOIN user_quest_progress p ON q.id = p.quest_id AND p.user_id = ?
+      WHERE q.type IN ('daily', 'side')
+    `;
     
-    const completedIds = new Set(completed.map(t => t.quest_id));
+    const params = [req.user.id];
+    
+    if (type && type !== 'all') {
+      query += ' AND q.type = ?';
+      params.push(type);
+    }
+    
+    query += ' ORDER BY q.type ASC, q.difficulty ASC, q.reward_exp DESC';
+    
+    const [tasks] = await db.execute(query, params);
     
     res.json({
       success: true,
       data: tasks.map(task => ({
         ...task,
-        completed: completedIds.has(task.id)
+        completed: task.status === 'claimed',
+        progress: task.progress || 0,
+        isCompleted: task.progress >= task.max_progress
       }))
     });
   } catch (err) {
+    console.error('查询任务错误:', err);
     res.status(500).json({ success: false, message: '查询任务失败' });
   }
 };
@@ -749,7 +760,7 @@ exports.completeTask = async (req, res) => {
     
     // 查询任务
     const [tasks] = await db.execute(
-      'SELECT id, title, reward_exp, reward_silver FROM quests WHERE id = ?',
+      'SELECT id, name as title, reward_exp, reward_silver, reward_neili, max_progress FROM quests WHERE id = ?',
       [questId]
     );
     
@@ -759,45 +770,60 @@ exports.completeTask = async (req, res) => {
     
     const task = tasks[0];
     
-    // 检查是否已完成
-    const [completed] = await db.execute(
-      'SELECT id FROM user_quests WHERE user_id = ? AND quest_id = ? AND status = "claimed"',
+    // 查询进度
+    const [progresses] = await db.execute(
+      'SELECT * FROM user_quest_progress WHERE user_id = ? AND quest_id = ?',
       [req.user.id, questId]
     );
     
-    if (completed.length > 0) {
-      return res.status(400).json({ success: false, message: '任务已完成' });
+    const progress = progresses.length > 0 ? progresses[0] : null;
+    
+    // 检查是否已领取奖励
+    if (progress && progress.status === 'claimed') {
+      return res.status(400).json({ success: false, message: '任务奖励已领取' });
     }
     
-    // 更新或创建任务记录
-    await db.execute(
-      `INSERT INTO user_quests (user_id, username, quest_id, status, completed_at) 
-       VALUES (?, ?, ?, 'claimed', NOW())
-       ON DUPLICATE KEY UPDATE status = 'claimed', completed_at = NOW()`,
-      [req.user.id, req.user.username, questId]
-    );
+    // 检查进度是否完成
+    const currentProgress = progress ? progress.progress : 0;
+    if (currentProgress < task.max_progress) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `任务未完成！当前进度：${currentProgress}/${task.max_progress}` 
+      });
+    }
+    
+    // 更新任务状态为已完成（未领取）
+    if (progress) {
+      await db.execute(
+        "UPDATE user_quest_progress SET status = 'completed', completed_at = NOW() WHERE user_id = ? AND quest_id = ?",
+        [req.user.id, questId]
+      );
+    } else {
+      await db.execute(
+        `INSERT INTO user_quest_progress (user_id, username, quest_id, progress, max_progress, status, completed_at) 
+         VALUES (?, ?, ?, ?, ?, 'completed', NOW())
+         ON DUPLICATE KEY UPDATE status = 'completed', completed_at = NOW()`,
+        [req.user.id, req.user.username, questId, task.max_progress, task.max_progress]
+      );
+    }
     
     // 发放奖励
     await db.execute(
-      'UPDATE users SET total_exp = total_exp + ?, monthly_exp = monthly_exp + ?, silver = silver + ? WHERE id = ?',
-      [task.reward_exp || 0, task.reward_exp || 0, task.reward_silver || 0, req.user.id]
+      'UPDATE users SET total_exp = total_exp + ?, monthly_exp = monthly_exp + ?, silver = silver + ?, neili = neili + ? WHERE id = ?',
+      [task.reward_exp || 0, task.reward_exp || 0, task.reward_silver || 0, task.reward_neili || 0, req.user.id]
     );
     
-    // 记录贡献
-    const contribution = Math.floor((task.reward_exp || 0) / 50);
-    await db.execute(
-      `INSERT INTO sect_contributions (sect_name, user_id, username, contribution, reason)
-       VALUES (?, ?, ?, ?, ?)`,
-      [req.user.sect || '无', req.user.id, req.user.username, contribution, `完成任务 ${task.title}`]
-    );
+    // 更新成就
+    const isDaily = task.max_progress > 1 || (await db.execute('SELECT type FROM quests WHERE id = ?', [questId]))[0][0]?.type === 'daily';
+    await updateQuestAchievement(req.user.id, req.user.username, isDaily);
     
     res.json({
       success: true,
-      message: `任务完成！获得 ${task.reward_exp || 0} 经验，${task.reward_silver || 0} 银两，${contribution} 贡献`,
+      message: `任务完成！获得 ${task.reward_exp || 0} 经验，${task.reward_silver || 0} 银两`,
       data: {
         exp: task.reward_exp || 0,
         silver: task.reward_silver || 0,
-        contribution
+        neili: task.reward_neili || 0
       }
     });
   } catch (err) {
@@ -806,213 +832,165 @@ exports.completeTask = async (req, res) => {
   }
 };
 
-// 获取门派仓库信息
-exports.getWarehouse = async (req, res) => {
+// 提交任务进度
+exports.submitProgress = async (req, res) => {
   try {
-    if (!req.user.sect || req.user.sect === '无') {
-      return res.json({ 
-        success: true, 
-        data: { 
-          fund: 0,
-          items: [],
-          donations: []
-        } 
-      });
+    const { questId } = req.params;
+    const { count = 1 } = req.body;
+    
+    if (!questId) {
+      return res.status(400).json({ success: false, message: '请指定任务 ID' });
     }
     
-    const [sects] = await db.execute('SELECT id, fund FROM sects WHERE name = ?', [req.user.sect]);
-    if (sects.length === 0) {
-      return res.json({ 
-        success: true, 
-        data: { 
-          fund: 0,
-          items: [],
-          donations: []
-        } 
-      });
+    // 查询任务
+    const [tasks] = await db.execute(
+      'SELECT id, max_progress, type FROM quests WHERE id = ?',
+      [questId]
+    );
+    
+    if (tasks.length === 0) {
+      return res.status(404).json({ success: false, message: '任务不存在' });
     }
     
-    const sect = sects[0];
+    const task = tasks[0];
     
-    // 查询仓库物品
-    const [items] = await db.execute(
-      'SELECT * FROM sect_warehouse WHERE sect_id = ? ORDER BY created_at DESC',
-      [sect.id]
+    // 查询当前进度
+    const [progresses] = await db.execute(
+      'SELECT * FROM user_quest_progress WHERE user_id = ? AND quest_id = ?',
+      [req.user.id, questId]
     );
     
-    // 查询捐赠记录（修正字段名）
-    const [donations] = await db.execute(
-      `SELECT sl.id, sl.amount, sl.balance, sl.reason, sl.operator_username as username, sl.created_at
-       FROM sect_fund_logs sl
-       WHERE sl.sect_id = ? AND sl.reason LIKE '%捐赠%'
-       ORDER BY sl.created_at DESC 
-       LIMIT 20`,
-      [sect.id]
-    );
+    const currentProgress = progresses.length > 0 ? progresses[0].progress : 0;
     
-    res.json({
-      success: true,
-      data: {
-        fund: sect.fund,
-        items: items || [],
-        donations: donations || []
-      }
-    });
-  } catch (err) {
-    console.error('查询仓库错误:', err.message);
-    res.json({
-      success: true,
-      data: {
-        fund: 0,
-        items: [],
-        donations: []
-      }
-    });
-  }
-};
-
-// 捐赠物品到仓库
-exports.donate = async (req, res) => {
-  try {
-    const { itemId, amount, type } = req.body;
-    
-    if (!req.user.sect || req.user.sect === '无') {
-      return res.status(400).json({ success: false, message: '您还没有加入任何门派' });
+    // 检查是否已完成
+    if (currentProgress >= task.max_progress) {
+      return res.status(400).json({ success: false, message: '任务已完成' });
     }
     
-    // 检查用户物品
-    const [userItems] = await db.execute(
-      'SELECT * FROM items WHERE owner = ? AND id = ?',
-      [req.user.username, itemId]
-    );
+    // 更新进度
+    const newProgress = Math.min(currentProgress + count, task.max_progress);
     
-    if (userItems.length === 0 || userItems[0].amount < amount) {
-      return res.status(400).json({ success: false, message: '物品不足' });
-    }
-    
-    const item = userItems[0];
-    
-    // 扣除用户物品
-    await db.execute(
-      'UPDATE items SET amount = amount - ? WHERE owner = ? AND id = ?',
-      [amount, req.user.username, itemId]
-    );
-    
-    // 增加仓库物品
-    const [existing] = await db.execute(
-      'SELECT * FROM sect_warehouse WHERE sect_id = (SELECT id FROM sects WHERE name = ?) AND item_name = ?',
-      [req.user.sect, item.name]
-    );
-    
-    if (existing.length > 0) {
+    if (progresses.length > 0) {
       await db.execute(
-        'UPDATE sect_warehouse SET amount = amount + ? WHERE sect_id = (SELECT id FROM sects WHERE name = ?) AND item_name = ?',
-        [amount, req.user.sect, item.name]
+        'UPDATE user_quest_progress SET progress = ?, status = "active" WHERE user_id = ? AND quest_id = ?',
+        [newProgress, req.user.id, questId]
       );
     } else {
       await db.execute(
-        'INSERT INTO sect_warehouse (sect_id, item_name, item_type, amount, donated_by, donated_at) VALUES ((SELECT id FROM sects WHERE name = ?), ?, ?, ?, ?, NOW())',
-        [req.user.sect, item.name, item.type, amount, req.user.username]
+        `INSERT INTO user_quest_progress (user_id, username, quest_id, progress, max_progress, status) 
+         VALUES (?, ?, ?, ?, ?, 'active')`,
+        [req.user.id, req.user.username, questId, newProgress, task.max_progress]
       );
     }
     
-    // 记录贡献
-    const contribution = Math.floor(item.price * amount / 100);
-    await db.execute(
-      `INSERT INTO sect_contributions (sect_name, user_id, username, contribution, reason)
-       VALUES (?, ?, ?, ?, ?)`,
-      [req.user.sect, req.user.id, req.user.username, contribution, `捐赠${item.name} ${amount}个`]
+    const isComplete = newProgress >= task.max_progress;
+    
+    res.json({
+      success: true,
+      message: isComplete ? '任务完成！' : `进度更新：${newProgress}/${task.max_progress}`,
+      data: {
+        progress: newProgress,
+        max: task.max_progress,
+        completed: isComplete
+      }
+    });
+  } catch (err) {
+    console.error('提交进度错误:', err);
+    res.status(500).json({ success: false, message: '提交进度失败' });
+  }
+};
+
+// 获取成就统计
+exports.getAchievements = async (req, res) => {
+  try {
+    const [achievements] = await db.execute(
+      'SELECT * FROM quest_achievements WHERE user_id = ?',
+      [req.user.id]
     );
     
+    if (achievements.length === 0) {
+      // 初始化成就记录
+      await db.execute(
+        'INSERT INTO quest_achievements (user_id, username) VALUES (?, ?)',
+        [req.user.id, req.user.username]
+      );
+      return res.json({ 
+        success: true, 
+        data: { 
+          total_completed: 0, 
+          daily_streak: 0, 
+          best_streak: 0 
+        } 
+      });
+    }
+    
+    const ach = achievements[0];
     res.json({
       success: true,
-      message: `捐赠成功！获得 ${contribution} 贡献`,
-      data: { contribution }
+      data: {
+        total_completed: ach.total_completed,
+        daily_streak: ach.daily_streak,
+        best_streak: ach.best_streak,
+        last_daily_completed: ach.last_daily_completed
+      }
     });
   } catch (err) {
-    console.error('捐赠错误:', err);
-    res.status(500).json({ success: false, message: '捐赠失败' });
+    console.error('查询成就错误:', err);
+    res.status(500).json({ success: false, message: '查询成就失败' });
   }
 };
 
-// 门派排行榜
-exports.leaderboard = async (req, res) => {
+// 更新成就（辅助函数）
+async function updateQuestAchievement(userId, username, isDaily) {
   try {
-    const { type = 'contribution', limit = 10 } = req.query;
+    const today = new Date().toISOString().split('T')[0];
     
-    let query = '';
-    switch (type) {
-      case 'contribution':
-        query = `
-          SELECT u.username, u.sect, SUM(c.contribution) as total_contribution
-          FROM users u
-          JOIN sect_contributions c ON u.id = c.user_id
-          WHERE u.sect != "无" AND u.sect IS NOT NULL
-          GROUP BY u.id, u.username, u.sect
-          ORDER BY total_contribution DESC
-          LIMIT ?
-        `;
-        break;
-      case 'exp':
-        query = `
-          SELECT username, sect, total_exp
-          FROM users
-          WHERE sect != "无" AND sect IS NOT NULL
-          ORDER BY total_exp DESC
-          LIMIT ?
-        `;
-        break;
-      case 'wealth':
-        query = `
-          SELECT username, sect, silver
-          FROM users
-          WHERE sect != "无" AND sect IS NOT NULL
-          ORDER BY silver DESC
-          LIMIT ?
-        `;
-        break;
-      default:
-        return res.status(400).json({ success: false, message: '无效的排行榜类型' });
+    const [achievements] = await db.execute(
+      'SELECT * FROM quest_achievements WHERE user_id = ?',
+      [userId]
+    );
+    
+    if (achievements.length === 0) {
+      await db.execute(
+        'INSERT INTO quest_achievements (user_id, username, total_completed, daily_streak, last_daily_completed) VALUES (?, ?, 1, ?, ?)',
+        [userId, username, isDaily ? 1 : 0, isDaily ? today : null]
+      );
+      return;
     }
     
-    const [results] = await db.execute(query, [parseInt(limit)]);
+    const ach = achievements[0];
+    let newStreak = ach.daily_streak;
+    let bestStreak = ach.best_streak;
+    let lastDate = ach.last_daily_completed;
     
-    res.json({
-      success: true,
-      data: results
-    });
+    if (isDaily) {
+      const yesterday = new Date();
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yesterdayStr = yesterday.toISOString().split('T')[0];
+      
+      if (lastDate === today) {
+        // 今天已经更新过
+      } else if (lastDate === yesterdayStr) {
+        // 连续完成
+        newStreak += 1;
+        bestStreak = Math.max(bestStreak, newStreak);
+      } else if (lastDate !== today) {
+        // 中断后重新开始
+        newStreak = 1;
+      }
+    }
+    
+    await db.execute(
+      `UPDATE quest_achievements 
+       SET total_completed = total_completed + 1,
+           daily_streak = ?,
+           best_streak = ?,
+           last_daily_completed = ?,
+           updated_at = NOW()
+       WHERE user_id = ?`,
+       [isDaily ? newStreak : ach.daily_streak, isDaily ? bestStreak : ach.best_streak, isDaily ? today : lastDate, userId]
+    );
   } catch (err) {
-    res.status(500).json({ success: false, message: '查询排行榜失败' });
+    console.error('更新成就错误:', err);
   }
-};
-
-// 获取本门派职位列表
-exports.getPositions = async (req, res) => {
-  try {
-    const userSect = req.user.sect || '无';
-    
-    if (userSect === '无' || !userSect) {
-      return res.json({ success: true, data: [] });
-    }
-    
-    // 获取门派 ID
-    const [sects] = await db.execute('SELECT id FROM sects WHERE name = ?', [userSect]);
-    if (sects.length === 0) {
-      return res.json({ success: true, data: [] });
-    }
-    
-    const sectId = sects[0].id;
-    
-    // 获取职位列表
-    const [positions] = await db.execute(`
-      SELECT * FROM sect_positions 
-      WHERE sect_id = ? 
-      ORDER BY position_rank DESC
-    `, [sectId]);
-    
-    res.json({ success: true, data: positions || [] });
-  } catch (err) {
-    console.error('获取门派职位失败:', err);
-    res.status(500).json({ success: false, message: '获取门派职位失败' });
-  }
-};
+}

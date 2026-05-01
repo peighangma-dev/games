@@ -90,3 +90,12 @@ class SocketManager {
 
 const socketManager = new SocketManager()
 export default socketManager
+
+// 导出便捷函数
+export function connectSocket(token) {
+  return socketManager.connect(token)
+}
+
+export function getSocket() {
+  return socketManager.getSocket()
+}

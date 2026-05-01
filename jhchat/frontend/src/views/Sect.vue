@@ -200,23 +200,61 @@
 
         <!-- 任务 -->
         <div v-if="activeTab === 'tasks'" class="tab-panel">
+          <div class="task-header-bar">
+            <div class="task-tabs">
+              <button :class="['task-tab', { active: taskCategory === 'all' }]" @click="taskCategory = 'all'">全部</button>
+              <button :class="['task-tab', { active: taskCategory === 'daily' }]" @click="taskCategory = 'daily'">📅 日常</button>
+              <button :class="['task-tab', { active: taskCategory === 'side' }]" @click="taskCategory = 'side'">📖 支线</button>
+            </div>
+            <button class="btn btn-sm" @click="showAchievements = true">🏆 成就</button>
+          </div>
+          
           <div class="card">
-            <h3 class="card-title">📜 任务</h3>
+            <h3 class="card-title">📜 任务列表</h3>
             <div class="task-list">
-              <div v-for="task in tasks" :key="task.id" class="task-item">
+              <div v-for="task in filteredTasks" :key="task.id" class="task-item" :class="[task.quest_type, task.difficulty]">
                 <div class="task-header">
                   <span class="task-title">{{ task.title }}</span>
                   <span :class="['task-tag', task.quest_type]">{{ taskTypeText(task.quest_type) }}</span>
+                  <span :class="['difficulty-badge', task.difficulty]">{{ difficultyText(task.difficulty) }}</span>
                 </div>
                 <div class="task-desc">{{ task.description }}</div>
+                
+                <!-- 进度条 -->
+                <div v-if="task.max_progress > 1" class="task-progress">
+                  <div class="progress-bar">
+                    <div class="progress-fill" :style="{ width: Math.min((task.progress / task.max_progress) * 100, 100) + '%' }"></div>
+                  </div>
+                  <span class="progress-text">{{ task.progress }}/{{ task.max_progress }}</span>
+                </div>
+                
                 <div class="task-rewards">
                   <span class="reward">✨ {{ task.reward_exp }}exp</span>
                   <span class="reward">💰 {{ task.reward_silver }}两</span>
+                  <span v-if="task.reward_neili" class="reward">🌀 {{ task.reward_neili }}内</span>
                 </div>
-                <button v-if="!task.completed" class="btn btn-sm btn-primary" @click="completeTask(task)">完成</button>
-                <span v-else class="badge-success">已完成</span>
+                
+                <div class="task-actions">
+                  <!-- 需要提交进度的任务 -->
+                  <template v-if="task.max_progress > 1 && !task.completed">
+                    <button v-if="!task.isCompleted" class="btn btn-sm btn-primary" @click="submitTaskProgress(task)">+ 提交进度</button>
+                    <button v-else class="btn btn-sm btn-success" @click="completeTask(task)">✅ 领取奖励</button>
+                  </template>
+                  <!-- 直接完成的任务 -->
+                  <template v-else>
+                    <button v-if="!task.completed" class="btn btn-sm btn-primary" @click="completeTask(task)">完成</button>
+                    <span v-else class="badge-success">已完成</span>
+                  </template>
+                </div>
               </div>
             </div>
+            
+            <div v-if="filteredTasks.length === 0" class="empty-state">
+              <i class="empty-icon">📋</i>
+              <p>暂无任务</p>
+            </div>
+          </div>
+        </div>
           </div>
         </div>
 
@@ -331,6 +369,39 @@
           </div>
         </div>
       </div>
+
+      <!-- 弹窗：任务成就 -->
+      <div v-if="showAchievements" class="modal" @click.self="showAchievements = false">
+        <div class="modal-content">
+          <h3>🏆 任务成就</h3>
+          <div v-if="achievements" class="achievement-grid">
+            <div class="achievement-item">
+              <div class="achievement-icon">📜</div>
+              <div class="achievement-info">
+                <div class="achievement-label">完成任务</div>
+                <div class="achievement-value">{{ achievements.total_completed }} 个</div>
+              </div>
+            </div>
+            <div class="achievement-item">
+              <div class="achievement-icon">🔥</div>
+              <div class="achievement-info">
+                <div class="achievement-label">连续完成日常</div>
+                <div class="achievement-value">{{ achievements.daily_streak }} 天</div>
+              </div>
+            </div>
+            <div class="achievement-item">
+              <div class="achievement-icon">👑</div>
+              <div class="achievement-info">
+                <div class="achievement-label">最佳记录</div>
+                <div class="achievement-value">{{ achievements.best_streak }} 天</div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" @click="showAchievements = false">关闭</button>
+          </div>
+        </div>
+      </div>
     </div>
   </PageLayout>
 </template>
@@ -386,6 +457,23 @@ const tasks = ref([])
 const warehouseData = ref({ fund: 0, items: [], donations: [] })
 const leaderboardData = ref([])
 const leaderboardType = ref('contribution')
+
+// 任务系统增强
+const taskCategory = ref('all') // all, daily, side
+const showAchievements = ref(false)
+const achievements = ref(null)
+const taskDifficultyMap = { easy: '简单', medium: '普通', hard: '困难', extreme: '极难' }
+
+// 过滤后的任务列表
+const filteredTasks = computed(() => {
+  if (taskCategory.value === 'all') return tasks.value
+  return tasks.value.filter(t => t.quest_type === taskCategory.value)
+})
+
+// 工具函数
+function difficultyText(d) {
+  return taskDifficultyMap[d] || d
+}
 
 // 工具函数
 function genderText(g) {
@@ -543,12 +631,17 @@ async function loadTasks() {
     return
   }
   try {
-    const res = await api.get('/sect/tasks')
+    const res = await api.get('/sect/tasks?type=' + taskCategory.value)
     if (res.success) tasks.value = res.data || []
   } catch (e) {
     console.error('加载任务失败', e)
   }
 }
+
+// 监听 Tab 切换，重新加载任务
+watch(taskCategory, async () => {
+  await loadTasks()
+})
 
 async function completeTask(task) {
   const res = await api.post('/sect/tasks/complete', { questId: task.id })
@@ -557,6 +650,24 @@ async function completeTask(task) {
     await userStore.fetchProfile()
     loadTasks()
   } else alert(res.message || '完成失败')
+}
+
+async function submitTaskProgress(task) {
+  // 模拟提交进度（+1）
+  const res = await api.post(`/sect/tasks/${task.id}/submit`, { count: 1 })
+  if (res.success) {
+    alert(`✅ ${res.message}`)
+    await loadTasks()
+  } else alert(res.message || '提交失败')
+}
+
+async function loadAchievements() {
+  try {
+    const res = await api.get('/sect/tasks/achievements')
+    if (res.success) achievements.value = res.data
+  } catch (e) {
+    console.error('加载成就失败', e)
+  }
 }
 
 // 仓库
@@ -681,6 +792,11 @@ async function loadPositions() {
 watch(showPositionModal, async (val) => {
   if (val) await loadPositions()
 })
+
+// Watch achievements modal
+watch(showAchievements, async (val) => {
+  if (val) await loadAchievements()
+})
 </script>
 
 <style scoped>
@@ -754,6 +870,42 @@ watch(showPositionModal, async (val) => {
 .member-ops { display: flex; gap: 4px; }
 .btn-xs { padding: 3px 8px; font-size: 11px; border-radius: 4px; border: 1px solid rgba(126, 184, 218, 0.3); background: rgba(126, 184, 218, 0.1); color: #7eb8da; cursor: pointer; }
 .btn-xs.btn-danger { border-color: rgba(231, 76, 60, 0.3); background: rgba(231, 76, 60, 0.1); color: #e74c3c; }
+
+/* 任务系统增强 */
+.task-header-bar { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; gap: 12px; }
+.task-tabs { display: flex; gap: 8px; }
+.task-tab { padding: 6px 14px; border-radius: 20px; border: 1px solid rgba(126, 184, 218, 0.3); background: rgba(0,0,0,0.2); color: #888; cursor: pointer; font-size: 12px; transition: all 0.2s; }
+.task-tab.active { background: rgba(126, 184, 218, 0.2); border-color: #7eb8da; color: #7eb8da; }
+.task-item { padding: 14px; background: rgba(0,0,0,0.2); border-radius: 8px; margin-bottom: 12px; border-left: 3px solid #7eb8da; }
+.task-item.daily { border-left-color: #3498db; }
+.task-item.side { border-left-color: #9b59b6; }
+.task-item.easy { border-left-width: 3px; }
+.task-item.medium { border-left-width: 4px; }
+.task-item.hard { border-left-width: 5px; }
+.task-item.extreme { border-left-width: 6px; border-left-color: #e74c3c; }
+.task-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 8px; }
+.task-title { color: #eee; font-weight: 500; flex: 1; }
+.task-tag { font-size: 11px; padding: 2px 8px; border-radius: 4px; }
+.task-tag.daily { background: rgba(52, 152, 219, 0.2); color: #3498db; }
+.task-tag.side { background: rgba(155, 89, 182, 0.2); color: #9b59b6; }
+.difficulty-badge { font-size: 11px; padding: 2px 6px; border-radius: 4px; }
+.difficulty-badge.easy { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+.difficulty-badge.medium { background: rgba(241, 196, 15, 0.2); color: #f1c40f; }
+.difficulty-badge.hard { background: rgba(230, 126, 34, 0.2); color: #e67e22; }
+.difficulty-badge.extreme { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+.task-desc { color: #999; font-size: 13px; margin-bottom: 10px; line-height: 1.5; }
+.task-progress { display: flex; align-items: center; gap: 10px; margin: 10px 0; }
+.progress-bar { flex: 1; height: 8px; background: rgba(0,0,0,0.3); border-radius: 4px; overflow: hidden; }
+.progress-fill { height: 100%; background: linear-gradient(90deg, #3498db, #2ecc71); transition: width 0.3s; }
+.progress-text { color: #7eb8da; font-size: 12px; min-width: 50px; text-align: right; }
+.task-rewards { display: flex; gap: 12px; margin: 10px 0; flex-wrap: wrap; }
+.reward { font-size: 12px; padding: 3px 8px; background: rgba(0,0,0,0.2); border-radius: 4px; }
+.task-actions { display: flex; gap: 8px; margin-top: 10px; }
+.achievement-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 20px 0; }
+.achievement-item { display: flex; flex-direction: column; align-items: center; padding: 16px; background: rgba(0,0,0,0.2); border-radius: 8px; text-align: center; }
+.achievement-icon { font-size: 36px; margin-bottom: 8px; }
+.achievement-label { color: #888; font-size: 12px; margin-bottom: 4px; }
+.achievement-value { color: #7eb8da; font-size: 20px; font-weight: bold; }
 
 /* 修炼 */
 .practice-status { background: rgba(0,0,0,0.2); padding: 12px; border-radius: 6px; margin-bottom: 16px; }
