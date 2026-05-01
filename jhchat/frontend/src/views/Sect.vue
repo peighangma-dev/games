@@ -616,6 +616,7 @@ watch(activeTab, (newTab) => {
   if (newTab === 'warehouse') loadWarehouse()
   if (newTab === 'leaderboard') loadLeaderboard()
   if (newTab === 'members') loadMembers()
+  if (newTab === 'practice') userStore.fetchProfile()
 })
 </script>
 

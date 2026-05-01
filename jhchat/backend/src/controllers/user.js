@@ -8,8 +8,8 @@ exports.getMe = async (req, res) => {
         spouse, is_vip, silver, sect, faction, sect_title, deposit, grade, 
         COALESCE(total_exp, all_value, 0) as total_exp, 
         COALESCE(monthly_exp, month_value, 0) as monthly_exp,
-        job, master, vip_expires_at, registered_at, last_login_at
-       FROM users WHERE id = ?`, [userId]
+        job, master, vip_expires_at, registered_at, last_login_at, practice_count_today
+        FROM users WHERE id = ?`, [userId]
     );
     if (users.length === 0) return res.status(404).json({ success: false, message: '用户不存在' });
     res.json({ success: true, data: users[0] });
