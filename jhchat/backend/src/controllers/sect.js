@@ -420,7 +420,12 @@ exports.checkIn = async (req, res) => {
     const lastSalary = users[0].salary_time;
     
     if (lastSalary && new Date(lastSalary).toDateString() === new Date().toDateString()) {
-      return res.status(400).json({ success: false, message: '今日俸禄已领取' });
+      // 已领取，返回成功但不发放俸禄
+      return res.json({
+        success: true,
+        message: '今日俸禄已领取',
+        data: { alreadyClaimed: true }
+      });
     }
     
     // 计算俸禄（等级 * 500 两）

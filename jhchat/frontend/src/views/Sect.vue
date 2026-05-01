@@ -476,7 +476,11 @@ async function leaveSect() {
 async function claimSalary() {
   const res = await api.post('/sect/checkin')
   if (res.success) {
-    alert(`✅ 领取 ${res.data.amount} 两成功`)
+    if (res.data?.alreadyClaimed) {
+      alert('今日俸禄已领取，明日再来吧')
+    } else {
+      alert(`✅ 领取 ${res.data.amount} 两成功`)
+    }
     await userStore.fetchProfile()
     loadMySectInfo()
   } else {
