@@ -118,6 +118,7 @@ const rankingRoutes = require('./routes/ranking');
 const achievementRoutes = require('./routes/achievement');
 const questRoutes = require('./routes/quest');
 const gardenRoutes = require('./routes/garden');
+const gameBonusRoutes = require('./routes/gameBonus');
 
 // 注册 API 路由
 app.use('/api/auth', authRoutes);
@@ -129,6 +130,7 @@ app.use('/api/skills', skillRoutes);
 app.use('/api/items', itemRoutes);
 app.use('/api/shop', shopRoutes);
 app.use('/api/games', gameRoutes);
+app.use('/api/game-bonus', gameBonusRoutes);
 app.use('/api/pets', petRoutes);
 app.use('/api/alchemy', alchemyRoutes);
 app.use('/api/misc', miscRoutes);
@@ -183,7 +185,7 @@ server.listen(PORT, HOST, () => {
 // 初始化 Socket.IO 和随机事件
 require('./socket')(io);
 
-// 启动随机事件定时器
+// 启动随机事件定时器（心跳清理和泡点经验在 socket 初始化时自动启动）
 startRandomEventScheduler(io);
 
 module.exports = { app, server, io };

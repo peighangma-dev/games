@@ -20,5 +20,6 @@ router.post('/avatar', auth, upload.single('avatar'), userCtrl.uploadAvatar);
 router.get('/online', userCtrl.getOnlineUsers);
 router.get('/members', auth, userCtrl.getMembers);
 router.get('/:name', auth, userCtrl.getUser);
+router.post('/bubble-exp/sync', auth, userCtrl.syncBubbleExp);
 
 module.exports = router;

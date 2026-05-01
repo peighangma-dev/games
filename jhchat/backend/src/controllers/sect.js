@@ -491,3 +491,461 @@ exports.sectMembersWithPage = async (req, res) => {
     res.status(500).json({ success: false, message: '查询门派成员失败' });
   }
 };
+
+// 获取个人贡献值
+exports.getContribution = async (req, res) => {
+  try {
+    const [contributions] = await db.execute(
+      'SELECT * FROM sect_contributions WHERE user_id = ? AND sect_name = ? ORDER BY created_at DESC LIMIT 30',
+      [req.user.id, req.user.sect]
+    );
+    
+    const [total] = await db.execute(
+      'SELECT SUM(contribution) as total FROM sect_contributions WHERE user_id = ? AND sect_name = ?',
+      [req.user.id, req.user.sect]
+    );
+    
+    res.json({
+      success: true,
+      data: {
+        total: total[0].total || 0,
+        records: contributions
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '查询贡献失败' });
+  }
+};
+
+// 门派修炼
+exports.practice = async (req, res) => {
+  try {
+    const { type } = req.body;
+    
+    if (!req.user.sect || req.user.sect === '无') {
+      return res.status(400).json({ success: false, message: '您还没有加入任何门派' });
+    }
+    
+    // 检查是否已修炼
+    const now = new Date();
+    const lastPractice = req.user.last_practice_at;
+    if (lastPractice) {
+      const last = new Date(lastPractice);
+      if (now.toDateString() === last.toDateString()) {
+        return res.status(400).json({ success: false, message: '今日已修炼，明日再来' });
+      }
+    }
+    
+    // 消耗体力
+    if (req.user.tili < 20) {
+      return res.status(400).json({ success: false, message: '体力不足 20 点' });
+    }
+    
+    let expGain = 0;
+    let practiceType = '';
+    
+    switch (type) {
+      case 'basic':
+        expGain = Math.floor(Math.random() * 50) + 50;
+        practiceType = '基础修炼';
+        break;
+      case 'advanced':
+        expGain = Math.floor(Math.random() * 100) + 100;
+        practiceType = '高级修炼';
+        break;
+      case 'intensive':
+        expGain = Math.floor(Math.random() * 200) + 200;
+        practiceType = '闭关修炼';
+        break;
+      default:
+        return res.status(400).json({ success: false, message: '无效的修炼类型' });
+    }
+    
+    // 更新用户经验
+    await db.execute(
+      'UPDATE users SET total_exp = total_exp + ?, monthly_exp = monthly_exp + ?, exp = exp + ?, tili = tili - 20, last_practice_at = NOW(), practice_count_today = practice_count_today + 1 WHERE id = ?',
+      [expGain, expGain, expGain, req.user.id]
+    );
+    
+    // 记录贡献
+    const contribution = Math.floor(expGain / 10);
+    await db.execute(
+      `INSERT INTO sect_contributions (sect_name, user_id, username, contribution, reason)
+       VALUES (?, ?, ?, ?, ?)`,
+      [req.user.sect, req.user.id, req.user.username, contribution, practiceType]
+    );
+    
+    res.json({
+      success: true,
+      message: `修炼成功！获得 ${expGain} 点经验，${contribution} 点贡献`,
+      data: { expGain, contribution }
+    });
+  } catch (err) {
+    console.error('门派修炼错误:', err);
+    res.status(500).json({ success: false, message: '修炼失败' });
+  }
+};
+
+// 获取可学技能列表
+exports.getSkills = async (req, res) => {
+  try {
+    if (!req.user.sect || req.user.sect === '无') {
+      return res.status(400).json({ success: false, message: '您还没有加入任何门派' });
+    }
+    
+    // 查询该门派的所有技能
+    const [skills] = await db.execute(
+      `SELECT ss.*, sp.position_name as required_position
+       FROM secret_skills ss
+       LEFT JOIN sect_positions sp ON ss.id = sp.id
+       WHERE ss.sect = ? OR ss.sect = '全门派' OR ss.sect = '通用'
+       ORDER BY ss.level ASC, ss.price DESC`,
+      [req.user.sect]
+    );
+    
+    // 查询用户已学技能
+    const [learned] = await db.execute(
+      'SELECT skill_id FROM user_skills WHERE user_id = ?',
+      [req.user.id]
+    );
+    
+    const learnedIds = new Set(learned.map(s => s.skill_id));
+    
+    res.json({
+      success: true,
+      data: skills.map(skill => ({
+        ...skill,
+        expense: skill.price,
+        level_name: skill.grade,
+        learned: learnedIds.has(skill.id)
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '查询技能失败' });
+  }
+};
+
+// 学习技能
+exports.learnSkill = async (req, res) => {
+  try {
+    const { skillId } = req.body;
+    
+    if (!skillId) {
+      return res.status(400).json({ success: false, message: '请指定技能 ID' });
+    }
+    
+    // 查询技能
+    const [skills] = await db.execute(
+      'SELECT * FROM secret_skills WHERE id = ? AND (sect = ? OR sect = "全门派")',
+      [skillId, req.user.sect]
+    );
+    
+    if (skills.length === 0) {
+      return res.status(404).json({ success: false, message: '技能不存在' });
+    }
+    
+    const skill = skills[0];
+    
+    // 检查是否已学习
+    const [learned] = await db.execute(
+      'SELECT * FROM user_skills WHERE user_id = ? AND skill_id = ?',
+      [req.user.id, skillId]
+    );
+    
+    if (learned.length > 0) {
+      return res.status(400).json({ success: false, message: '已经学习过该技能' });
+    }
+    
+    // 检查银两
+    if (req.user.silver < skill.expense) {
+      return res.status(400).json({ success: false, message: '银两不足' });
+    }
+    
+    // 学习技能
+    await db.execute(
+      'INSERT INTO user_skills (user_id, skill_id, learned_at) VALUES (?, ?, NOW())',
+      [req.user.id, skillId]
+    );
+    
+    // 扣除银两
+    await db.execute(
+      'UPDATE users SET silver = silver - ? WHERE id = ?',
+      [skill.expense, req.user.id]
+    );
+    
+    // 记录门派贡献
+    const contribution = Math.floor(skill.expense / 100);
+    await db.execute(
+      `INSERT INTO sect_contributions (sect_name, user_id, username, contribution, reason)
+       VALUES (?, ?, ?, ?, ?)`,
+      [req.user.sect, req.user.id, req.user.username, contribution, `学习技能 ${skill.name}`]
+    );
+    
+    res.json({
+      success: true,
+      message: `成功学习技能 ${skill.name}！`,
+      data: { skill: skill.name }
+    });
+  } catch (err) {
+    console.error('学习技能错误:', err);
+    res.status(500).json({ success: false, message: '学习技能失败' });
+  }
+};
+
+// 获取门派任务列表
+exports.getTasks = async (req, res) => {
+  try {
+    if (!req.user.sect || req.user.sect === '无') {
+      return res.status(400).json({ success: false, message: '您还没有加入任何门派' });
+    }
+    
+    const [tasks] = await db.execute(
+      `SELECT id, title, description, type as quest_type, reward_exp, reward_silver, reward_neili
+       FROM quests 
+       WHERE type IN ('daily', 'side')
+       ORDER BY reward_exp DESC, reward_silver DESC
+       LIMIT 20`,
+      []
+    );
+    
+    // 查询用户已完成的任务
+    const [completed] = await db.execute(
+      'SELECT quest_id, completed_at FROM user_quests WHERE user_id = ?',
+      [req.user.id]
+    );
+    
+    const completedIds = new Set(completed.map(t => t.quest_id));
+    
+    res.json({
+      success: true,
+      data: tasks.map(task => ({
+        ...task,
+        completed: completedIds.has(task.id)
+      }))
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '查询任务失败' });
+  }
+};
+
+// 完成门派任务
+exports.completeTask = async (req, res) => {
+  try {
+    const { questId } = req.body;
+    
+    if (!questId) {
+      return res.status(400).json({ success: false, message: '请指定任务 ID' });
+    }
+    
+    // 查询任务
+    const [tasks] = await db.execute(
+      'SELECT id, title, reward_exp, reward_silver FROM quests WHERE id = ?',
+      [questId]
+    );
+    
+    if (tasks.length === 0) {
+      return res.status(404).json({ success: false, message: '任务不存在' });
+    }
+    
+    const task = tasks[0];
+    
+    // 检查是否已完成
+    const [completed] = await db.execute(
+      'SELECT id FROM user_quests WHERE user_id = ? AND quest_id = ? AND status = "claimed"',
+      [req.user.id, questId]
+    );
+    
+    if (completed.length > 0) {
+      return res.status(400).json({ success: false, message: '任务已完成' });
+    }
+    
+    // 更新或创建任务记录
+    await db.execute(
+      `INSERT INTO user_quests (user_id, username, quest_id, status, completed_at) 
+       VALUES (?, ?, ?, 'claimed', NOW())
+       ON DUPLICATE KEY UPDATE status = 'claimed', completed_at = NOW()`,
+      [req.user.id, req.user.username, questId]
+    );
+    
+    // 发放奖励
+    await db.execute(
+      'UPDATE users SET total_exp = total_exp + ?, monthly_exp = monthly_exp + ?, silver = silver + ? WHERE id = ?',
+      [task.reward_exp || 0, task.reward_exp || 0, task.reward_silver || 0, req.user.id]
+    );
+    
+    // 记录贡献
+    const contribution = Math.floor((task.reward_exp || 0) / 50);
+    await db.execute(
+      `INSERT INTO sect_contributions (sect_name, user_id, username, contribution, reason)
+       VALUES (?, ?, ?, ?, ?)`,
+      [req.user.sect || '无', req.user.id, req.user.username, contribution, `完成任务 ${task.title}`]
+    );
+    
+    res.json({
+      success: true,
+      message: `任务完成！获得 ${task.reward_exp || 0} 经验，${task.reward_silver || 0} 银两，${contribution} 贡献`,
+      data: {
+        exp: task.reward_exp || 0,
+        silver: task.reward_silver || 0,
+        contribution
+      }
+    });
+  } catch (err) {
+    console.error('完成任务错误:', err);
+    res.status(500).json({ success: false, message: '完成任务失败' });
+  }
+};
+
+// 获取门派仓库信息
+exports.getWarehouse = async (req, res) => {
+  try {
+    if (!req.user.sect || req.user.sect === '无') {
+      return res.status(400).json({ success: false, message: '您还没有加入任何门派' });
+    }
+    
+    const [sects] = await db.execute('SELECT id, fund FROM sects WHERE name = ?', [req.user.sect]);
+    if (sects.length === 0) {
+      return res.status(404).json({ success: false, message: '门派不存在' });
+    }
+    
+    const sect = sects[0];
+    
+    // 查询仓库物品
+    const [items] = await db.execute(
+      'SELECT * FROM sect_warehouse WHERE sect_id = ? ORDER BY created_at DESC',
+      [sect.id]
+    );
+    
+    // 查询捐赠记录
+    const [donations] = await db.execute(
+      'SELECT * FROM sect_fund_logs WHERE sect_name = ? AND log_type = "donate" ORDER BY created_at DESC LIMIT 20',
+      [req.user.sect]
+    );
+    
+    res.json({
+      success: true,
+      data: {
+        fund: sect.fund,
+        items,
+        donations
+      }
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '查询仓库失败' });
+  }
+};
+
+// 捐赠物品到仓库
+exports.donate = async (req, res) => {
+  try {
+    const { itemId, amount, type } = req.body;
+    
+    if (!req.user.sect || req.user.sect === '无') {
+      return res.status(400).json({ success: false, message: '您还没有加入任何门派' });
+    }
+    
+    // 检查用户物品
+    const [userItems] = await db.execute(
+      'SELECT * FROM items WHERE owner = ? AND id = ?',
+      [req.user.username, itemId]
+    );
+    
+    if (userItems.length === 0 || userItems[0].amount < amount) {
+      return res.status(400).json({ success: false, message: '物品不足' });
+    }
+    
+    const item = userItems[0];
+    
+    // 扣除用户物品
+    await db.execute(
+      'UPDATE items SET amount = amount - ? WHERE owner = ? AND id = ?',
+      [amount, req.user.username, itemId]
+    );
+    
+    // 增加仓库物品
+    const [existing] = await db.execute(
+      'SELECT * FROM sect_warehouse WHERE sect_id = (SELECT id FROM sects WHERE name = ?) AND item_name = ?',
+      [req.user.sect, item.name]
+    );
+    
+    if (existing.length > 0) {
+      await db.execute(
+        'UPDATE sect_warehouse SET amount = amount + ? WHERE sect_id = (SELECT id FROM sects WHERE name = ?) AND item_name = ?',
+        [amount, req.user.sect, item.name]
+      );
+    } else {
+      await db.execute(
+        'INSERT INTO sect_warehouse (sect_id, item_name, item_type, amount, donated_by, donated_at) VALUES ((SELECT id FROM sects WHERE name = ?), ?, ?, ?, ?, NOW())',
+        [req.user.sect, item.name, item.type, amount, req.user.username]
+      );
+    }
+    
+    // 记录贡献
+    const contribution = Math.floor(item.price * amount / 100);
+    await db.execute(
+      `INSERT INTO sect_contributions (sect_name, user_id, username, contribution, reason)
+       VALUES (?, ?, ?, ?, ?)`,
+      [req.user.sect, req.user.id, req.user.username, contribution, `捐赠${item.name} ${amount}个`]
+    );
+    
+    res.json({
+      success: true,
+      message: `捐赠成功！获得 ${contribution} 贡献`,
+      data: { contribution }
+    });
+  } catch (err) {
+    console.error('捐赠错误:', err);
+    res.status(500).json({ success: false, message: '捐赠失败' });
+  }
+};
+
+// 门派排行榜
+exports.leaderboard = async (req, res) => {
+  try {
+    const { type = 'contribution', limit = 10 } = req.query;
+    
+    let query = '';
+    switch (type) {
+      case 'contribution':
+        query = `
+          SELECT u.username, u.sect, SUM(c.contribution) as total_contribution
+          FROM users u
+          JOIN sect_contributions c ON u.id = c.user_id
+          WHERE u.sect != "无" AND u.sect IS NOT NULL
+          GROUP BY u.id, u.username, u.sect
+          ORDER BY total_contribution DESC
+          LIMIT ?
+        `;
+        break;
+      case 'exp':
+        query = `
+          SELECT username, sect, total_exp
+          FROM users
+          WHERE sect != "无" AND sect IS NOT NULL
+          ORDER BY total_exp DESC
+          LIMIT ?
+        `;
+        break;
+      case 'wealth':
+        query = `
+          SELECT username, sect, silver
+          FROM users
+          WHERE sect != "无" AND sect IS NOT NULL
+          ORDER BY silver DESC
+          LIMIT ?
+        `;
+        break;
+      default:
+        return res.status(400).json({ success: false, message: '无效的排行榜类型' });
+    }
+    
+    const [results] = await db.execute(query, [parseInt(limit)]);
+    
+    res.json({
+      success: true,
+      data: results
+    });
+  } catch (err) {
+    res.status(500).json({ success: false, message: '查询排行榜失败' });
+  }
+};

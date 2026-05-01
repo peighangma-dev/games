@@ -386,7 +386,7 @@
 import { ref, computed, onMounted, onUnmounted, nextTick, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useUserStore } from '../stores/user'
-import { connectSocket, getSocket, disconnectSocket } from '../utils/socket'
+import { connectSocket, getSocket } from '../utils/socket'
 import api from '../utils/api'
 
 const router = useRouter()
@@ -1028,7 +1028,7 @@ onMounted(async () => {
 })
 
 onUnmounted(() => {
-  disconnectSocket()
+  console.log('[聊天室] 页面卸载，保持 Socket 连接')
 })
 </script>
 

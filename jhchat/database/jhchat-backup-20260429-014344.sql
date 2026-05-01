@@ -1,0 +1,3141 @@
+-- MySQL dump 10.13  Distrib 5.7.42, for Linux (x86_64)
+--
+-- Host: localhost    Database: jhchat
+-- ------------------------------------------------------
+-- Server version	5.7.42
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES utf8 */;
+/*!40103 SET @OLD_TIME_ZONE=@@TIME_ZONE */;
+/*!40103 SET TIME_ZONE='+00:00' */;
+/*!40014 SET @OLD_UNIQUE_CHECKS=@@UNIQUE_CHECKS, UNIQUE_CHECKS=0 */;
+/*!40014 SET @OLD_FOREIGN_KEY_CHECKS=@@FOREIGN_KEY_CHECKS, FOREIGN_KEY_CHECKS=0 */;
+/*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
+/*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
+
+--
+-- Table structure for table `achievement_progress`
+--
+
+DROP TABLE IF EXISTS `achievement_progress`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `achievement_progress` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `alchemy_count` int(11) NOT NULL DEFAULT '0' COMMENT '炼丹次数',
+  `fishing_count` int(11) NOT NULL DEFAULT '0' COMMENT '钓鱼次数',
+  `mining_count` int(11) NOT NULL DEFAULT '0' COMMENT '挖矿次数',
+  `hunting_count` int(11) NOT NULL DEFAULT '0' COMMENT '狩猎次数',
+  `legendary_count` int(11) NOT NULL DEFAULT '0' COMMENT '稀有物品次数',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='成就进度';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `achievement_progress`
+--
+
+LOCK TABLES `achievement_progress` WRITE;
+/*!40000 ALTER TABLE `achievement_progress` DISABLE KEYS */;
+INSERT INTO `achievement_progress` VALUES (1,1,'站长',0,2,1,1,0,'2026-04-20 13:37:27'),(5,13,'install',0,2,0,0,0,'2026-04-22 14:17:10');
+/*!40000 ALTER TABLE `achievement_progress` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `achievements`
+--
+
+DROP TABLE IF EXISTS `achievements`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `achievements` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '成就名称',
+  `description` text COLLATE utf8mb4_unicode_ci COMMENT '成就描述',
+  `icon` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '?' COMMENT '图标',
+  `category` enum('alchemy','fishing','mining','hunting','combat','social') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '分类',
+  `requirement_type` enum('count','level','rare','legendary') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'count' COMMENT '达成类型',
+  `requirement_value` int(11) NOT NULL COMMENT '达成条件数值',
+  `points` int(11) NOT NULL DEFAULT '0' COMMENT '成就点数',
+  `reward_silver` bigint(20) NOT NULL DEFAULT '0' COMMENT '银两奖励',
+  `reward_exp` int(11) NOT NULL DEFAULT '0' COMMENT '经验奖励',
+  `reward_item` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '物品奖励',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB AUTO_INCREMENT=146 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='成就定义';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `achievements`
+--
+
+LOCK TABLES `achievements` WRITE;
+/*!40000 ALTER TABLE `achievements` DISABLE KEYS */;
+INSERT INTO `achievements` VALUES (1,'炼丹 novice','累计炼丹 10 次','?','alchemy','count',10,10,200,100,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(2,'炼丹学徒','累计炼丹 50 次','?','alchemy','count',50,30,500,300,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(3,'炼丹师','累计炼丹 100 次','?','alchemy','count',100,50,1000,500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(4,'炼丹宗师','累计炼丹 500 次','?','alchemy','count',500,100,3000,1500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(5,'神丹巧匠','炼制出 10 次神品丹药','✨','alchemy','rare',10,80,2000,1000,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(6,'钓鱼新手','累计钓鱼 10 次','?','fishing','count',10,10,200,100,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(7,'钓鱼达人','累计钓鱼 50 次','?','fishing','count',50,30,500,300,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(8,'钓鱼大师','累计钓鱼 100 次','?','fishing','count',100,50,1000,500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(9,'渔王','累计钓鱼 500 次','?','fishing','count',500,100,3000,1500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(10,'珍稀猎手','钓到 20 次稀有鱼获','?','fishing','rare',20,80,2000,1000,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(11,'龙族友人','钓到 5 次传说鱼获','?','fishing','legendary',5,150,5000,2000,'龙鲤','2026-04-19 08:08:46','2026-04-19 08:08:46'),(12,'挖矿新手','累计挖矿 10 次','⛏️','mining','count',10,10,200,100,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(13,'挖矿工人','累计挖矿 50 次','⛏️','mining','count',50,30,500,300,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(14,'挖矿专家','累计挖矿 100 次','⛏️','mining','count',100,50,1000,500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(15,'矿场大亨','累计挖矿 500 次','?','mining','count',500,100,3000,1500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(16,'宝石猎人','挖到 20 次宝石','?','mining','rare',20,80,2000,1000,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(17,'狩猎新手','累计狩猎 10 次','?','hunting','count',10,10,200,100,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(18,'猎人','累计狩猎 50 次','?','hunting','count',50,30,500,300,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(19,'狩猎专家','累计狩猎 100 次','?','hunting','count',100,50,1000,500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(20,'荒野之王','累计狩猎 500 次','?','hunting','count',500,100,3000,1500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(21,'传说猎手','猎到 10 次神兽','?','hunting','legendary',10,150,5000,2000,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(22,'初入江湖','拥有 1000 银子的积蓄','?','combat','level',1000,20,300,150,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(23,'小有名气','拥有 10000 银子的积蓄','?','combat','level',10000,50,1000,500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(24,'富甲一方','拥有 100000 银子的积蓄','?','combat','level',100000,100,5000,2000,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(25,'江湖新秀','达到等级 5','⭐','social','level',5,20,300,200,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(26,'江湖名宿','达到等级 8','⭐⭐','social','level',8,50,1000,500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(27,'一代宗师','达到等级 10','?','social','level',10,100,3000,1500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(28,'内力深厚','内力达到 1000 点','?','social','level',1000,50,1000,500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(29,'内力无边','内力达到 5000 点','??','social','level',5000,100,3000,1500,NULL,'2026-04-19 08:08:46','2026-04-19 08:08:46'),(30,'炼丹 novice','累计炼丹 10 次','?','alchemy','count',10,10,200,100,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(31,'炼丹学徒','累计炼丹 50 次','?','alchemy','count',50,30,500,300,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(32,'炼丹师','累计炼丹 100 次','?','alchemy','count',100,50,1000,500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(33,'炼丹宗师','累计炼丹 500 次','?','alchemy','count',500,100,3000,1500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(34,'神丹巧匠','炼制出 10 次神品丹药','✨','alchemy','rare',10,80,2000,1000,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(35,'钓鱼新手','累计钓鱼 10 次','?','fishing','count',10,10,200,100,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(36,'钓鱼达人','累计钓鱼 50 次','?','fishing','count',50,30,500,300,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(37,'钓鱼大师','累计钓鱼 100 次','?','fishing','count',100,50,1000,500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(38,'渔王','累计钓鱼 500 次','?','fishing','count',500,100,3000,1500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(39,'珍稀猎手','钓到 20 次稀有鱼获','?','fishing','rare',20,80,2000,1000,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(40,'龙族友人','钓到 5 次传说鱼获','?','fishing','legendary',5,150,5000,2000,'龙鲤','2026-04-19 09:55:48','2026-04-19 09:55:48'),(41,'挖矿新手','累计挖矿 10 次','⛏️','mining','count',10,10,200,100,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(42,'挖矿工人','累计挖矿 50 次','⛏️','mining','count',50,30,500,300,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(43,'挖矿专家','累计挖矿 100 次','⛏️','mining','count',100,50,1000,500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(44,'矿场大亨','累计挖矿 500 次','?','mining','count',500,100,3000,1500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(45,'宝石猎人','挖到 20 次宝石','?','mining','rare',20,80,2000,1000,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(46,'狩猎新手','累计狩猎 10 次','?','hunting','count',10,10,200,100,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(47,'猎人','累计狩猎 50 次','?','hunting','count',50,30,500,300,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(48,'狩猎专家','累计狩猎 100 次','?','hunting','count',100,50,1000,500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(49,'荒野之王','累计狩猎 500 次','?','hunting','count',500,100,3000,1500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(50,'传说猎手','猎到 10 次神兽','?','hunting','legendary',10,150,5000,2000,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(51,'初入江湖','拥有 1000 银子的积蓄','?','combat','level',1000,20,300,150,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(52,'小有名气','拥有 10000 银子的积蓄','?','combat','level',10000,50,1000,500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(53,'富甲一方','拥有 100000 银子的积蓄','?','combat','level',100000,100,5000,2000,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(54,'江湖新秀','达到等级 5','⭐','social','level',5,20,300,200,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(55,'江湖名宿','达到等级 8','⭐⭐','social','level',8,50,1000,500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(56,'一代宗师','达到等级 10','?','social','level',10,100,3000,1500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(57,'内力深厚','内力达到 1000 点','?','social','level',1000,50,1000,500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(58,'内力无边','内力达到 5000 点','??','social','level',5000,100,3000,1500,NULL,'2026-04-19 09:55:48','2026-04-19 09:55:48'),(59,'炼丹 novice','累计炼丹 10 次','?','alchemy','count',10,10,200,100,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(60,'炼丹学徒','累计炼丹 50 次','?','alchemy','count',50,30,500,300,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(61,'炼丹师','累计炼丹 100 次','?','alchemy','count',100,50,1000,500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(62,'炼丹宗师','累计炼丹 500 次','?','alchemy','count',500,100,3000,1500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(63,'神丹巧匠','炼制出 10 次神品丹药','✨','alchemy','rare',10,80,2000,1000,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(64,'钓鱼新手','累计钓鱼 10 次','?','fishing','count',10,10,200,100,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(65,'钓鱼达人','累计钓鱼 50 次','?','fishing','count',50,30,500,300,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(66,'钓鱼大师','累计钓鱼 100 次','?','fishing','count',100,50,1000,500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(67,'渔王','累计钓鱼 500 次','?','fishing','count',500,100,3000,1500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(68,'珍稀猎手','钓到 20 次稀有鱼获','?','fishing','rare',20,80,2000,1000,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(69,'龙族友人','钓到 5 次传说鱼获','?','fishing','legendary',5,150,5000,2000,'龙鲤','2026-04-19 11:09:04','2026-04-19 11:09:04'),(70,'挖矿新手','累计挖矿 10 次','⛏️','mining','count',10,10,200,100,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(71,'挖矿工人','累计挖矿 50 次','⛏️','mining','count',50,30,500,300,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(72,'挖矿专家','累计挖矿 100 次','⛏️','mining','count',100,50,1000,500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(73,'矿场大亨','累计挖矿 500 次','?','mining','count',500,100,3000,1500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(74,'宝石猎人','挖到 20 次宝石','?','mining','rare',20,80,2000,1000,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(75,'狩猎新手','累计狩猎 10 次','?','hunting','count',10,10,200,100,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(76,'猎人','累计狩猎 50 次','?','hunting','count',50,30,500,300,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(77,'狩猎专家','累计狩猎 100 次','?','hunting','count',100,50,1000,500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(78,'荒野之王','累计狩猎 500 次','?','hunting','count',500,100,3000,1500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(79,'传说猎手','猎到 10 次神兽','?','hunting','legendary',10,150,5000,2000,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(80,'初入江湖','拥有 1000 银子的积蓄','?','combat','level',1000,20,300,150,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(81,'小有名气','拥有 10000 银子的积蓄','?','combat','level',10000,50,1000,500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(82,'富甲一方','拥有 100000 银子的积蓄','?','combat','level',100000,100,5000,2000,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(83,'江湖新秀','达到等级 5','⭐','social','level',5,20,300,200,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(84,'江湖名宿','达到等级 8','⭐⭐','social','level',8,50,1000,500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(85,'一代宗师','达到等级 10','?','social','level',10,100,3000,1500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(86,'内力深厚','内力达到 1000 点','?','social','level',1000,50,1000,500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(87,'内力无边','内力达到 5000 点','??','social','level',5000,100,3000,1500,NULL,'2026-04-19 11:09:04','2026-04-19 11:09:04'),(88,'炼丹 novice','累计炼丹 10 次','?','alchemy','count',10,10,200,100,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(89,'炼丹学徒','累计炼丹 50 次','?','alchemy','count',50,30,500,300,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(90,'炼丹师','累计炼丹 100 次','?','alchemy','count',100,50,1000,500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(91,'炼丹宗师','累计炼丹 500 次','?','alchemy','count',500,100,3000,1500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(92,'神丹巧匠','炼制出 10 次神品丹药','✨','alchemy','rare',10,80,2000,1000,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(93,'钓鱼新手','累计钓鱼 10 次','?','fishing','count',10,10,200,100,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(94,'钓鱼达人','累计钓鱼 50 次','?','fishing','count',50,30,500,300,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(95,'钓鱼大师','累计钓鱼 100 次','?','fishing','count',100,50,1000,500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(96,'渔王','累计钓鱼 500 次','?','fishing','count',500,100,3000,1500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(97,'珍稀猎手','钓到 20 次稀有鱼获','?','fishing','rare',20,80,2000,1000,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(98,'龙族友人','钓到 5 次传说鱼获','?','fishing','legendary',5,150,5000,2000,'龙鲤','2026-04-19 11:09:11','2026-04-19 11:09:11'),(99,'挖矿新手','累计挖矿 10 次','⛏️','mining','count',10,10,200,100,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(100,'挖矿工人','累计挖矿 50 次','⛏️','mining','count',50,30,500,300,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(101,'挖矿专家','累计挖矿 100 次','⛏️','mining','count',100,50,1000,500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(102,'矿场大亨','累计挖矿 500 次','?','mining','count',500,100,3000,1500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(103,'宝石猎人','挖到 20 次宝石','?','mining','rare',20,80,2000,1000,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(104,'狩猎新手','累计狩猎 10 次','?','hunting','count',10,10,200,100,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(105,'猎人','累计狩猎 50 次','?','hunting','count',50,30,500,300,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(106,'狩猎专家','累计狩猎 100 次','?','hunting','count',100,50,1000,500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(107,'荒野之王','累计狩猎 500 次','?','hunting','count',500,100,3000,1500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(108,'传说猎手','猎到 10 次神兽','?','hunting','legendary',10,150,5000,2000,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(109,'初入江湖','拥有 1000 银子的积蓄','?','combat','level',1000,20,300,150,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(110,'小有名气','拥有 10000 银子的积蓄','?','combat','level',10000,50,1000,500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(111,'富甲一方','拥有 100000 银子的积蓄','?','combat','level',100000,100,5000,2000,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(112,'江湖新秀','达到等级 5','⭐','social','level',5,20,300,200,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(113,'江湖名宿','达到等级 8','⭐⭐','social','level',8,50,1000,500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(114,'一代宗师','达到等级 10','?','social','level',10,100,3000,1500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(115,'内力深厚','内力达到 1000 点','?','social','level',1000,50,1000,500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(116,'内力无边','内力达到 5000 点','??','social','level',5000,100,3000,1500,NULL,'2026-04-19 11:09:11','2026-04-19 11:09:11'),(117,'炼丹 novice','累计炼丹 10 次','?','alchemy','count',10,10,200,100,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(118,'炼丹学徒','累计炼丹 50 次','?','alchemy','count',50,30,500,300,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(119,'炼丹师','累计炼丹 100 次','?','alchemy','count',100,50,1000,500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(120,'炼丹宗师','累计炼丹 500 次','?','alchemy','count',500,100,3000,1500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(121,'神丹巧匠','炼制出 10 次神品丹药','✨','alchemy','rare',10,80,2000,1000,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(122,'钓鱼新手','累计钓鱼 10 次','?','fishing','count',10,10,200,100,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(123,'钓鱼达人','累计钓鱼 50 次','?','fishing','count',50,30,500,300,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(124,'钓鱼大师','累计钓鱼 100 次','?','fishing','count',100,50,1000,500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(125,'渔王','累计钓鱼 500 次','?','fishing','count',500,100,3000,1500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(126,'珍稀猎手','钓到 20 次稀有鱼获','?','fishing','rare',20,80,2000,1000,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(127,'龙族友人','钓到 5 次传说鱼获','?','fishing','legendary',5,150,5000,2000,'龙鲤','2026-04-19 16:42:15','2026-04-19 16:42:15'),(128,'挖矿新手','累计挖矿 10 次','⛏️','mining','count',10,10,200,100,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(129,'挖矿工人','累计挖矿 50 次','⛏️','mining','count',50,30,500,300,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(130,'挖矿专家','累计挖矿 100 次','⛏️','mining','count',100,50,1000,500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(131,'矿场大亨','累计挖矿 500 次','?','mining','count',500,100,3000,1500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(132,'宝石猎人','挖到 20 次宝石','?','mining','rare',20,80,2000,1000,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(133,'狩猎新手','累计狩猎 10 次','?','hunting','count',10,10,200,100,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(134,'猎人','累计狩猎 50 次','?','hunting','count',50,30,500,300,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(135,'狩猎专家','累计狩猎 100 次','?','hunting','count',100,50,1000,500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(136,'荒野之王','累计狩猎 500 次','?','hunting','count',500,100,3000,1500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(137,'传说猎手','猎到 10 次神兽','?','hunting','legendary',10,150,5000,2000,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(138,'初入江湖','拥有 1000 银子的积蓄','?','combat','level',1000,20,300,150,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(139,'小有名气','拥有 10000 银子的积蓄','?','combat','level',10000,50,1000,500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(140,'富甲一方','拥有 100000 银子的积蓄','?','combat','level',100000,100,5000,2000,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(141,'江湖新秀','达到等级 5','⭐','social','level',5,20,300,200,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(142,'江湖名宿','达到等级 8','⭐⭐','social','level',8,50,1000,500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(143,'一代宗师','达到等级 10','?','social','level',10,100,3000,1500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(144,'内力深厚','内力达到 1000 点','?','social','level',1000,50,1000,500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15'),(145,'内力无边','内力达到 5000 点','??','social','level',5000,100,3000,1500,NULL,'2026-04-19 16:42:15','2026-04-19 16:42:15');
+/*!40000 ALTER TABLE `achievements` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admin_action_logs`
+--
+
+DROP TABLE IF EXISTS `admin_action_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `admin_action_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action_type` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `action` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `user_agent` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `request_data` text COLLATE utf8mb4_unicode_ci,
+  `response_status` enum('success','failed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'success',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`username`),
+  KEY `idx_action_type` (`action_type`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admin_action_logs`
+--
+
+LOCK TABLES `admin_action_logs` WRITE;
+/*!40000 ALTER TABLE `admin_action_logs` DISABLE KEYS */;
+INSERT INTO `admin_action_logs` VALUES (1,15,'testadmin','clear_cache','POST /server/clear-cache','::ffff:127.0.0.1','curl/7.88.1','{}','success','2026-04-22 09:47:31'),(2,1,'站长','update_user','PUT /users/15','183.228.206.237','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36','{\"grade\":10,\"silver\":0,\"status\":\"normal\",\"sect\":\"无\",\"is_vip\":0}','failed','2026-04-24 16:54:31'),(3,1,'站长','update_user','PUT /users/15','183.228.206.237','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36','{\"grade\":1,\"silver\":0,\"status\":\"normal\",\"sect\":\"无\",\"is_vip\":0}','failed','2026-04-24 16:54:36'),(4,1,'站长','delete_user','DELETE /users/15','183.228.206.237','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/147.0.0.0 Safari/537.36','{}','failed','2026-04-24 16:54:41'),(5,1,'站长','clear_cache','POST /server/clear-cache','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"type\":\"all\"}','success','2026-04-25 02:53:03'),(6,1,'站长','clear_cache','POST /server/clear-cache','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"type\":\"all\"}','success','2026-04-25 02:53:15'),(7,1,'站长','update_user','PUT /users/15','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"grade\":10,\"silver\":0,\"status\":\"normal\",\"sect\":\"无\",\"is_vip\":0}','failed','2026-04-25 03:06:12'),(8,1,'独角兽','create_ip_lock','POST /ip-locks','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36','{\"ip\":\"45.56.56.56\",\"hours\":24}','failed','2026-04-25 04:11:26'),(9,1,'独角兽','create_ip_lock','POST /ip-locks','::ffff:127.0.0.1','curl/7.88.1','{\"ip\":\"1.2.3.4\",\"reason\":\"test\"}','failed','2026-04-25 04:11:45'),(10,1,'独角兽','create_ip_lock','POST /ip-locks','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36','{\"ip\":\"56.56.56.56\",\"expires_at\":\"2026-04-26T04:12:36.251Z\"}','failed','2026-04-25 04:12:39'),(11,1,'独角兽','create_ip_lock','POST /ip-locks','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36','{\"ip\":\"56.56.56.56\",\"expires_at\":\"2026-04-26T04:14:55.175Z\"}','failed','2026-04-25 04:14:58'),(12,1,'独角兽','create_ip_lock','POST /ip-locks','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36','{\"ip\":\"56.56.56.56\",\"expires_at\":\"2026-04-26T04:15:13.486Z\"}','failed','2026-04-25 04:15:16'),(13,1,'独角兽','create_ip_lock','POST /ip-locks','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"ip\":\"56.56.56.56\",\"expires_at\":\"2026-04-26T04:16:05.384Z\"}','failed','2026-04-25 04:16:08'),(14,1,'独角兽','create_ip_lock','POST /ip-locks','::ffff:127.0.0.1','curl/7.88.1','{\"ip\":\"192.168.1.100\",\"expires_at\":\"2026-04-26T04:16:39+00:00\"}','failed','2026-04-25 04:16:39'),(15,1,'独角兽','create_ip_lock','POST /ip-locks','::ffff:127.0.0.1','curl/7.88.1','{\"ip\":\"192.168.1.100\",\"expires_at\":\"2026-04-26T04:16:39+00:00\"}','failed','2026-04-25 04:18:16'),(16,1,'独角兽','create_ip_lock','POST /ip-locks','::ffff:127.0.0.1','curl/7.88.1','{\"ip\":\"192.168.1.100\",\"expires_at\":\"2026-04-26T04:16:39.000Z\"}','failed','2026-04-25 04:24:22'),(17,1,'独角兽','create_ip_lock','POST /ip-locks','::ffff:127.0.0.1','curl/7.88.1','{\"ip\":\"192.168.1.200\",\"expires_at\":\"2026-04-26T04:16:39.000Z\"}','failed','2026-04-25 04:26:58'),(18,1,'独角兽','create_ip_lock','POST /ip-locks','::ffff:127.0.0.1','curl/7.88.1','{\"ip\":\"192.168.1.201\",\"expires_at\":\"2026-04-26T04:16:39.000Z\"}','failed','2026-04-25 04:27:15'),(19,1,'独角兽','delete_ip_lock','DELETE /ip-locks/undefined','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{}','success','2026-04-25 04:31:03'),(20,1,'独角兽','create_ip_lock','POST /ip-locks','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"ip\":\"45.45.45.45\",\"expires_at\":\"2026-04-26 04:31:10\"}','success','2026-04-25 04:31:13'),(21,1,'独角兽','create_ip_lock','POST /ip-locks','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"ip\":\"56.56.56.56\",\"expires_at\":\"2026-04-26 04:31:19\"}','success','2026-04-25 04:31:22'),(22,1,'独角兽','update_user','PUT /users/13','125.82.66.31','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"grade\":3,\"silver\":924,\"status\":\"normal\",\"sect\":\"无\",\"is_vip\":0}','success','2026-04-25 07:13:05'),(23,1,'admin','create_sect','POST /sects','::ffff:127.0.0.1','curl/7.88.1','{\"name\":\"六扇门\",\"leader\":\"独角兽\",\"slogan\":\"朝廷鹰犬，维护正义\",\"description\":\"朝廷直属的门派，维护江湖秩序\",\"rules\":\"忠于朝廷，服从命令\",\"fit_gender\":\"both\"}','success','2026-04-25 07:49:59'),(24,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"new_password\":\"123456\",\"force_change\":false,\"notify\":true}','failed','2026-04-26 12:56:00'),(25,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"123456\",\"notify\":true,\"forceChange\":false}','failed','2026-04-26 13:04:12'),(26,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"1234567\",\"notify\":true,\"forceChange\":false}','failed','2026-04-26 13:04:17'),(27,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"1234567\",\"notify\":true,\"forceChange\":false}','failed','2026-04-26 13:04:22'),(28,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"1234567\",\"notify\":true,\"forceChange\":false}','failed','2026-04-26 13:04:51'),(29,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"1234567\",\"notify\":true,\"forceChange\":false}','failed','2026-04-26 13:06:05'),(30,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"1234567\",\"notify\":true,\"forceChange\":false}','failed','2026-04-26 13:06:13'),(31,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"1234567\",\"notify\":true,\"forceChange\":false}','failed','2026-04-26 13:08:09'),(32,1,'独角兽','reset_password','POST /users/18/reset-password','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"1234567\",\"notify\":true,\"forceChange\":false}','success','2026-04-26 13:12:21'),(33,1,'独角兽','create_manager','POST /managers','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"username\":\"测试用户\",\"grade\":6,\"faction\":\"六扇门\"}','success','2026-04-26 13:16:30'),(34,1,'独角兽','update_manager','PUT /managers/18','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"grade\":6,\"faction\":\"六扇门\"}','success','2026-04-26 13:16:37'),(35,1,'独角兽','delete_manager','DELETE /managers/18','113.248.202.196','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{}','success','2026-04-26 13:16:42'),(36,1,'独角兽','reset_password','POST /users/18/reset-password','125.82.70.106','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"admin224\",\"forceChange\":false,\"notify\":true}','success','2026-04-28 03:21:52'),(37,1,'独角兽','reset_password','POST /users/18/reset-password','125.82.70.106','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"newPassword\":\"admin492\",\"forceChange\":false,\"notify\":true}','success','2026-04-28 03:22:06'),(38,1,'独角兽','update_sect','PUT /sects/1','125.82.70.106','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"id\":1,\"name\":\"逍遥派\",\"leader\":\"\",\"slogan\":\"\",\"description\":\"笑傲江湖，逍遥自在\",\"rules\":\"逍遥派门规\",\"fit_gender\":\"both\"}','success','2026-04-28 03:35:08'),(39,1,'独角兽','delete_item','DELETE /items/1','125.82.70.106','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{}','success','2026-04-28 03:35:39'),(40,1,'独角兽','create_manager','POST /managers','125.82.70.106','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{\"username\":\"测试用户\",\"grade\":6,\"faction\":\"六扇门\"}','success','2026-04-28 05:03:47'),(41,1,'独角兽','delete_manager','DELETE /managers/18','125.82.70.106','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','{}','success','2026-04-28 05:03:52');
+/*!40000 ALTER TABLE `admin_action_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `admin_applications`
+--
+
+DROP TABLE IF EXISTS `admin_applications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `admin_applications` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT '申请人 ID',
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '申请人用户名',
+  `current_grade` tinyint(3) unsigned NOT NULL COMMENT '当前等级',
+  `applied_grade` tinyint(3) unsigned NOT NULL COMMENT '申请等级',
+  `reason` text COLLATE utf8mb4_unicode_ci COMMENT '申请理由',
+  `status` enum('pending','approved','rejected') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT '状态',
+  `reviewer` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '审核人',
+  `review_comment` text COLLATE utf8mb4_unicode_ci COMMENT '审核意见',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='管理员申请记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `admin_applications`
+--
+
+LOCK TABLES `admin_applications` WRITE;
+/*!40000 ALTER TABLE `admin_applications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `admin_applications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `alchemy_furnaces`
+--
+
+DROP TABLE IF EXISTS `alchemy_furnaces`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `alchemy_furnaces` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否正在炼制',
+  `cooldown_minutes` int(11) NOT NULL DEFAULT '10' COMMENT '冷却时间 (分钟)',
+  `last_craft_time` datetime DEFAULT NULL COMMENT '上次炼制时间',
+  `craft_start_time` datetime DEFAULT NULL COMMENT '本次炼制开始时间',
+  `craft_recipe_id` int(10) unsigned DEFAULT NULL COMMENT '当前炼制药方 ID',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_owner` (`owner`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='炼丹炉';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `alchemy_furnaces`
+--
+
+LOCK TABLES `alchemy_furnaces` WRITE;
+/*!40000 ALTER TABLE `alchemy_furnaces` DISABLE KEYS */;
+INSERT INTO `alchemy_furnaces` VALUES (1,'站长',0,10,NULL,NULL,NULL),(2,'install',0,10,NULL,NULL,NULL);
+/*!40000 ALTER TABLE `alchemy_furnaces` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `alchemy_items`
+--
+
+DROP TABLE IF EXISTS `alchemy_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `alchemy_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '无',
+  `quantity` int(11) NOT NULL DEFAULT '0',
+  `potency` int(11) NOT NULL DEFAULT '0' COMMENT '药效',
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='配药物品';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `alchemy_items`
+--
+
+LOCK TABLES `alchemy_items` WRITE;
+/*!40000 ALTER TABLE `alchemy_items` DISABLE KEYS */;
+INSERT INTO `alchemy_items` VALUES (1,'冰水','站长',1,0),(2,'冰水','站长',5,0),(3,'小鲤鱼','站长',5,0),(4,'金沙','站长',4,0),(5,'矿石','站长',1,0),(6,'人参','站长',1,0),(7,'石头','站长',1,0);
+/*!40000 ALTER TABLE `alchemy_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `alchemy_quests`
+--
+
+DROP TABLE IF EXISTS `alchemy_quests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `alchemy_quests` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `npc_id` tinyint(3) unsigned NOT NULL COMMENT 'NPC ID',
+  `npc_name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'NPC 名称',
+  `npc_icon` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT '?‍⚕️' COMMENT 'NPC 图标',
+  `quest_type` enum('daily','normal') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normal' COMMENT '任务类型',
+  `title` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '任务标题',
+  `description` text COLLATE utf8mb4_unicode_ci COMMENT '任务描述',
+  `quest_category` enum('craft','gather') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '任务分类',
+  `target_item` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '目标物品',
+  `target_count` int(11) NOT NULL DEFAULT '1' COMMENT '目标数量',
+  `requirement_level` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '等级要求',
+  `reward_silver` int(11) NOT NULL DEFAULT '0' COMMENT '银两奖励',
+  `reward_exp` int(11) NOT NULL DEFAULT '0' COMMENT '经验奖励',
+  `reward_item` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '物品奖励',
+  `reward_item_count` int(11) NOT NULL DEFAULT '0' COMMENT '物品奖励数量',
+  `reward_contribution` int(11) NOT NULL DEFAULT '0' COMMENT '贡献奖励',
+  `is_daily` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否日常任务',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否可用',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_npc` (`npc_name`),
+  KEY `idx_type` (`quest_type`),
+  KEY `idx_active` (`is_active`)
+) ENGINE=InnoDB AUTO_INCREMENT=248 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='炼丹任务';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `alchemy_quests`
+--
+
+LOCK TABLES `alchemy_quests` WRITE;
+/*!40000 ALTER TABLE `alchemy_quests` DISABLE KEYS */;
+INSERT INTO `alchemy_quests` VALUES (1,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 07:11:48'),(2,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 07:11:48'),(3,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 07:11:48'),(4,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 07:11:48'),(5,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 07:11:48'),(6,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 07:11:48'),(7,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 07:11:48'),(8,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 07:11:48'),(9,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 07:11:48'),(10,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 07:11:48'),(11,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 07:11:48'),(12,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 07:11:48'),(13,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 07:11:48'),(14,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 07:11:48'),(15,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 07:11:48'),(16,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 07:11:48'),(17,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 07:11:48'),(18,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 07:11:48'),(19,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 07:11:48'),(39,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 07:32:08'),(40,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 07:32:08'),(41,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 07:32:08'),(42,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 07:32:08'),(43,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 07:32:08'),(44,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 07:32:08'),(45,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 07:32:08'),(46,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 07:32:08'),(47,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 07:32:08'),(48,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 07:32:08'),(49,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 07:32:08'),(50,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 07:32:08'),(51,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 07:32:08'),(52,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 07:32:08'),(53,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 07:32:08'),(54,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 07:32:08'),(55,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 07:32:08'),(56,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 07:32:08'),(57,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 07:32:08'),(58,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 07:32:11'),(59,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 07:32:11'),(60,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 07:32:11'),(61,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 07:32:11'),(62,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 07:32:11'),(63,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 07:32:11'),(64,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 07:32:11'),(65,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 07:32:11'),(66,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 07:32:11'),(67,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 07:32:11'),(68,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 07:32:11'),(69,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 07:32:11'),(70,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 07:32:11'),(71,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 07:32:11'),(72,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 07:32:11'),(73,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 07:32:11'),(74,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 07:32:11'),(75,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 07:32:11'),(76,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 07:32:11'),(77,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 07:33:14'),(78,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 07:33:14'),(79,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 07:33:14'),(80,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 07:33:14'),(81,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 07:33:14'),(82,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 07:33:14'),(83,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 07:33:14'),(84,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 07:33:14'),(85,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 07:33:14'),(86,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 07:33:14'),(87,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 07:33:14'),(88,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 07:33:14'),(89,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 07:33:14'),(90,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 07:33:14'),(91,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 07:33:14'),(92,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 07:33:14'),(93,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 07:33:14'),(94,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 07:33:14'),(95,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 07:33:14'),(96,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 08:02:18'),(97,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 08:02:18'),(98,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 08:02:18'),(99,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 08:02:18'),(100,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 08:02:18'),(101,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 08:02:18'),(102,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 08:02:18'),(103,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 08:02:18'),(104,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 08:02:18'),(105,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 08:02:18'),(106,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 08:02:18'),(107,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 08:02:18'),(108,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 08:02:18'),(109,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 08:02:18'),(110,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 08:02:18'),(111,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 08:02:18'),(112,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 08:02:18'),(113,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 08:02:18'),(114,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 08:02:18'),(115,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 08:02:36'),(116,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 08:02:36'),(117,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 08:02:36'),(118,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 08:02:36'),(119,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 08:02:36'),(120,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 08:02:36'),(121,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 08:02:36'),(122,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 08:02:36'),(123,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 08:02:36'),(124,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 08:02:36'),(125,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 08:02:36'),(126,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 08:02:36'),(127,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 08:02:36'),(128,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 08:02:36'),(129,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 08:02:36'),(130,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 08:02:36'),(131,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 08:02:36'),(132,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 08:02:36'),(133,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 08:02:36'),(134,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 08:07:50'),(135,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 08:07:50'),(136,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 08:07:50'),(137,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 08:07:50'),(138,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 08:07:50'),(139,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 08:07:50'),(140,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 08:07:50'),(141,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 08:07:50'),(142,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 08:07:50'),(143,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 08:07:50'),(144,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 08:07:50'),(145,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 08:07:50'),(146,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 08:07:50'),(147,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 08:07:50'),(148,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 08:07:50'),(149,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 08:07:50'),(150,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 08:07:50'),(151,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 08:07:50'),(152,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 08:07:50'),(153,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 08:08:46'),(154,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 08:08:46'),(155,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 08:08:46'),(156,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 08:08:46'),(157,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 08:08:46'),(158,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 08:08:46'),(159,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 08:08:46'),(160,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 08:08:46'),(161,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 08:08:46'),(162,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 08:08:46'),(163,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 08:08:46'),(164,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 08:08:46'),(165,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 08:08:46'),(166,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 08:08:46'),(167,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 08:08:46'),(168,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 08:08:46'),(169,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 08:08:46'),(170,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 08:08:46'),(171,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 08:08:46'),(172,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 09:55:48'),(173,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 09:55:48'),(174,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 09:55:48'),(175,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 09:55:48'),(176,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 09:55:48'),(177,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 09:55:48'),(178,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 09:55:48'),(179,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 09:55:48'),(180,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 09:55:48'),(181,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 09:55:48'),(182,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 09:55:48'),(183,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 09:55:48'),(184,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 09:55:48'),(185,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 09:55:48'),(186,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 09:55:48'),(187,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 09:55:48'),(188,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 09:55:48'),(189,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 09:55:48'),(190,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 09:55:48'),(191,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 11:09:04'),(192,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 11:09:04'),(193,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 11:09:04'),(194,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 11:09:04'),(195,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 11:09:04'),(196,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 11:09:04'),(197,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 11:09:04'),(198,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 11:09:04'),(199,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 11:09:04'),(200,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 11:09:04'),(201,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 11:09:04'),(202,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 11:09:04'),(203,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 11:09:04'),(204,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 11:09:04'),(205,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 11:09:04'),(206,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 11:09:04'),(207,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 11:09:04'),(208,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 11:09:04'),(209,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 11:09:04'),(210,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 11:09:11'),(211,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 11:09:11'),(212,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 11:09:11'),(213,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 11:09:11'),(214,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 11:09:11'),(215,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 11:09:11'),(216,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 11:09:11'),(217,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 11:09:11'),(218,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 11:09:11'),(219,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 11:09:11'),(220,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 11:09:11'),(221,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 11:09:11'),(222,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 11:09:11'),(223,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 11:09:11'),(224,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 11:09:11'),(225,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 11:09:11'),(226,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 11:09:11'),(227,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 11:09:11'),(228,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 11:09:11'),(229,1,'张医师','?‍⚕️','daily','初识草药','收集 5 份甘草','gather','甘草',5,1,100,50,NULL,0,10,1,1,'2026-04-19 16:42:15'),(230,1,'张医师','?‍⚕️','daily','钓鱼药材','收集 3 份鱼腥草','gather','鱼腥草',3,2,150,80,NULL,0,15,1,1,'2026-04-19 16:42:15'),(231,1,'张医师','?‍⚕️','normal','疗伤圣药','收集 10 份灵芝','gather','灵芝',10,5,500,200,'金疮药',1,50,0,1,'2026-04-19 16:42:15'),(232,1,'张医师','?‍⚕️','normal','矿中寻药','收集 5 份矿石','gather','银矿',5,3,300,150,NULL,0,30,0,1,'2026-04-19 16:42:15'),(233,2,'药王','?','daily','炼丹基础','炼制 3 次丹药','craft',NULL,3,3,200,100,NULL,0,20,1,1,'2026-04-19 16:42:15'),(234,2,'药王','?','daily','狩猎收集','收集 3 份兽肉','gather','兽肉',3,2,120,60,NULL,0,12,1,1,'2026-04-19 16:42:15'),(235,2,'药王','?','normal','珍稀药材','收集 10 份人参','gather','人参',10,6,800,400,'人参养荣丸',1,80,0,1,'2026-04-19 16:42:15'),(236,2,'药王','?','normal','奇石药引','收集 5 份奇石','gather','奇石',5,4,400,200,NULL,0,40,0,1,'2026-04-19 16:42:15'),(237,2,'药王','?','normal','高级炼丹','炼制 10 次丹药','craft',NULL,10,7,1000,500,'九转金丹',1,100,0,1,'2026-04-19 16:42:15'),(238,3,'江湖郎中','?','daily','街头卖艺','收集 2 份止血草','gather','止血草',2,1,80,40,NULL,0,8,1,1,'2026-04-19 16:42:15'),(239,3,'江湖郎中','?','daily','渔夫之友','收集 2 份钓鱼获得的药材','gather','甘草',2,1,100,50,NULL,0,10,1,1,'2026-04-19 16:42:15'),(240,3,'江湖郎中','?','normal','挖矿炼药','收集 8 份金矿','gather','金矿',8,5,600,300,NULL,0,60,0,1,'2026-04-19 16:42:15'),(241,3,'江湖郎中','?','normal','猎人伙伴','收集 8 份皮','gather','皮',8,4,350,180,NULL,0,35,0,1,'2026-04-19 16:42:15'),(242,3,'江湖郎中','?','normal','炼丹实践','炼制 5 次丹药','craft',NULL,5,4,450,220,'金创药',2,45,0,1,'2026-04-19 16:42:15'),(243,4,'炼丹师','?','daily','炼丹修行','炼制 5 次丹药','craft',NULL,5,4,250,120,NULL,0,25,1,1,'2026-04-19 16:42:15'),(244,4,'炼丹师','?','daily','矿石采集','收集 3 份矿石','gather','矿石',3,2,150,80,NULL,0,15,1,1,'2026-04-19 16:42:15'),(245,4,'炼丹师','?','normal','仙丹妙药','炼制 20 次丹药','craft',NULL,20,8,1500,800,'仙丹',1,150,0,1,'2026-04-19 16:42:15'),(246,4,'炼丹师','?','normal','寻宝之旅','收集 10 份奇石','gather','奇石',10,6,700,350,'水晶',2,70,0,1,'2026-04-19 16:42:15'),(247,4,'炼丹师','?','normal','巅峰炼丹','炼制 50 次丹药','craft',NULL,50,10,3000,1500,'九转还魂丹',1,300,0,1,'2026-04-19 16:42:15');
+/*!40000 ALTER TABLE `alchemy_quests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `alchemy_recipes`
+--
+
+DROP TABLE IF EXISTS `alchemy_recipes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `alchemy_recipes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '药品名称',
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '药品描述',
+  `effect_type` enum('neili','tili','wugong','charm','attack','defense','all') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '效果类型',
+  `effect_value` int(11) NOT NULL DEFAULT '0' COMMENT '效果值',
+  `materials` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '材料配方 (JSON)',
+  `success_rate` int(11) NOT NULL DEFAULT '100' COMMENT '成功率 (%)',
+  `level` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '需要等级',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`),
+  KEY `idx_level` (`level`)
+) ENGINE=InnoDB AUTO_INCREMENT=41 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='炼丹配方';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `alchemy_recipes`
+--
+
+LOCK TABLES `alchemy_recipes` WRITE;
+/*!40000 ALTER TABLE `alchemy_recipes` DISABLE KEYS */;
+INSERT INTO `alchemy_recipes` VALUES (1,'金疮药','治疗外伤的常用药','neili',10,'[{\"name\":\"甘草\",\"qty\":3},{\"name\":\"鱼腥草\",\"qty\":2}]',100,1,'2026-04-19 09:55:48'),(2,'止血散','快速止血的药物','tili',15,'[{\"name\":\"止血草\",\"qty\":5},{\"name\":\"甘草\",\"qty\":2}]',95,2,'2026-04-19 09:55:48'),(3,'清心丸','清心明目的丹药','neili',25,'[{\"name\":\"灵芝\",\"qty\":3},{\"name\":\"甘草\",\"qty\":3}]',90,3,'2026-04-19 09:55:48'),(4,'顺脉丹','疏通经脉的丹药','wugong',5,'[{\"name\":\"灵芝\",\"qty\":5},{\"name\":\"止血草\",\"qty\":3}]',85,4,'2026-04-19 09:55:48'),(5,'养荣丸','滋养荣卫的补药','charm',10,'[{\"name\":\"人参\",\"qty\":2},{\"name\":\"灵芝\",\"qty\":3}]',80,5,'2026-04-19 09:55:48'),(6,'小还丹','恢复内力的小还丹','neili',50,'[{\"name\":\"人参\",\"qty\":5},{\"name\":\"何首乌\",\"qty\":3}]',75,6,'2026-04-19 09:55:48'),(7,'大还丹','恢复内力的极品丹药','neili',100,'[{\"name\":\"冬虫夏草\",\"qty\":3},{\"name\":\"人参\",\"qty\":5}]',70,7,'2026-04-19 09:55:48'),(8,'九转金丹','九转九转的极品金丹','all',50,'[{\"name\":\"天山雪莲\",\"qty\":2},{\"name\":\"冬虫夏草\",\"qty\":5},{\"name\":\"人参\",\"qty\":10}]',60,8,'2026-04-19 09:55:48'),(9,'虎骨酒','强筋健骨的药酒','attack',15,'[{\"name\":\"灵芝\",\"qty\":4},{\"name\":\"甘草\",\"qty\":5}]',85,5,'2026-04-19 09:55:48'),(10,'龟苓膏','滋阴润燥的补品','defense',15,'[{\"name\":\"何首乌\",\"qty\":4},{\"name\":\"灵芝\",\"qty\":2}]',80,5,'2026-04-19 09:55:48');
+/*!40000 ALTER TABLE `alchemy_recipes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `announcements`
+--
+
+DROP TABLE IF EXISTS `announcements`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `announcements` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='公告置顶';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `announcements`
+--
+
+LOCK TABLES `announcements` WRITE;
+/*!40000 ALTER TABLE `announcements` DISABLE KEYS */;
+INSERT INTO `announcements` VALUES (1,'12313123','2026-04-19 16:51:40');
+/*!40000 ALTER TABLE `announcements` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `bad_words`
+--
+
+DROP TABLE IF EXISTS `bad_words`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `bad_words` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `word` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_word` (`word`)
+) ENGINE=InnoDB AUTO_INCREMENT=105 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='脏词列表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `bad_words`
+--
+
+LOCK TABLES `bad_words` WRITE;
+/*!40000 ALTER TABLE `bad_words` DISABLE KEYS */;
+INSERT INTO `bad_words` VALUES (1,'fuck'),(2,'shit'),(5,'妈的'),(3,'操'),(6,'混蛋'),(8,'滚'),(7,'王八蛋'),(4,'靠');
+/*!40000 ALTER TABLE `bad_words` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `bank_accounts`
+--
+
+DROP TABLE IF EXISTS `bank_accounts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `bank_accounts` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `deposit` bigint(20) NOT NULL DEFAULT '0' COMMENT '存款',
+  `last_interest_at` datetime DEFAULT NULL COMMENT '最后计息时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user` (`user_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='银行账户';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `bank_accounts`
+--
+
+LOCK TABLES `bank_accounts` WRITE;
+/*!40000 ALTER TABLE `bank_accounts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `bank_accounts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `banned_usernames`
+--
+
+DROP TABLE IF EXISTS `banned_usernames`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `banned_usernames` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name_pattern` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户名或模式',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='禁止登录名';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `banned_usernames`
+--
+
+LOCK TABLES `banned_usernames` WRITE;
+/*!40000 ALTER TABLE `banned_usernames` DISABLE KEYS */;
+/*!40000 ALTER TABLE `banned_usernames` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `birth_records`
+--
+
+DROP TABLE IF EXISTS `birth_records`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `birth_records` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `partner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `born_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='生育记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `birth_records`
+--
+
+LOCK TABLES `birth_records` WRITE;
+/*!40000 ALTER TABLE `birth_records` DISABLE KEYS */;
+/*!40000 ALTER TABLE `birth_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `blackjack_games`
+--
+
+DROP TABLE IF EXISTS `blackjack_games`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `blackjack_games` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `dealer_cards` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'z0~z5',
+  `dealer_points` int(11) DEFAULT NULL,
+  `player_cards` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'u0~u5',
+  `player_points` int(11) DEFAULT NULL,
+  `bet` int(11) NOT NULL DEFAULT '0',
+  `wins` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='21点游戏';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `blackjack_games`
+--
+
+LOCK TABLES `blackjack_games` WRITE;
+/*!40000 ALTER TABLE `blackjack_games` DISABLE KEYS */;
+/*!40000 ALTER TABLE `blackjack_games` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `bounties`
+--
+
+DROP TABLE IF EXISTS `bounties`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `bounties` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `target` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_completed` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='悬赏';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `bounties`
+--
+
+LOCK TABLES `bounties` WRITE;
+/*!40000 ALTER TABLE `bounties` DISABLE KEYS */;
+/*!40000 ALTER TABLE `bounties` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `card_templates`
+--
+
+DROP TABLE IF EXISTS `card_templates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `card_templates` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '卡片名称',
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '功能说明',
+  `price` int(11) NOT NULL DEFAULT '0' COMMENT '需要银两',
+  `card_type` enum('normal','vip') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normal',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_card_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=131 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卡片商品';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `card_templates`
+--
+
+LOCK TABLES `card_templates` WRITE;
+/*!40000 ALTER TABLE `card_templates` DISABLE KEYS */;
+INSERT INTO `card_templates` VALUES (1,'变性卡','变换性别(需未婚)',50000,'normal'),(2,'踢人卡','踢出聊天室',80000,'normal'),(3,'大牢卡','关入大牢3天',100000,'normal'),(4,'财神卡','抢夺对方20%银两',150000,'normal'),(5,'强盗花','偷走一件未装备物品',120000,'normal'),(6,'催眠卡','使对方睡着约1.3分钟',60000,'normal'),(7,'情人卡','互相结为配偶(需异性且双方未婚)',200000,'normal'),(8,'升级卡','等级+1(最高5级)',300000,'normal'),(9,'免罪卡','被逮捕/坐牢时自动消耗抵消',180000,'vip'),(10,'复仇卡','被杀时自动消耗并随机化凶手属性',250000,'vip');
+/*!40000 ALTER TABLE `card_templates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `chat_actions`
+--
+
+DROP TABLE IF EXISTS `chat_actions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `chat_actions` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `action_type` varchar(10) COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '1' COMMENT '1=系统自动',
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '动作名',
+  `template` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '动作模板(##=发言者,%%=对象)',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=391 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天动作库';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `chat_actions`
+--
+
+LOCK TABLES `chat_actions` WRITE;
+/*!40000 ALTER TABLE `chat_actions` DISABLE KEYS */;
+INSERT INTO `chat_actions` VALUES (1,'1','微笑','##对%%微微一笑'),(2,'1','大笑','##对%%仰天大笑'),(3,'1','哭泣','##对%%泪流满面'),(4,'1','拥抱','##紧紧拥抱了%%'),(5,'1','握手','##与%%握手言欢'),(6,'1','鞠躬','##向%%深深鞠了一躬'),(7,'1','挥手','##向%%挥手致意'),(8,'1','怒视','##怒视着%%'),(9,'1','安慰','##轻声安慰%%'),(10,'1','祝福','##真心祝福%%'),(11,'1','拍肩','##拍了拍%%的肩膀'),(12,'1','敬茶','##给%%敬上一杯茶'),(13,'1','磕头','##给%%磕了三个响头'),(14,'1','行礼','##向%%抱拳行礼'),(15,'1','眨眼','##对%%眨了眨眼'),(16,'1','害羞','##在%%面前害羞地低下了头'),(17,'1','瞪眼','##瞪大了眼睛看着%%'),(18,'1','叹气','##对着%%长叹一声'),(19,'1','鼓掌','##为%%热烈鼓掌'),(20,'1','跳起','##高兴得跳了起来拉着%%'),(21,'1','低头','##在%%面前低下了头'),(22,'1','转身','##转身背对%%'),(23,'1','偷看','##偷偷看了%%一眼'),(24,'1','飞吻','##给%%送了一个飞吻'),(25,'1','挠头','##对着%%不好意思地挠了挠头'),(26,'1','上香','##给%%上了一炷香'),(27,'1','献花','##给%%献上一束鲜花'),(28,'1','作揖','##向%%作揖致敬'),(29,'1','肃立','##在%%面前肃立'),(30,'1','请教','##虚心向%%请教'),(361,'1','微笑','##对%%微微一笑'),(362,'1','大笑','##对%%仰天大笑'),(363,'1','哭泣','##对%%泪流满面'),(364,'1','拥抱','##紧紧拥抱了%%'),(365,'1','握手','##与%%握手言欢'),(366,'1','鞠躬','##向%%深深鞠了一躬'),(367,'1','挥手','##向%%挥手致意'),(368,'1','怒视','##怒视着%%'),(369,'1','安慰','##轻声安慰%%'),(370,'1','祝福','##真心祝福%%'),(371,'1','拍肩','##拍了拍%%的肩膀'),(372,'1','敬茶','##给%%敬上一杯茶'),(373,'1','磕头','##给%%磕了三个响头'),(374,'1','行礼','##向%%抱拳行礼'),(375,'1','眨眼','##对%%眨了眨眼'),(376,'1','害羞','##在%%面前害羞地低下了头'),(377,'1','瞪眼','##瞪大了眼睛看着%%'),(378,'1','叹气','##对着%%长叹一声'),(379,'1','鼓掌','##为%%热烈鼓掌'),(380,'1','跳起','##高兴得跳了起来拉着%%'),(381,'1','低头','##在%%面前低下了头'),(382,'1','转身','##转身背对%%'),(383,'1','偷看','##偷偷看了%%一眼'),(384,'1','飞吻','##给%%送了一个飞吻'),(385,'1','挠头','##对着%%不好意思地挠了挠头'),(386,'1','上香','##给%%上了一炷香'),(387,'1','献花','##给%%献上一束鲜花'),(388,'1','作揖','##向%%作揖致敬'),(389,'1','肃立','##在%%面前肃立'),(390,'1','请教','##虚心向%%请教');
+/*!40000 ALTER TABLE `chat_actions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `chat_exp_logs`
+--
+
+DROP TABLE IF EXISTS `chat_exp_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `chat_exp_logs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT '用户 ID',
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户名',
+  `exp_gain` int(11) NOT NULL COMMENT '获得经验',
+  `chat_minutes` int(11) NOT NULL COMMENT '聊天分钟数',
+  `is_daily_limit` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否达到日limit',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天经验日志';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `chat_exp_logs`
+--
+
+LOCK TABLES `chat_exp_logs` WRITE;
+/*!40000 ALTER TABLE `chat_exp_logs` DISABLE KEYS */;
+INSERT INTO `chat_exp_logs` VALUES (1,1,'独角兽',10,1,0,'2026-04-26 14:31:53'),(2,1,'独角兽',10,1,0,'2026-04-28 11:55:46');
+/*!40000 ALTER TABLE `chat_exp_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `chat_messages`
+--
+
+DROP TABLE IF EXISTS `chat_messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `chat_messages` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `room_id` tinyint(3) unsigned NOT NULL,
+  `line_no` bigint(20) unsigned NOT NULL COMMENT '行号',
+  `is_action` tinyint(1) NOT NULL DEFAULT '0' COMMENT '动作标志',
+  `is_private` tinyint(1) NOT NULL DEFAULT '0' COMMENT '私聊标志',
+  `sender` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `receiver` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '所有人',
+  `sender_color` varchar(7) COLLATE utf8mb4_unicode_ci DEFAULT '660099' COMMENT '名字颜色',
+  `msg_color` varchar(7) COLLATE utf8mb4_unicode_ci DEFAULT '660099' COMMENT '消息颜色',
+  `action_word` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '动作词',
+  `content` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_room_line` (`room_id`,`line_no`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=464 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天消息';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `chat_messages`
+--
+
+LOCK TABLES `chat_messages` WRITE;
+/*!40000 ALTER TABLE `chat_messages` DISABLE KEYS */;
+INSERT INTO `chat_messages` VALUES (2,1,2,0,0,'站长','所有人','660099','660099','','123','2026-04-19 07:27:53'),(30,1,29,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 08:00:54'),(31,1,30,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 11:06:06'),(32,1,31,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 11:06:17'),(33,1,32,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 11:29:44'),(34,1,33,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 11:35:00'),(35,1,34,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 11:35:03'),(36,1,35,0,0,'站长','所有人','660099','660099','','1','2026-04-19 11:35:05'),(37,1,36,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 11:35:31'),(38,1,37,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 11:56:45'),(39,1,38,0,0,'站长','所有人','660099','660099','','111','2026-04-19 11:56:49'),(40,1,39,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 12:02:39'),(41,1,40,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:20:12'),(42,1,41,0,0,'站长','所有人','660099','660099','','1','2026-04-19 13:20:46'),(43,1,42,1,0,'站长','所有人','660099','660099','','<b>站长</b>对着<b>所有人</b>长叹一声','2026-04-19 13:25:08'),(44,1,43,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:27:20'),(45,1,44,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:27:20'),(46,1,45,0,0,'站长','所有人','FF6600','99FF00','','546546546','2026-04-19 13:28:20'),(47,1,46,0,0,'站长','所有人','FF6600','99FF00','','<img src=\"/assets/chat-images/245.gif\" alt=\"表情245\">','2026-04-19 13:28:40'),(48,1,47,0,0,'站长','所有人','FF6600','99FF00','','<img src=\"/assets/chat-images/249.gif\" alt=\"表情249\">','2026-04-19 13:28:43'),(49,1,48,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:29:57'),(50,1,49,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:29:59'),(51,1,50,0,0,'站长','所有人','660099','660099','上香','23131','2026-04-19 13:31:14'),(52,1,51,0,0,'站长','所有人','660099','660099','上香','<img src=\"/assets/chat-images/44.gif\" alt=\"表情44\">','2026-04-19 13:31:50'),(53,1,52,0,0,'站长','所有人','660099','660099','上香','<img src=\"/assets/chat-images/43.gif\" alt=\"表情43\">','2026-04-19 13:31:54'),(54,1,53,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:32:08'),(55,1,54,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:32:08'),(56,1,55,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:32:09'),(57,1,56,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:32:43'),(58,1,57,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:32:43'),(59,1,58,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:32:45'),(60,1,59,1,0,'站长','所有人','660099','660099','','<b>站长</b>偷偷看了<b>所有人</b>一眼','2026-04-19 13:33:44'),(61,1,60,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:34:51'),(62,1,61,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:36:38'),(63,1,62,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:36:40'),(64,1,63,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:37:10'),(65,1,64,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:41:18'),(66,1,65,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:42:58'),(67,1,66,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:48:17'),(68,1,67,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:48:19'),(69,1,68,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:57:39'),(70,1,69,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:57:40'),(71,1,70,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:58:00'),(72,1,71,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:58:01'),(73,1,72,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 13:58:50'),(74,1,73,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 13:58:50'),(75,1,74,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 14:01:56'),(76,1,75,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 14:01:59'),(77,1,76,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 14:13:37'),(78,1,77,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 14:19:47'),(79,1,78,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 14:20:07'),(80,1,79,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 14:20:10'),(81,1,80,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 14:21:24'),(82,1,81,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 14:24:02'),(83,1,82,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 14:26:44'),(84,1,83,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 15:12:43'),(85,1,84,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 15:14:28'),(86,1,85,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 15:14:29'),(87,1,86,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 15:14:37'),(88,1,87,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 15:14:50'),(89,1,88,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 15:14:56'),(90,1,89,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 15:15:06'),(91,1,90,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 15:15:19'),(92,1,91,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 15:15:28'),(93,1,92,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 15:15:29'),(94,1,93,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:10:24'),(95,1,94,0,0,'install','所有人','660099','660099','','11','2026-04-19 16:10:27'),(96,1,95,0,0,'install','所有人','660099','660099','','<img src=\"/assets/chat-images/320.gif\" alt=\"表情320\">','2026-04-19 16:11:36'),(97,1,96,0,0,'系统','所有人','FF0000','660099','','? ?️ 狂风大作，install 被风吹得晕头转向！','2026-04-19 16:16:37'),(98,1,97,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:20:40'),(99,1,98,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:20:42'),(100,1,99,0,0,'install','所有人','660099','660099','','<img src=\"/assets/chat-images/200.gif\" alt=\"表情200\">','2026-04-19 16:20:46'),(101,1,100,0,0,'install','所有人','660099','660099','','<img src=\"/assets/chat-images/208.gif\" alt=\"表情208\">','2026-04-19 16:20:51'),(102,1,101,0,0,'install','所有人','660099','660099','','<img src=\"/assets/chat-images/232.gif\" alt=\"表情232\">','2026-04-19 16:21:23'),(103,1,102,0,0,'install','所有人','660099','660099','','<img src=\"/assets/chat-images/208.gif\" alt=\"表情208\">','2026-04-19 16:21:26'),(104,1,103,0,0,'install','所有人','660099','660099','','<img src=\"/assets/chat-images/199.gif\" alt=\"表情199\">','2026-04-19 16:21:29'),(105,1,104,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:26:33'),(106,1,105,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:32:29'),(107,1,106,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:32:39'),(108,1,107,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:32:41'),(109,1,108,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:32:42'),(110,1,109,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:32:45'),(111,1,110,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:32:59'),(112,1,111,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:35:38'),(113,1,112,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:36:32'),(114,1,113,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:37:53'),(115,1,114,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:37:55'),(116,1,115,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:37:57'),(117,1,116,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:38:00'),(118,1,117,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:41:11'),(119,1,118,0,0,'系统','所有人','FF0000','660099','','? ? 天灾降临！全服玩家损失 16 点体力！ （全服生效）','2026-04-19 16:41:48'),(120,1,119,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:44:42'),(121,1,120,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:44:44'),(122,1,121,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:44:47'),(123,1,122,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:44:54'),(124,1,123,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:49:04'),(125,1,124,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:49:06'),(126,1,125,0,0,'系统','所有人','FF0000','660099','','? ?️ 仙山显圣！全服有缘人武功提升 2 层！ （全服生效）','2026-04-19 16:49:06'),(127,1,126,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:49:23'),(128,1,127,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:49:24'),(129,1,128,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:49:50'),(130,1,129,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:49:52'),(131,1,130,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-19 16:49:56'),(132,1,131,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-19 16:51:08'),(133,1,132,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 16:51:47'),(134,1,133,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 16:51:56'),(135,1,134,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 16:53:31'),(136,1,135,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 16:54:15'),(137,1,136,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 16:59:31'),(138,1,137,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 16:59:35'),(139,1,138,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 16:59:37'),(140,1,139,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 17:01:09'),(141,1,140,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 17:01:10'),(142,1,141,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 17:01:53'),(143,1,142,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 17:01:55'),(144,1,143,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 17:02:46'),(145,1,144,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 17:02:46'),(146,1,145,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 17:02:54'),(147,1,146,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-19 17:03:02'),(148,1,147,0,0,'系统','所有人','FF0000','660099','','? ?️ 神功护体，站长 内力暴涨 166 点！','2026-04-19 17:03:57'),(149,1,148,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-19 17:04:13'),(150,1,149,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 04:52:55'),(151,1,150,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 04:52:56'),(152,1,151,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 04:52:59'),(153,1,152,0,0,'站长','所有人','660099','660099','','1','2026-04-20 04:53:02'),(154,1,153,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 04:53:26'),(155,1,154,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:09:16'),(156,1,155,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:09:23'),(157,1,156,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:09:25'),(158,1,157,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:09:29'),(159,1,158,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:09:31'),(160,1,159,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:09:35'),(161,1,160,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:09:37'),(162,1,161,0,0,'系统','所有人','FF0000','660099','','? ? 天降祥瑞！全服玩家体力恢复 39 点！ （全服生效）','2026-04-20 05:10:22'),(163,1,162,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:11:13'),(164,1,163,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:11:13'),(165,1,164,0,0,'系统','所有人','FF0000','660099','','? ? 福星高照，站长 走了狗屎运，获得 412 两银子！','2026-04-20 05:12:24'),(166,1,165,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:12:37'),(167,1,166,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:12:38'),(168,1,167,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:12:47'),(169,1,168,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:12:48'),(170,1,169,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:12:52'),(171,1,170,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:12:53'),(172,1,171,0,0,'系统','所有人','FF0000','660099','','? ? 山贼打劫！站长 被抢走了 643 两银子！','2026-04-20 05:15:57'),(173,1,172,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:22:04'),(174,1,173,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:22:15'),(175,1,174,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:22:19'),(176,1,175,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:22:21'),(177,1,176,0,0,'系统','所有人','FF0000','660099','','? ? 站长 体力不支，损失 44 点体力！','2026-04-20 05:25:11'),(178,1,177,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:26:13'),(183,1,182,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 05:38:18'),(184,1,183,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 05:38:22'),(185,1,184,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-20 05:41:22'),(186,1,185,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-20 05:41:56'),(188,1,187,0,0,'系统','所有人','FF0000','660099','','? ? 天降祥瑞！全服玩家体力恢复 35 点！ （全服生效）','2026-04-20 05:45:44'),(189,1,188,0,0,'系统','所有人','FF0000','660099','','? ? 一位神秘老人出现，给了install一本武功秘籍！','2026-04-20 05:55:12'),(190,1,189,0,0,'系统','所有人','FF0000','660099','','? ✨ 吉星高照，install 捡到一袋银子，获得 253 两！','2026-04-20 06:27:28'),(191,1,190,0,0,'系统','所有人','FF0000','660099','','? ? 经济萧条，物价飞涨！全服玩家损失 143 两银子！','2026-04-20 06:29:49'),(192,1,191,0,0,'系统','所有人','FF0000','660099','','? ✨ install 偶得奇遇，内力增加 119 点！','2026-04-20 06:35:50'),(193,1,192,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-20 06:54:30'),(194,1,193,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-20 06:54:32'),(195,1,194,0,0,'系统','所有人','FF0000','660099','','? ☄️ 流星陨落，install 被流星碎片击中，获得神秘力量！','2026-04-20 07:12:45'),(196,1,195,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-20 07:38:11'),(197,1,196,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-20 07:38:12'),(198,1,197,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-20 07:44:13'),(199,1,198,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-20 07:44:14'),(200,1,199,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-20 07:44:26'),(201,1,200,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-20 07:44:29'),(202,1,201,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-20 07:44:34'),(203,1,202,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 07:57:39'),(204,1,203,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 07:57:46'),(205,1,204,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 08:03:03'),(206,1,205,0,0,'站长','所有人','660099','660099','','123123','2026-04-20 08:03:08'),(207,1,206,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 08:03:20'),(208,1,207,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 08:14:53'),(209,1,208,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 08:14:53'),(210,1,209,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 08:14:59'),(211,1,210,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 08:15:00'),(212,1,211,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 08:15:07'),(213,1,212,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 08:15:09'),(214,1,213,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-20 08:17:09'),(215,1,214,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 08:18:09'),(217,1,216,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-20 08:27:48'),(218,1,217,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-20 09:01:00'),(219,1,218,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-20 09:01:29'),(223,1,222,0,0,'站长','所有人','660099','660099','','222','2026-04-20 12:30:29'),(224,1,223,0,0,'系统','所有人','FF0000','660099','','? ? 普天同庆！全服玩家获得 112 两银子奖励！','2026-04-20 12:31:14'),(225,1,224,0,0,'系统','所有人','FF0000','660099','','? ? 站长 体力不支，损失 46 点体力！','2026-04-20 12:35:46'),(231,1,230,0,0,'系统','所有人','FF0000','660099','','? ? 财神爷降临，赏赐 站长 1416 两银子！','2026-04-21 01:46:03'),(232,1,231,0,0,'系统','所有人','FF0000','660099','','? ? 站长 走路摔了一跤，掉了 186 两银子！','2026-04-21 01:49:12'),(238,1,237,0,0,'系统','所有人','FF0000','660099','','? ?️ 狂风大作，站长 被风吹得晕头转向！','2026-04-21 02:04:39'),(251,1,250,0,0,'站长','所有人','660099','660099','','213123','2026-04-21 14:13:42'),(252,1,251,0,0,'系统','所有人','FF0000','660099','','? ? 站长 劫富济贫，从贪官处获得 1035 两银子！','2026-04-21 14:13:44'),(255,1,254,0,0,'系统','所有人','FF0000','660099','','? ? 紫气东来，站长 感觉修为有所提升！','2026-04-21 14:16:06'),(270,1,269,0,0,'系统','所有人','FF0000','660099','','? ? 天灾降临！全服玩家损失 18 点体力！ （全服生效）','2026-04-21 14:27:13'),(278,1,277,0,0,'系统','所有人','FF0000','660099','','? ☀️ 万里无云，站长 心情舒畅，体力 +15！','2026-04-21 15:28:51'),(280,1,279,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:30:43'),(281,1,280,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:30:48'),(283,1,282,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:31:10'),(284,1,283,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:31:20'),(285,1,284,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:31:26'),(286,1,285,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:31:36'),(288,1,287,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:31:39'),(289,1,288,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:31:40'),(290,1,289,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:36:32'),(292,1,291,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:36:36'),(295,1,294,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:36:38'),(296,1,295,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:37:07'),(298,1,297,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:40:52'),(299,1,298,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:40:54'),(300,1,299,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:41:34'),(301,1,300,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:41:36'),(302,1,301,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:42:52'),(303,1,302,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:42:54'),(304,1,303,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:43:17'),(305,1,304,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:43:51'),(306,1,305,0,0,'系统','所有人','FF0000','660099','','? ? 皇帝大喜，赏赐全服百姓各 144 两银子！','2026-04-21 15:45:39'),(307,1,306,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:45:44'),(308,1,307,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:45:46'),(309,1,308,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:45:47'),(310,1,309,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:45:48'),(311,1,310,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:45:49'),(312,1,311,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:45:51'),(313,1,312,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:46:42'),(314,1,313,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:46:42'),(315,1,314,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:46:45'),(316,1,315,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:46:46'),(318,1,317,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:47:05'),(319,1,318,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:47:44'),(320,1,319,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:47:54'),(321,1,320,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:48:00'),(322,1,321,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:48:32'),(324,1,323,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:48:50'),(326,1,325,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:48:53'),(327,1,326,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:49:04'),(328,1,327,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:49:07'),(329,1,328,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:49:08'),(330,1,329,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:49:13'),(331,1,330,0,0,'系统','所有人','FF0000','660099','','? ? 隐世高人传授站长绝学，武功提升 12 层！','2026-04-21 15:50:32'),(332,1,331,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:50:43'),(333,1,332,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:52:17'),(334,1,333,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:52:18'),(335,1,334,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:55:37'),(336,1,335,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-21 15:55:39'),(337,1,336,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-21 15:55:40'),(342,1,337,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 来到了笑傲江湖','2026-04-22 13:19:07'),(343,1,338,1,0,'站长','所有人','660099','660099','','<b>站长</b>为<b>所有人</b>热烈鼓掌','2026-04-22 13:19:49'),(344,1,339,0,0,'站长','所有人','660099','660099','','<img src=\"/assets/chat-images/209.gif\" alt=\"表情209\">','2026-04-22 13:20:08'),(345,1,340,0,0,'系统','所有人','FF0000','660099','','? ? 天灾降临！全服玩家损失 15 点体力！ （全服生效）','2026-04-22 13:21:13'),(346,1,341,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 来到了笑傲江湖','2026-04-22 13:21:35'),(347,1,342,0,0,'系统','所有人','FF0000','660099','','? ☀️ 万里无云，install 心情舒畅，体力 +15！','2026-04-22 13:24:25'),(348,1,343,0,0,'系统','所有人','FF0000','660099','','<b>install</b> ? 锣鼓喧天，鞭炮齐鸣，欢迎新大侠！','2026-04-22 13:31:38'),(349,1,344,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 13:33:19'),(350,1,345,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 剑指苍穹，问鼎中原，恭迎侠士光临！','2026-04-22 13:33:20'),(351,1,346,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 13:33:23'),(352,1,347,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 江湖一笑浪滔滔，红尘尽忘乐逍遥，欢迎光临！','2026-04-22 13:33:23'),(353,1,348,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 13:33:26'),(354,1,349,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 武林盛会，群英荟萃，欢迎大侠驾临！','2026-04-22 13:33:27'),(355,1,350,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 13:33:36'),(356,1,351,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 一入江湖岁月催，欢迎各位大侠光临！','2026-04-22 13:41:47'),(357,1,352,0,0,'install','所有人','660099','660099','','123123','2026-04-22 13:42:06'),(358,1,353,0,1,'install','install','660099','660099','','123213','2026-04-22 13:42:54'),(359,1,354,0,0,'系统','所有人','FF0000','660099','','? ? 福星高照，install 走了狗屎运，获得 225 两银子！','2026-04-22 13:46:08'),(360,1,355,0,0,'系统','所有人','FF0000','660099','','? ? 恶霸欺行霸市，install 被勒索 222 两银子！','2026-04-22 13:55:06'),(361,1,356,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 13:56:46'),(362,1,357,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 桃花影落飞神剑，碧水潮生按玉箫，欢迎侠士光临！','2026-04-22 14:22:55'),(363,1,358,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 14:26:22'),(364,1,359,0,0,'系统','所有人','FF0000','660099','','<b>install</b> ✨ 星光璀璨，欢迎侠士莅临指教！','2026-04-22 14:26:22'),(365,1,360,0,0,'系统','所有人','FF0000','660099','','<b>install</b> ? 掌声欢迎！又有一位大侠驾到！','2026-04-22 14:26:22'),(366,1,361,0,0,'系统','所有人','FF0000','660099','','? ?️ 神功护体，install 内力暴涨 272 点！','2026-04-22 14:26:37'),(367,1,362,0,0,'系统','所有人','FF0000','660099','','? ? 一位神秘老人出现，给了install一本武功秘籍！','2026-04-22 14:28:37'),(368,1,363,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 14:28:53'),(369,1,364,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 剑指苍穹，问鼎中原，恭迎侠士光临！','2026-04-22 14:28:55'),(370,1,365,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 14:29:06'),(371,1,366,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 剑指苍穹，问鼎中原，恭迎侠士光临！','2026-04-22 14:29:08'),(372,1,367,0,0,'系统','所有人','FF0000','660099','','? ? install 不慎丢失钱包，损失 157 两银子！','2026-04-22 14:31:15'),(373,1,368,0,0,'系统','所有人','FF0000','660099','','? ? 天降祥瑞！全服玩家体力恢复 21 点！ （全服生效）','2026-04-22 14:47:50'),(374,1,369,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 14:48:45'),(375,1,370,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 桃花影落飞神剑，碧水潮生按玉箫，欢迎侠士光临！','2026-04-22 14:48:47'),(376,1,371,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 14:51:54'),(377,1,372,0,0,'系统','所有人','FF0000','660099','','<b>install</b> ☕ 茶已备好，静候侠士光临！','2026-04-22 14:52:09'),(378,1,373,0,0,'系统','所有人','FF0000','660099','','? ? 财神爷降临，赏赐 install 825 两银子！','2026-04-22 15:02:29'),(379,1,374,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 15:12:51'),(380,1,375,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 笑傲江湖论英雄，今日得见真豪杰！','2026-04-22 15:12:53'),(381,1,376,0,0,'系统','所有人','FF0000','660099','','? ☀️ 万里无云，install 心情舒畅，体力 +15！','2026-04-22 15:37:41'),(382,1,377,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 离开了笑傲江湖','2026-04-22 16:02:21'),(383,1,378,0,0,'系统','所有人','FF0000','660099','','<b>install</b> 五岳争锋，谁是英雄？欢迎加入笑傲江湖！','2026-04-22 16:02:23'),(384,1,379,0,0,'install','所有人','660099','660099','','234234234','2026-04-22 16:02:32'),(385,1,380,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 一入江湖岁月催，欢迎各位大侠光临！','2026-04-22 16:07:31'),(386,1,381,0,0,'站长','所有人','660099','660099','','123123123','2026-04-22 16:07:33'),(387,1,382,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-22 16:07:35'),(388,1,386,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> ? 热烈欢迎新侠士光临笑傲江湖！','2026-04-24 04:59:03'),(389,1,387,0,0,'站长','所有人','660099','660099','','123123','2026-04-24 04:59:04'),(390,1,388,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-24 04:59:47'),(391,1,389,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> ☕ 茶已备好，静候侠士光临！','2026-04-24 04:59:49'),(392,1,390,0,0,'系统','所有人','FF0000','660099','','? ? 站长 体力不支，损失 40 点体力！','2026-04-24 05:01:33'),(393,1,391,0,0,'系统','所有人','FF0000','660099','','? ? 福星高照，站长 走了狗屎运，获得 301 两银子！','2026-04-24 05:09:53'),(394,1,392,0,0,'系统','所有人','FF0000','660099','','? ?️ 神功护体，站长 内力暴涨 146 点！','2026-04-24 05:30:43'),(395,1,393,0,0,'系统','所有人','FF0000','660099','','? ? 月黑风高，站长 感觉有些不寻常的事情要发生...','2026-04-24 05:43:52'),(396,1,394,0,0,'系统','所有人','FF0000','660099','','? ? 恶霸欺行霸市，站长 被勒索 409 两银子！','2026-04-24 05:46:11'),(397,1,395,0,0,'系统','所有人','FF0000','660099','','? ? 站长 走路摔了一跤，掉了 313 两银子！','2026-04-24 06:09:07'),(398,1,396,0,0,'系统','所有人','FF0000','660099','','? ⚡ 电闪雷鸣，站长 被雷劈中，获得神秘力量！','2026-04-24 06:15:04'),(399,1,397,0,0,'系统','所有人','FF0000','660099','','? ? 财神爷降临，赏赐 站长 507 两银子！','2026-04-24 06:35:31'),(400,1,398,0,0,'系统','所有人','FF0000','660099','','? ?️ 天降甘霖，站长 感觉神清气爽！','2026-04-24 06:51:13'),(401,1,399,0,0,'系统','所有人','FF0000','660099','','? ? 站长 服下灵丹妙药，体力恢复 49 点！','2026-04-24 07:12:19'),(402,1,400,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-24 07:19:29'),(403,1,401,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 剑指苍穹，问鼎中原，恭迎侠士光临！','2026-04-24 07:19:32'),(404,1,402,0,0,'系统','所有人','FF0000','660099','','? ? 魔气肆虐！全服玩家内力损失 59 点！ （全服生效）','2026-04-24 07:24:54'),(405,1,403,0,0,'系统','所有人','FF0000','660099','','? ?️ 狂风大作，站长 被风吹得晕头转向！','2026-04-24 07:27:31'),(406,1,404,0,0,'系统','所有人','FF0000','660099','','? ? 一位神秘老人出现，给了站长一本武功秘籍！','2026-04-24 07:32:13'),(407,1,405,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-24 07:32:56'),(408,1,406,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 这位大侠面生得很，可是初来乍到？欢迎！','2026-04-24 17:10:16'),(409,1,407,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 离开了笑傲江湖','2026-04-24 17:10:25'),(410,1,408,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 桃花影落飞神剑，碧水潮生按玉箫，欢迎侠士光临！','2026-04-25 07:58:30'),(411,1,409,0,0,'独角兽','所有人','660099','660099','','123123','2026-04-25 07:58:32'),(412,1,410,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了房间','2026-04-25 07:58:45'),(413,2,1,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 这位大侠面生得很，可是初来乍到？欢迎！','2026-04-25 07:58:45'),(414,2,2,0,0,'独角兽','所有人','660099','660099','','111','2026-04-25 07:58:47'),(415,2,3,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了房间','2026-04-25 07:58:49'),(416,1,411,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 一入江湖岁月催，欢迎各位大侠光临！','2026-04-25 07:58:49'),(417,1,412,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了房间','2026-04-25 07:58:54'),(418,2,4,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 这位大侠面生得很，可是初来乍到？欢迎！','2026-04-25 07:58:54'),(419,2,5,0,0,'独角兽','所有人','660099','660099','','111','2026-04-25 07:58:57'),(420,2,6,0,0,'独角兽','所有人','660099','660099','','111','2026-04-25 07:59:18'),(421,2,7,0,0,'独角兽','所有人','660099','660099','','123123','2026-04-25 07:59:21'),(422,2,8,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了房间','2026-04-25 07:59:27'),(423,1,413,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 天涯海角觅知音，相逢一笑泯恩仇，欢迎！','2026-04-25 07:59:27'),(424,1,414,0,0,'独角兽','所有人','660099','660099','','23123123','2026-04-25 07:59:29'),(425,1,415,0,0,'独角兽','所有人','660099','660099','','123123123','2026-04-25 07:59:36'),(426,1,416,0,0,'系统','所有人','FF0000','660099','','? ?️ 神功护体，独角兽 内力暴涨 288 点！','2026-04-25 08:01:07'),(427,1,417,0,1,'独角兽','独角兽','660099','660099','','111','2026-04-25 08:03:16'),(428,1,418,0,0,'系统','所有人','FF0000','660099','','? ✨ 天地灵气涌动！全服玩家内力增加 112 点！ （全服生效）','2026-04-25 08:03:41'),(429,1,419,0,1,'独角兽','独角兽','660099','660099','','1','2026-04-25 08:08:26'),(430,1,420,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-25 08:09:06'),(431,1,421,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 剑指苍穹，问鼎中原，恭迎侠士光临！','2026-04-25 08:09:11'),(432,1,422,0,1,'独角兽','独角兽','660099','660099','','123213','2026-04-25 08:09:16'),(433,1,423,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-25 08:11:17'),(434,1,424,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> ☕ 茶已备好，静候侠士光临！','2026-04-25 08:11:17'),(435,1,425,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-25 08:11:24'),(436,1,426,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 听闻阁下武艺超群，今日得见，幸会幸会！','2026-04-25 08:11:24'),(437,1,427,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-25 08:11:48'),(438,1,428,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> ? 酒已温上，请大侠入座！','2026-04-25 08:11:54'),(439,1,429,0,0,'系统','所有人','FF0000','660099','','? ? 独角兽 劫富济贫，从贪官处获得 610 两银子！','2026-04-25 08:12:03'),(440,1,430,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> ? 灯火辉煌，喜迎贵客临门！','2026-04-25 08:12:15'),(441,1,431,0,1,'独角兽','独角兽','660099','660099','','123123','2026-04-25 08:12:20'),(442,1,432,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 一入江湖岁月催，欢迎各位大侠光临！','2026-04-25 08:17:25'),(443,1,433,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-25 08:20:01'),(444,1,434,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 剑指苍穹，问鼎中原，恭迎侠士光临！','2026-04-26 12:55:43'),(445,1,435,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-26 12:55:45'),(446,1,436,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 江湖传闻已久的大侠，今日终于现身了！','2026-04-26 13:19:53'),(447,1,437,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-26 13:19:55'),(448,1,438,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 江湖风云再起，恭迎侠士大驾光临！','2026-04-26 13:20:48'),(449,1,439,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-26 13:20:51'),(450,1,440,0,0,'系统','所有人','FF0000','660099','','<b>站长</b> 欢迎各位侠士莅临笑傲江湖，祝您game愉快！','2026-04-26 14:17:57'),(451,1,441,0,0,'系统','所有人','FF0000','660099','','? ? 站长 风寒感冒，体力损失 10 点！','2026-04-26 14:18:51'),(452,1,442,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 笑傲江湖论英雄，今日得见真豪杰！','2026-04-26 14:31:52'),(453,1,443,0,0,'独角兽','所有人','660099','660099','','234234','2026-04-26 14:31:53'),(454,1,444,0,0,'系统','所有人','FF0000','660099','','? ? 紫气东来，独角兽 感觉修为有所提升！','2026-04-26 14:32:30'),(455,1,445,0,0,'系统','所有人','FF0000','660099','','? ? 独角兽 替天行道，从恶霸那里夺取 445 两银子！','2026-04-26 14:34:37'),(456,1,446,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-26 14:34:42'),(457,1,447,0,0,'系统','所有人','FF0000','660099','','<b>测试用户</b> 一入江湖岁月催，欢迎各位大侠光临！','2026-04-28 03:22:55'),(458,1,448,0,0,'系统','所有人','FF0000','660099','','? ? 测试用户 走路摔了一跤，掉了 490 两银子！','2026-04-28 03:25:08'),(459,1,449,0,0,'系统','所有人','FF0000','660099','','? ? 日月同辉！全服玩家全属性提升 5 点！ （全服生效）','2026-04-28 03:29:46'),(460,1,450,0,0,'系统','所有人','FF0000','660099','','<b>测试用户</b> 离开了笑傲江湖','2026-04-28 03:32:56'),(461,1,451,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 江湖风云再起，恭迎侠士大驾光临！','2026-04-28 11:55:45'),(462,1,452,0,0,'独角兽','所有人','660099','660099','','11','2026-04-28 11:55:46'),(463,1,453,0,0,'系统','所有人','FF0000','660099','','<b>独角兽</b> 离开了笑傲江湖','2026-04-28 11:55:49');
+/*!40000 ALTER TABLE `chat_messages` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `chat_rooms`
+--
+
+DROP TABLE IF EXISTS `chat_rooms`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `chat_rooms` (
+  `id` tinyint(3) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `min_grade` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '最低等级',
+  `max_grade` tinyint(3) unsigned NOT NULL DEFAULT '10' COMMENT '最高等级(0=不限)',
+  `fight_enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT 'PK开关',
+  `sort_order` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_room_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='聊天房间';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `chat_rooms`
+--
+
+LOCK TABLES `chat_rooms` WRITE;
+/*!40000 ALTER TABLE `chat_rooms` DISABLE KEYS */;
+INSERT INTO `chat_rooms` VALUES (1,'大厅',0,0,1,0),(2,'忍者室',0,3,1,1),(3,'常胜殿',3,0,1,2);
+/*!40000 ALTER TABLE `chat_rooms` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `courtesans`
+--
+
+DROP TABLE IF EXISTS `courtesans`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `courtesans` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `beauty` int(11) NOT NULL DEFAULT '0' COMMENT '美貌度',
+  `registered_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='烟花院';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `courtesans`
+--
+
+LOCK TABLES `courtesans` WRITE;
+/*!40000 ALTER TABLE `courtesans` DISABLE KEYS */;
+/*!40000 ALTER TABLE `courtesans` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `cultivation_progress`
+--
+
+DROP TABLE IF EXISTS `cultivation_progress`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `cultivation_progress` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT '用户 ID',
+  `practice_type` tinyint(4) NOT NULL COMMENT '修炼类型：1=内功，2=外功，3=轻功',
+  `level` int(11) NOT NULL DEFAULT '1' COMMENT '修为等级',
+  `progress` int(11) NOT NULL DEFAULT '0' COMMENT '当前进度',
+  `required_progress` int(11) NOT NULL DEFAULT '1000' COMMENT '升级所需进度',
+  `total_practices` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '总修炼次数',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_type` (`user_id`,`practice_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='修为进度';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `cultivation_progress`
+--
+
+LOCK TABLES `cultivation_progress` WRITE;
+/*!40000 ALTER TABLE `cultivation_progress` DISABLE KEYS */;
+INSERT INTO `cultivation_progress` VALUES (1,1,1,1,137,1000,2,'2026-04-20 14:03:37'),(2,13,1,1,0,1000,0,'2026-04-20 13:32:03'),(4,1,2,1,0,1000,0,'2026-04-20 13:32:03'),(5,13,2,1,0,1000,0,'2026-04-20 13:32:03'),(7,1,3,1,0,1000,0,'2026-04-20 13:32:03'),(8,13,3,1,0,1000,0,'2026-04-20 13:32:03');
+/*!40000 ALTER TABLE `cultivation_progress` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `diner_menu`
+--
+
+DROP TABLE IF EXISTS `diner_menu`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `diner_menu` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '酒菜',
+  `power` int(11) NOT NULL DEFAULT '0',
+  `stamina` int(11) NOT NULL DEFAULT '0',
+  `level_req` int(11) NOT NULL DEFAULT '0',
+  `quantity` int(11) NOT NULL DEFAULT '0',
+  `price` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='酒菜菜单';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `diner_menu`
+--
+
+LOCK TABLES `diner_menu` WRITE;
+/*!40000 ALTER TABLE `diner_menu` DISABLE KEYS */;
+/*!40000 ALTER TABLE `diner_menu` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `economy_transaction_logs`
+--
+
+DROP TABLE IF EXISTS `economy_transaction_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `economy_transaction_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT '用户 ID',
+  `type` enum('income','spending') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '类型：收入/支出',
+  `amount` bigint(20) NOT NULL COMMENT '金额',
+  `balance_before` bigint(20) NOT NULL COMMENT '交易前余额',
+  `balance_after` bigint(20) NOT NULL COMMENT '交易后余额',
+  `operator_id` int(10) unsigned DEFAULT NULL COMMENT '操作用户 ID（管理员操作时）',
+  `source` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '收入来源（income 类型）',
+  `category` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '支出类别（spending 类型）',
+  `reason` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '原因说明',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `idx_source` (`source`),
+  KEY `idx_category` (`category`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='经济交易日志';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `economy_transaction_logs`
+--
+
+LOCK TABLES `economy_transaction_logs` WRITE;
+/*!40000 ALTER TABLE `economy_transaction_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `economy_transaction_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `fight_bans`
+--
+
+DROP TABLE IF EXISTS `fight_bans`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `fight_bans` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `room_id` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `banned_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_username_room` (`username`,`room_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='禁打名单';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fight_bans`
+--
+
+LOCK TABLES `fight_bans` WRITE;
+/*!40000 ALTER TABLE `fight_bans` DISABLE KEYS */;
+/*!40000 ALTER TABLE `fight_bans` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `fishing_items`
+--
+
+DROP TABLE IF EXISTS `fishing_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `fishing_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `item_name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '物品名称',
+  `item_type` enum('食材','药材','暗器','杂物') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT '食材' COMMENT '物品类型',
+  `effect_neili` int(11) NOT NULL DEFAULT '0' COMMENT '内力效果',
+  `effect_tili` int(11) NOT NULL DEFAULT '0' COMMENT '体力效果',
+  `silver_value` int(11) NOT NULL DEFAULT '0' COMMENT '出售价格',
+  `rarities` enum('common','uncommon','rare','epic','legendary') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'common' COMMENT '稀有度',
+  `image_file` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '图片文件',
+  `description` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '物品描述',
+  PRIMARY KEY (`id`),
+  KEY `idx_rarity` (`rarities`)
+) ENGINE=InnoDB AUTO_INCREMENT=101 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='钓鱼物品配置';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fishing_items`
+--
+
+LOCK TABLES `fishing_items` WRITE;
+/*!40000 ALTER TABLE `fishing_items` DISABLE KEYS */;
+INSERT INTO `fishing_items` VALUES (1,'鲫鱼','食材',0,0,50,'common',NULL,'常见的淡水鱼，味道鲜美'),(2,'鲤鱼','食材',0,0,80,'common',NULL,'普通的鲤鱼，寓意吉祥'),(3,'草鱼','食材',0,0,60,'common',NULL,'肉质鲜嫩的草鱼'),(4,'小鱼干','杂物',0,5,30,'common',NULL,'晒干的小鱼，可以恢复少量体力'),(5,'鲈鱼','食材',5,5,150,'uncommon',NULL,'肉质细嫩的鲈鱼，略有滋补'),(6,'鳊鱼','食材',8,0,180,'uncommon',NULL,'罕见的鳊鱼，可增强内力'),(7,'河蚌','杂物',0,10,100,'uncommon',NULL,'普通河蚌，可能含有珍珠'),(8,'鳜鱼','食材',15,10,300,'rare',NULL,'珍贵的鳜鱼，滋补效果显著'),(9,'甲鱼','药材',20,20,500,'rare',NULL,'珍贵的甲鱼，大补之物'),(10,'珍珠','杂物',10,0,400,'rare',NULL,'从河蚌中发现的珍珠'),(11,'娃娃鱼','药材',50,30,1000,'epic',NULL,'珍稀的娃娃鱼，珍贵药材'),(12,'千年鱼','药材',80,0,1500,'epic',NULL,'生存千年的灵鱼，内力大增'),(13,'夜明珠','杂物',30,30,2000,'epic',NULL,'从大鱼腹中得到的夜明珠'),(14,'蛟龙筋','药材',200,100,5000,'legendary',NULL,'传说中蛟龙的筋，大补神物'),(15,'龙鲤','药材',150,150,8000,'legendary',NULL,'龙之血脉的鲤鱼，可遇不可求'),(16,'鲛人泪','杂物',100,100,10000,'legendary',NULL,'鲛人落泪化成的珍宝'),(17,'鲫鱼','食材',0,0,50,'common',NULL,'常见的淡水鱼，味道鲜美'),(18,'鲤鱼','食材',0,0,80,'common',NULL,'普通的鲤鱼，寓意吉祥'),(19,'草鱼','食材',0,0,60,'common',NULL,'肉质鲜嫩的草鱼'),(20,'小鱼干','杂物',0,5,30,'common',NULL,'晒干的小鱼，可以恢复少量体力'),(21,'鲈鱼','食材',5,5,150,'uncommon',NULL,'肉质细嫩的鲈鱼，略有滋补'),(22,'鳊鱼','食材',8,0,180,'uncommon',NULL,'罕见的鳊鱼，可增强内力'),(23,'河蚌','杂物',0,10,100,'uncommon',NULL,'普通河蚌，可能含有珍珠'),(24,'鳜鱼','食材',15,10,300,'rare',NULL,'珍贵的鳜鱼，滋补效果显著'),(25,'甲鱼','药材',20,20,500,'rare',NULL,'珍贵的甲鱼，大补之物'),(26,'珍珠','杂物',10,0,400,'rare',NULL,'从河蚌中发现的珍珠'),(27,'娃娃鱼','药材',50,30,1000,'epic',NULL,'珍稀的娃娃鱼，珍贵药材'),(28,'千年鱼','药材',80,0,1500,'epic',NULL,'生存千年的灵鱼，内力大增'),(29,'夜明珠','杂物',30,30,2000,'epic',NULL,'从大鱼腹中得到的夜明珠'),(30,'蛟龙筋','药材',200,100,5000,'legendary',NULL,'传说中蛟龙的筋，大补神物'),(31,'龙鲤','药材',150,150,8000,'legendary',NULL,'龙之血脉的鲤鱼，可遇不可求'),(32,'鲛人泪','杂物',100,100,10000,'legendary',NULL,'鲛人落泪化成的珍宝'),(33,'鲫鱼','食材',0,0,50,'common',NULL,'常见的淡水鱼，味道鲜美'),(34,'鲤鱼','食材',0,0,80,'common',NULL,'普通的鲤鱼，寓意吉祥'),(35,'草鱼','食材',0,0,60,'common',NULL,'肉质鲜嫩的草鱼'),(36,'小鱼干','杂物',0,5,30,'common',NULL,'晒干的小鱼，可以恢复少量体力'),(37,'鲈鱼','食材',5,5,150,'uncommon',NULL,'肉质细嫩的鲈鱼，略有滋补'),(38,'鳊鱼','食材',8,0,180,'uncommon',NULL,'罕见的鳊鱼，可增强内力'),(39,'河蚌','杂物',0,10,100,'uncommon',NULL,'普通河蚌，可能含有珍珠'),(40,'鳜鱼','食材',15,10,300,'rare',NULL,'珍贵的鳜鱼，滋补效果显著'),(41,'甲鱼','药材',20,20,500,'rare',NULL,'珍贵的甲鱼，大补之物'),(42,'珍珠','杂物',10,0,400,'rare',NULL,'从河蚌中发现的珍珠'),(43,'娃娃鱼','药材',50,30,1000,'epic',NULL,'珍稀的娃娃鱼，珍贵药材'),(44,'千年鱼','药材',80,0,1500,'epic',NULL,'生存千年的灵鱼，内力大增'),(45,'夜明珠','杂物',30,30,2000,'epic',NULL,'从大鱼腹中得到的夜明珠'),(46,'蛟龙筋','药材',200,100,5000,'legendary',NULL,'传说中蛟龙的筋，大补神物'),(47,'龙鲤','药材',150,150,8000,'legendary',NULL,'龙之血脉的鲤鱼，可遇不可求'),(48,'鲛人泪','杂物',100,100,10000,'legendary',NULL,'鲛人落泪化成的珍宝'),(49,'鲫鱼','食材',0,0,50,'common',NULL,'常见的淡水鱼，味道鲜美'),(50,'鲤鱼','食材',0,0,80,'common',NULL,'普通的鲤鱼，寓意吉祥'),(51,'草鱼','食材',0,0,60,'common',NULL,'肉质鲜嫩的草鱼'),(52,'小鱼干','杂物',0,5,30,'common',NULL,'晒干的小鱼，可以恢复少量体力'),(53,'鲈鱼','食材',5,5,150,'uncommon',NULL,'肉质细嫩的鲈鱼，略有滋补'),(54,'鳊鱼','食材',8,0,180,'uncommon',NULL,'罕见的鳊鱼，可增强内力'),(55,'河蚌','杂物',0,10,100,'uncommon',NULL,'普通河蚌，可能含有珍珠'),(56,'鳜鱼','食材',15,10,300,'rare',NULL,'珍贵的鳜鱼，滋补效果显著'),(57,'甲鱼','药材',20,20,500,'rare',NULL,'珍贵的甲鱼，大补之物'),(58,'珍珠','杂物',10,0,400,'rare',NULL,'从河蚌中发现的珍珠'),(59,'娃娃鱼','药材',50,30,1000,'epic',NULL,'珍稀的娃娃鱼，珍贵药材'),(60,'千年鱼','药材',80,0,1500,'epic',NULL,'生存千年的灵鱼，内力大增'),(61,'夜明珠','杂物',30,30,2000,'epic',NULL,'从大鱼腹中得到的夜明珠'),(62,'蛟龙筋','药材',200,100,5000,'legendary',NULL,'传说中蛟龙的筋，大补神物'),(63,'龙鲤','药材',150,150,8000,'legendary',NULL,'龙之血脉的鲤鱼，可遇不可求'),(64,'鲛人泪','杂物',100,100,10000,'legendary',NULL,'鲛人落泪化成的珍宝'),(65,'鲫鱼','食材',0,0,50,'common',NULL,'常见的淡水鱼，味道鲜美'),(66,'鲤鱼','食材',0,0,80,'common',NULL,'普通的鲤鱼，寓意吉祥'),(67,'草鱼','食材',0,0,60,'common',NULL,'肉质鲜嫩的草鱼'),(68,'小鱼干','杂物',0,5,30,'common',NULL,'晒干的小鱼，可以恢复少量体力'),(69,'鲈鱼','食材',5,5,150,'uncommon',NULL,'肉质细嫩的鲈鱼，略有滋补'),(70,'鳊鱼','食材',8,0,180,'uncommon',NULL,'罕见的鳊鱼，可增强内力'),(71,'河蚌','杂物',0,10,100,'uncommon',NULL,'普通河蚌，可能含有珍珠'),(72,'鳜鱼','食材',15,10,300,'rare',NULL,'珍贵的鳜鱼，滋补效果显著'),(73,'甲鱼','药材',20,20,500,'rare',NULL,'珍贵的甲鱼，大补之物'),(74,'珍珠','杂物',10,0,400,'rare',NULL,'从河蚌中发现的珍珠'),(75,'娃娃鱼','药材',50,30,1000,'epic',NULL,'珍稀的娃娃鱼，珍贵药材'),(76,'千年鱼','药材',80,0,1500,'epic',NULL,'生存千年的灵鱼，内力大增'),(77,'夜明珠','杂物',30,30,2000,'epic',NULL,'从大鱼腹中得到的夜明珠'),(78,'蛟龙筋','药材',200,100,5000,'legendary',NULL,'传说中蛟龙的筋，大补神物'),(79,'龙鲤','药材',150,150,8000,'legendary',NULL,'龙之血脉的鲤鱼，可遇不可求'),(80,'鲛人泪','杂物',100,100,10000,'legendary',NULL,'鲛人落泪化成的珍宝'),(81,'鲫鱼','食材',0,0,50,'common',NULL,'常见的淡水鱼，味道鲜美'),(82,'鲤鱼','食材',0,0,80,'common',NULL,'普通的鲤鱼，寓意吉祥'),(83,'草鱼','食材',0,0,60,'common',NULL,'肉质鲜嫩的草鱼'),(84,'小鱼干','杂物',0,5,30,'common',NULL,'晒干的小鱼，可以恢复少量体力'),(85,'鲈鱼','食材',5,5,150,'uncommon',NULL,'肉质细嫩的鲈鱼，略有滋补'),(86,'鳊鱼','食材',8,0,180,'uncommon',NULL,'罕见的鳊鱼，可增强内力'),(87,'河蚌','杂物',0,10,100,'uncommon',NULL,'普通河蚌，可能含有珍珠'),(88,'鳜鱼','食材',15,10,300,'rare',NULL,'珍贵的鳜鱼，滋补效果显著'),(89,'甲鱼','药材',20,20,500,'rare',NULL,'珍贵的甲鱼，大补之物'),(90,'珍珠','杂物',10,0,400,'rare',NULL,'从河蚌中发现的珍珠'),(91,'娃娃鱼','药材',50,30,1000,'epic',NULL,'珍稀的娃娃鱼，珍贵药材'),(92,'千年鱼','药材',80,0,1500,'epic',NULL,'生存千年的灵鱼，内力大增'),(93,'夜明珠','杂物',30,30,2000,'epic',NULL,'从大鱼腹中得到的夜明珠'),(94,'蛟龙筋','药材',200,100,5000,'legendary',NULL,'传说中蛟龙的筋，大补神物'),(95,'龙鲤','药材',150,150,8000,'legendary',NULL,'龙之血脉的鲤鱼，可遇不可求'),(96,'鲛人泪','杂物',100,100,10000,'legendary',NULL,'鲛人落泪化成的珍宝'),(97,'漂流瓶','杂物',0,0,0,'common','',NULL),(98,'矿泉水瓶','杂物',0,0,0,'common','',NULL),(99,'破旧水草','杂物',0,0,0,'common','',NULL),(100,'烂鱼钩','杂物',0,0,0,'common','',NULL);
+/*!40000 ALTER TABLE `fishing_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `fishing_ranking`
+--
+
+DROP TABLE IF EXISTS `fishing_ranking`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `fishing_ranking` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `total_count` int(11) NOT NULL DEFAULT '0' COMMENT '总钓鱼次数',
+  `total_weight` decimal(10,2) NOT NULL DEFAULT '0.00' COMMENT '总重量 (斤)',
+  `rare_count` int(11) NOT NULL DEFAULT '0' COMMENT '稀有鱼获数量',
+  `shenpin_count` int(11) NOT NULL DEFAULT '0' COMMENT '神品鱼获数量',
+  `total_value` bigint(20) NOT NULL DEFAULT '0' COMMENT '鱼获总价值',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user` (`user_id`),
+  KEY `idx_total_value` (`total_value`),
+  KEY `idx_rare_count` (`rare_count`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='钓鱼排行榜';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fishing_ranking`
+--
+
+LOCK TABLES `fishing_ranking` WRITE;
+/*!40000 ALTER TABLE `fishing_ranking` DISABLE KEYS */;
+/*!40000 ALTER TABLE `fishing_ranking` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `fishing_records`
+--
+
+DROP TABLE IF EXISTS `fishing_records`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `fishing_records` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `effect_value` int(11) NOT NULL DEFAULT '0',
+  `silver_reward` int(11) NOT NULL DEFAULT '0',
+  `rarities` enum('common','uncommon','rare','epic','legendary') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'common',
+  `fished_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_username` (`username`),
+  KEY `idx_fished_at` (`fished_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='钓鱼记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fishing_records`
+--
+
+LOCK TABLES `fishing_records` WRITE;
+/*!40000 ALTER TABLE `fishing_records` DISABLE KEYS */;
+INSERT INTO `fishing_records` VALUES (1,1,'站长','河蚌','杂物',100,100,'uncommon','2026-04-19 11:51:26'),(2,1,'站长','小鱼干','杂物',30,30,'common','2026-04-20 13:19:58'),(3,13,'install','鲈鱼','食材',5,150,'uncommon','2026-04-22 14:17:10');
+/*!40000 ALTER TABLE `fishing_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `fishing_states`
+--
+
+DROP TABLE IF EXISTS `fishing_states`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `fishing_states` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT '用户 ID',
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `started_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `last_fished_at` datetime DEFAULT NULL COMMENT '最后钓鱼时间',
+  `cooldown_minutes` int(11) NOT NULL DEFAULT '30' COMMENT '冷却时间 (分钟)',
+  PRIMARY KEY (`id`),
+  KEY `idx_active` (`is_active`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='钓鱼状态';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `fishing_states`
+--
+
+LOCK TABLES `fishing_states` WRITE;
+/*!40000 ALTER TABLE `fishing_states` DISABLE KEYS */;
+INSERT INTO `fishing_states` VALUES (1,1,'站长','2026-04-19 11:51:20',0,'2026-04-19 11:51:20',30),(2,1,'站长','2026-04-20 13:19:53',0,'2026-04-20 13:19:53',30),(3,13,'install','2026-04-22 14:17:06',0,'2026-04-22 14:17:06',30);
+/*!40000 ALTER TABLE `fishing_states` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `garden_plants`
+--
+
+DROP TABLE IF EXISTS `garden_plants`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `garden_plants` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '植物名称',
+  `seed_name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '种子名称',
+  `harvest_item` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '收获物品',
+  `min_sect_level` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '最低药园等级',
+  `growth_time_minutes` int(11) NOT NULL DEFAULT '60' COMMENT '生长时间 (分钟)',
+  `growth_stages` tinyint(3) unsigned NOT NULL DEFAULT '4' COMMENT '生长阶段数',
+  `harvest_quantity_min` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '最少收获数量',
+  `harvest_quantity_max` tinyint(3) unsigned NOT NULL DEFAULT '3' COMMENT '最多收获数量',
+  `seed_cost` int(11) NOT NULL DEFAULT '100' COMMENT '种子成本 (银两)',
+  `harvest_value` int(11) NOT NULL DEFAULT '200' COMMENT '收获价值 (银两)',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `idx_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=73 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药园植物配置';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `garden_plants`
+--
+
+LOCK TABLES `garden_plants` WRITE;
+/*!40000 ALTER TABLE `garden_plants` DISABLE KEYS */;
+INSERT INTO `garden_plants` VALUES (1,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(2,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(3,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(4,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(5,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(6,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(7,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(8,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1),(9,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(10,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(11,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(12,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(13,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(14,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(15,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(16,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1),(17,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(18,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(19,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(20,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(21,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(22,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(23,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(24,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1),(25,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(26,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(27,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(28,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(29,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(30,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(31,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(32,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1),(33,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(34,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(35,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(36,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(37,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(38,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(39,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(40,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1),(41,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(42,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(43,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(44,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(45,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(46,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(47,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(48,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1),(49,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(50,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(51,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(52,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(53,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(54,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(55,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(56,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1),(57,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(58,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(59,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(60,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(61,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(62,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(63,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(64,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1),(65,'甘草','甘草种子','甘草',1,30,4,2,4,50,100,1),(66,'鱼腥草','鱼腥草种子','鱼腥草',1,45,4,2,4,80,150,1),(67,'止血草','止血草种子','止血草',1,60,4,1,3,100,200,1),(68,'灵芝','灵芝孢子','灵芝',2,120,4,1,2,200,400,1),(69,'人参','人参种子','人参',3,180,4,1,2,300,600,1),(70,'何首乌','何首乌块茎','何首乌',3,240,4,1,2,400,800,1),(71,'冬虫夏草','冬虫夏草菌包','冬虫夏草',4,300,4,1,2,500,1000,1),(72,'天山雪莲','雪莲种子','天山雪莲',5,360,4,1,2,800,1500,1);
+/*!40000 ALTER TABLE `garden_plants` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `garden_plots`
+--
+
+DROP TABLE IF EXISTS `garden_plots`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `garden_plots` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `garden_id` int(10) unsigned NOT NULL COMMENT '药园 ID',
+  `plot_number` tinyint(3) unsigned NOT NULL COMMENT '地块编号',
+  `plant_id` int(10) unsigned DEFAULT NULL COMMENT '种植的植物 ID',
+  `plant_name` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '植物名称',
+  `planter_id` int(10) unsigned DEFAULT NULL COMMENT '种植者 ID',
+  `planter_username` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '种植者用户名',
+  `planted_at` datetime DEFAULT NULL COMMENT '种植时间',
+  `growth_stage` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '生长阶段 0-4',
+  `growth_progress` int(11) NOT NULL DEFAULT '0' COMMENT '生长进度 0-100',
+  `ready_at` datetime DEFAULT NULL COMMENT '成熟时间',
+  `is_harvested` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否已收获',
+  `harvested_at` datetime DEFAULT NULL COMMENT '收获时间',
+  `harvester_username` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '收获者',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_garden_plot` (`garden_id`,`plot_number`),
+  KEY `idx_plant` (`plant_id`),
+  KEY `idx_planter` (`planter_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=161 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药园地块';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `garden_plots`
+--
+
+LOCK TABLES `garden_plots` WRITE;
+/*!40000 ALTER TABLE `garden_plots` DISABLE KEYS */;
+INSERT INTO `garden_plots` VALUES (1,1,1,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(2,1,2,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(3,1,3,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(4,1,4,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(5,1,5,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(6,1,6,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(7,1,7,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(8,1,8,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(9,1,9,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(10,1,10,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(11,1,11,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(12,1,12,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(13,1,13,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(14,1,14,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(15,1,15,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(16,1,16,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(17,1,17,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(18,1,18,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(19,1,19,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(20,1,20,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(21,2,1,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(22,2,2,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(23,2,3,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(24,2,4,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(25,2,5,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(26,2,6,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(27,2,7,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(28,2,8,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(29,2,9,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(30,2,10,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(31,2,11,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(32,2,12,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(33,2,13,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(34,2,14,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(35,2,15,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(36,2,16,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(37,2,17,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(38,2,18,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(39,2,19,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(40,2,20,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(41,3,1,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(42,3,2,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(43,3,3,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(44,3,4,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(45,3,5,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(46,3,6,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(47,3,7,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(48,3,8,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(49,3,9,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(50,3,10,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(51,3,11,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(52,3,12,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(53,3,13,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(54,3,14,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(55,3,15,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(56,3,16,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(57,3,17,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(58,3,18,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(59,3,19,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(60,3,20,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(61,4,1,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(62,4,2,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(63,4,3,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(64,4,4,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(65,4,5,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(66,4,6,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(67,4,7,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(68,4,8,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(69,4,9,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(70,4,10,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(71,4,11,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(72,4,12,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(73,4,13,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(74,4,14,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(75,4,15,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(76,4,16,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(77,4,17,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(78,4,18,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(79,4,19,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(80,4,20,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(81,5,1,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(82,5,2,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(83,5,3,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(84,5,4,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(85,5,5,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(86,5,6,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(87,5,7,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(88,5,8,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(89,5,9,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(90,5,10,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(91,5,11,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(92,5,12,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(93,5,13,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(94,5,14,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(95,5,15,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(96,5,16,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(97,5,17,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(98,5,18,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(99,5,19,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(100,5,20,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(101,6,1,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(102,6,2,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(103,6,3,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(104,6,4,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(105,6,5,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(106,6,6,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(107,6,7,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(108,6,8,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(109,6,9,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(110,6,10,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(111,6,11,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(112,6,12,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(113,6,13,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(114,6,14,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(115,6,15,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(116,6,16,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(117,6,17,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(118,6,18,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(119,6,19,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(120,6,20,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(121,7,1,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(122,7,2,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(123,7,3,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(124,7,4,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(125,7,5,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(126,7,6,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(127,7,7,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(128,7,8,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(129,7,9,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(130,7,10,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(131,7,11,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(132,7,12,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(133,7,13,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(134,7,14,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(135,7,15,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(136,7,16,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(137,7,17,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(138,7,18,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(139,7,19,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(140,7,20,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(141,8,1,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(142,8,2,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(143,8,3,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(144,8,4,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(145,8,5,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(146,8,6,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(147,8,7,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(148,8,8,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(149,8,9,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(150,8,10,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(151,8,11,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(152,8,12,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(153,8,13,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(154,8,14,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(155,8,15,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(156,8,16,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(157,8,17,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(158,8,18,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(159,8,19,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL),(160,8,20,NULL,NULL,NULL,NULL,NULL,0,0,NULL,0,NULL,NULL);
+/*!40000 ALTER TABLE `garden_plots` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `garden_records`
+--
+
+DROP TABLE IF EXISTS `garden_records`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `garden_records` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `sect_id` int(10) unsigned NOT NULL,
+  `action_type` enum('plant','water','harvest') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '操作类型',
+  `plant_name` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '植物名称',
+  `plot_number` tinyint(3) unsigned DEFAULT NULL COMMENT '地块编号',
+  `contribution_earned` int(11) NOT NULL DEFAULT '0' COMMENT '获得贡献',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_sect` (`sect_id`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='药园操作记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `garden_records`
+--
+
+LOCK TABLES `garden_records` WRITE;
+/*!40000 ALTER TABLE `garden_records` DISABLE KEYS */;
+/*!40000 ALTER TABLE `garden_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hunting_items`
+--
+
+DROP TABLE IF EXISTS `hunting_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hunting_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `item_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `effect_neili` int(11) DEFAULT '0',
+  `effect_tili` int(11) DEFAULT '0',
+  `silver_value` int(11) DEFAULT '0',
+  `rarities` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `image_file` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'hunt_common.gif',
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='狩猎物品';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hunting_items`
+--
+
+LOCK TABLES `hunting_items` WRITE;
+/*!40000 ALTER TABLE `hunting_items` DISABLE KEYS */;
+INSERT INTO `hunting_items` VALUES (1,'人参','药材',50,0,100,'common','','补气养血的珍贵药材'),(2,'鹿茸','药材',80,0,200,'uncommon','','补肾壮阳的珍贵药材'),(3,'灵芝','药材',100,0,300,'rare','','延年益寿的仙草'),(4,'千年何首乌','药材',200,0,1000,'epic','','传说中的仙药'),(5,'龙涎香','药材',500,0,5000,'legendary','',' dragons 的唾液制成'),(6,'野兔','食材',0,20,50,'common','','鲜美的野味'),(7,'野猪','食材',0,50,150,'uncommon','','凶猛的野兽'),(8,'梅花鹿','食材',0,80,300,'rare','','优雅的鹿科动物'),(9,'黑熊','食材',0,100,500,'epic','','山林中的霸主'),(10,'空手而归','无',0,0,0,'common','','什么都没有猎到');
+/*!40000 ALTER TABLE `hunting_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hunting_records`
+--
+
+DROP TABLE IF EXISTS `hunting_records`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hunting_records` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` enum('work','hunt') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `job_name` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `item_name` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `item_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `reward_silver` int(11) NOT NULL DEFAULT '0',
+  `reward_exp` int(11) NOT NULL DEFAULT '0',
+  `is_success` tinyint(1) NOT NULL DEFAULT '0',
+  `rarities` enum('common','uncommon','rare','epic','legendary') COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `completed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_time` (`completed_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='狩猎记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hunting_records`
+--
+
+LOCK TABLES `hunting_records` WRITE;
+/*!40000 ALTER TABLE `hunting_records` DISABLE KEYS */;
+INSERT INTO `hunting_records` VALUES (1,1,'站长','hunt',NULL,'人参','药材',100,50,1,'common','2026-04-20 13:31:29'),(2,1,'站长','work','药铺伙计',NULL,NULL,90,180,1,NULL,'2026-04-20 14:18:47');
+/*!40000 ALTER TABLE `hunting_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `hunting_states`
+--
+
+DROP TABLE IF EXISTS `hunting_states`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `hunting_states` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `type` enum('work','hunt') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'work 或 hunt',
+  `job_name` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '打工职业名称',
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `started_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_completed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `cooldown_minutes` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_active` (`is_active`),
+  KEY `idx_type` (`type`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='狩猎状态';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `hunting_states`
+--
+
+LOCK TABLES `hunting_states` WRITE;
+/*!40000 ALTER TABLE `hunting_states` DISABLE KEYS */;
+INSERT INTO `hunting_states` VALUES (1,1,'站长','hunt',NULL,0,'2026-04-20 13:20:53','2026-04-20 13:20:53',120),(2,1,'站长','hunt',NULL,0,'2026-04-20 13:31:14','2026-04-20 13:31:14',120),(3,1,'站长','work','药铺伙计',0,'2026-04-20 14:18:43','2026-04-20 14:18:43',30);
+/*!40000 ALTER TABLE `hunting_states` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `inn_records`
+--
+
+DROP TABLE IF EXISTS `inn_records`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `inn_records` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `registrant` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `partner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci,
+  `registered_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='客栈记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `inn_records`
+--
+
+LOCK TABLES `inn_records` WRITE;
+/*!40000 ALTER TABLE `inn_records` DISABLE KEYS */;
+/*!40000 ALTER TABLE `inn_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `insurance_products`
+--
+
+DROP TABLE IF EXISTS `insurance_products`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `insurance_products` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `duration_days` int(11) NOT NULL DEFAULT '0',
+  `price` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='保险产品';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `insurance_products`
+--
+
+LOCK TABLES `insurance_products` WRITE;
+/*!40000 ALTER TABLE `insurance_products` DISABLE KEYS */;
+/*!40000 ALTER TABLE `insurance_products` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ip_bans`
+--
+
+DROP TABLE IF EXISTS `ip_bans`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ip_bans` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ip_pattern` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'IP或通配符(如10.%)',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='IP永久封锁';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ip_bans`
+--
+
+LOCK TABLES `ip_bans` WRITE;
+/*!40000 ALTER TABLE `ip_bans` DISABLE KEYS */;
+/*!40000 ALTER TABLE `ip_bans` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `ip_locks`
+--
+
+DROP TABLE IF EXISTS `ip_locks`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `ip_locks` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `ip` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `locked_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '锁定时间',
+  `locked_by` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '操作者',
+  `expires_at` datetime NOT NULL COMMENT '自动解封时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_ip` (`ip`),
+  KEY `idx_expires` (`expires_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='IP临时锁定';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `ip_locks`
+--
+
+LOCK TABLES `ip_locks` WRITE;
+/*!40000 ALTER TABLE `ip_locks` DISABLE KEYS */;
+INSERT INTO `ip_locks` VALUES (1,'192.168.1.100','2026-04-25 04:24:37','test','2026-04-25 04:24:38'),(3,'45.45.45.45','2026-04-25 04:31:13','独角兽','2026-04-26 04:31:10'),(4,'56.56.56.56','2026-04-25 04:31:22','独角兽','2026-04-26 04:31:19');
+/*!40000 ALTER TABLE `ip_locks` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `items`
+--
+
+DROP TABLE IF EXISTS `items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '物品名',
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '无' COMMENT '拥有者',
+  `type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '类型',
+  `attack` int(11) NOT NULL DEFAULT '0',
+  `defense` int(11) NOT NULL DEFAULT '0',
+  `sort_no` int(11) DEFAULT NULL COMMENT '编号',
+  `quantity` int(11) NOT NULL DEFAULT '1' COMMENT '数量/面值',
+  `amount` int(11) DEFAULT NULL COMMENT '物品数量',
+  `is_equipped` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否装备',
+  `neili_bonus` int(11) NOT NULL DEFAULT '0' COMMENT '内力加成',
+  `tili_bonus` int(11) NOT NULL DEFAULT '0' COMMENT '体力加成',
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`),
+  KEY `idx_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='物品';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `items`
+--
+
+LOCK TABLES `items` WRITE;
+/*!40000 ALTER TABLE `items` DISABLE KEYS */;
+/*!40000 ALTER TABLE `items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `kill_logs`
+--
+
+DROP TABLE IF EXISTS `kill_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `kill_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `victim` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `killer` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `skill` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '使用的武功',
+  `killed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_expired` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_time` (`killed_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='击杀记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `kill_logs`
+--
+
+LOCK TABLES `kill_logs` WRITE;
+/*!40000 ALTER TABLE `kill_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `kill_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `learned_skills`
+--
+
+DROP TABLE IF EXISTS `learned_skills`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `learned_skills` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `skill_name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `neili_bonus` int(11) NOT NULL DEFAULT '0',
+  `speed_bonus` int(11) NOT NULL DEFAULT '0',
+  `level` int(11) NOT NULL DEFAULT '1',
+  `learned_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='已学武功';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `learned_skills`
+--
+
+LOCK TABLES `learned_skills` WRITE;
+/*!40000 ALTER TABLE `learned_skills` DISABLE KEYS */;
+/*!40000 ALTER TABLE `learned_skills` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `market_listings`
+--
+
+DROP TABLE IF EXISTS `market_listings`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `market_listings` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `seller` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `power` int(11) NOT NULL DEFAULT '0',
+  `stamina` int(11) NOT NULL DEFAULT '0',
+  `level_req` int(11) NOT NULL DEFAULT '0',
+  `quantity` int(11) NOT NULL DEFAULT '1',
+  `original_price` int(11) NOT NULL DEFAULT '0',
+  `selling_price` int(11) NOT NULL DEFAULT '0',
+  `listed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  PRIMARY KEY (`id`),
+  KEY `idx_active` (`is_active`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='二手市场';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `market_listings`
+--
+
+LOCK TABLES `market_listings` WRITE;
+/*!40000 ALTER TABLE `market_listings` DISABLE KEYS */;
+/*!40000 ALTER TABLE `market_listings` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `marriages`
+--
+
+DROP TABLE IF EXISTS `marriages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `marriages` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `proposer` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '求婚方',
+  `target` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '被求婚方',
+  `message` text COLLATE utf8mb4_unicode_ci COMMENT '求婚说明',
+  `proposed_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_expired` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='婚姻登记';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `marriages`
+--
+
+LOCK TABLES `marriages` WRITE;
+/*!40000 ALTER TABLE `marriages` DISABLE KEYS */;
+/*!40000 ALTER TABLE `marriages` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `martial_arts`
+--
+
+DROP TABLE IF EXISTS `martial_arts`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `martial_arts` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '武功名称',
+  `sect` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '所属门派',
+  `neili_cost` int(11) NOT NULL DEFAULT '0' COMMENT '需要内力',
+  `is_timed` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否时效性',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='武功';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `martial_arts`
+--
+
+LOCK TABLES `martial_arts` WRITE;
+/*!40000 ALTER TABLE `martial_arts` DISABLE KEYS */;
+/*!40000 ALTER TABLE `martial_arts` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `messages`
+--
+
+DROP TABLE IF EXISTS `messages`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `messages` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `receiver` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '收件人',
+  `sender` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '发件人',
+  `title` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci,
+  `sent_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `is_read` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_receiver` (`receiver`,`is_read`),
+  KEY `idx_sender` (`sender`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='站内邮件';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `messages`
+--
+
+LOCK TABLES `messages` WRITE;
+/*!40000 ALTER TABLE `messages` DISABLE KEYS */;
+INSERT INTO `messages` VALUES (1,'测试用户','系统','密码重置通知','管理员已将您的密码重置。','2026-04-26 13:12:21',0),(2,'测试用户','系统','密码重置通知','管理员已将您的密码重置。','2026-04-28 03:21:52',0),(3,'测试用户','系统','密码重置通知','管理员已将您的密码重置。','2026-04-28 03:22:06',0);
+/*!40000 ALTER TABLE `messages` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mini_pets`
+--
+
+DROP TABLE IF EXISTS `mini_pets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mini_pets` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `attack` int(11) NOT NULL DEFAULT '0',
+  `defense` int(11) NOT NULL DEFAULT '0',
+  `level` int(11) NOT NULL DEFAULT '1',
+  `exp` int(11) NOT NULL DEFAULT '0',
+  `special_skill` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `rage` int(11) NOT NULL DEFAULT '0',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='小型宠物';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mini_pets`
+--
+
+LOCK TABLES `mini_pets` WRITE;
+/*!40000 ALTER TABLE `mini_pets` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mini_pets` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mining_items`
+--
+
+DROP TABLE IF EXISTS `mining_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mining_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `item_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `effect_neili` int(11) DEFAULT '0',
+  `effect_tili` int(11) DEFAULT '0',
+  `silver_value` int(11) DEFAULT '0',
+  `rarities` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `image_file` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT 'ore_common.gif',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='挖矿物品';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mining_items`
+--
+
+LOCK TABLES `mining_items` WRITE;
+/*!40000 ALTER TABLE `mining_items` DISABLE KEYS */;
+INSERT INTO `mining_items` VALUES (11,'碎石块','杂物',0,0,0,'trash',''),(12,'矿泉水瓶','杂物',0,0,0,'trash',''),(13,'废弃矿渣','杂物',0,0,0,'trash',''),(14,'破布片','杂物',0,0,0,'trash',''),(15,'烂木头','杂物',0,0,0,'trash','');
+/*!40000 ALTER TABLE `mining_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mining_records`
+--
+
+DROP TABLE IF EXISTS `mining_records`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mining_records` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `item_type` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `effect_value` int(11) DEFAULT '0',
+  `silver_reward` int(11) DEFAULT '0',
+  `rarities` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `mined_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_time` (`mined_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='挖矿记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mining_records`
+--
+
+LOCK TABLES `mining_records` WRITE;
+/*!40000 ALTER TABLE `mining_records` DISABLE KEYS */;
+INSERT INTO `mining_records` VALUES (1,1,'站长','石头','材料',10,10,'common','2026-04-20 13:37:27');
+/*!40000 ALTER TABLE `mining_records` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mining_states`
+--
+
+DROP TABLE IF EXISTS `mining_states`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mining_states` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT '1',
+  `started_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_mined_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `cooldown_minutes` int(11) NOT NULL DEFAULT '60',
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_active` (`is_active`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='挖矿状态';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mining_states`
+--
+
+LOCK TABLES `mining_states` WRITE;
+/*!40000 ALTER TABLE `mining_states` DISABLE KEYS */;
+INSERT INTO `mining_states` VALUES (1,1,'站长',0,'2026-04-20 13:37:17','2026-04-20 13:37:17',60);
+/*!40000 ALTER TABLE `mining_states` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `mute_list`
+--
+
+DROP TABLE IF EXISTS `mute_list`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `mute_list` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `muted_by` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `muted_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `expires_at` datetime DEFAULT NULL COMMENT 'NULL=永久',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='禁言名单';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `mute_list`
+--
+
+LOCK TABLES `mute_list` WRITE;
+/*!40000 ALTER TABLE `mute_list` DISABLE KEYS */;
+/*!40000 ALTER TABLE `mute_list` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `news`
+--
+
+DROP TABLE IF EXISTS `news`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `news` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `topic` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci,
+  `author` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `view_count` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_time` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='新闻公告';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `news`
+--
+
+LOCK TABLES `news` WRITE;
+/*!40000 ALTER TABLE `news` DISABLE KEYS */;
+INSERT INTO `news` VALUES (1,'多年不见，甚是想念','各位江湖朋友，好久不见！\n\n曾经的热血青春，如今的岁月静好。\n那些年我们一起追过的武侠梦，是否还在心中燃？\n\n笑傲江湖聊天室重新开放，愿各位在此重拾初心，再续江湖梦。\n\n- 注册即可赠送新手大礼包\n- 每日签到领福利\n- 加入门派切磋武艺\n- 寻找你的神仙眷侣\n\n多年不见，甚是想念。期待与你重逢在这个快意恩仇的武侠世界！','站长','2026-04-19 16:42:15',0);
+/*!40000 ALTER TABLE `news` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `noodle_bowls`
+--
+
+DROP TABLE IF EXISTS `noodle_bowls`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `noodle_bowls` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `seasoning` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '调料组合',
+  `price` int(11) NOT NULL DEFAULT '0',
+  `is_done` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='做面记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `noodle_bowls`
+--
+
+LOCK TABLES `noodle_bowls` WRITE;
+/*!40000 ALTER TABLE `noodle_bowls` DISABLE KEYS */;
+/*!40000 ALTER TABLE `noodle_bowls` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `noodle_ingredients`
+--
+
+DROP TABLE IF EXISTS `noodle_ingredients`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `noodle_ingredients` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `nutrition` int(11) NOT NULL DEFAULT '0',
+  `flavor` int(11) NOT NULL DEFAULT '0',
+  `price` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='面菜食材';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `noodle_ingredients`
+--
+
+LOCK TABLES `noodle_ingredients` WRITE;
+/*!40000 ALTER TABLE `noodle_ingredients` DISABLE KEYS */;
+/*!40000 ALTER TABLE `noodle_ingredients` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `online_users`
+--
+
+DROP TABLE IF EXISTS `online_users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `online_users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `room_id` tinyint(3) unsigned NOT NULL DEFAULT '0',
+  `avatar` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gender` enum('male','female') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'male',
+  `sect` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '无',
+  `grade` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '等级',
+  `joined_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_active_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `socket_id` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT 'Socket.IO连接ID',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user` (`user_id`),
+  KEY `idx_room` (`room_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=182 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='在线用户';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `online_users`
+--
+
+LOCK TABLES `online_users` WRITE;
+/*!40000 ALTER TABLE `online_users` DISABLE KEYS */;
+/*!40000 ALTER TABLE `online_users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `operation_logs`
+--
+
+DROP TABLE IF EXISTS `operation_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `operation_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `log_time` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `operator` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `action` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '操作描述',
+  `is_expired` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_time` (`log_time`),
+  KEY `idx_operator` (`operator`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='操作日志';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `operation_logs`
+--
+
+LOCK TABLES `operation_logs` WRITE;
+/*!40000 ALTER TABLE `operation_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `operation_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pet_init_rules`
+--
+
+DROP TABLE IF EXISTS `pet_init_rules`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pet_init_rules` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `init_clean` int(11) NOT NULL DEFAULT '0',
+  `init_happy` int(11) NOT NULL DEFAULT '0',
+  `init_health` int(11) NOT NULL DEFAULT '0',
+  `init_milk` int(11) NOT NULL DEFAULT '0',
+  `init_life` int(11) NOT NULL DEFAULT '0',
+  `init_hunger` int(11) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='宠物初始化参数';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pet_init_rules`
+--
+
+LOCK TABLES `pet_init_rules` WRITE;
+/*!40000 ALTER TABLE `pet_init_rules` DISABLE KEYS */;
+INSERT INTO `pet_init_rules` VALUES (1,50,50,80,0,100,0);
+/*!40000 ALTER TABLE `pet_init_rules` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `photos`
+--
+
+DROP TABLE IF EXISTS `photos`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `photos` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `jh_name` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '江湖名',
+  `real_name` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gender` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `age` int(11) DEFAULT NULL,
+  `address` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `bio` text COLLATE utf8mb4_unicode_ci,
+  `is_approved` tinyint(1) NOT NULL DEFAULT '0',
+  `image_data` longblob COMMENT '照片二进制',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='照片';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `photos`
+--
+
+LOCK TABLES `photos` WRITE;
+/*!40000 ALTER TABLE `photos` DISABLE KEYS */;
+/*!40000 ALTER TABLE `photos` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `poll_candidates`
+--
+
+DROP TABLE IF EXISTS `poll_candidates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `poll_candidates` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `vote_count` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='投票候选人';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `poll_candidates`
+--
+
+LOCK TABLES `poll_candidates` WRITE;
+/*!40000 ALTER TABLE `poll_candidates` DISABLE KEYS */;
+/*!40000 ALTER TABLE `poll_candidates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `poll_config`
+--
+
+DROP TABLE IF EXISTS `poll_config`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `poll_config` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `start_time` datetime DEFAULT NULL,
+  `end_time` datetime DEFAULT NULL,
+  `min_exp` int(11) NOT NULL DEFAULT '300' COMMENT '经验值门槛',
+  `is_active` tinyint(1) NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='投票配置';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `poll_config`
+--
+
+LOCK TABLES `poll_config` WRITE;
+/*!40000 ALTER TABLE `poll_config` DISABLE KEYS */;
+/*!40000 ALTER TABLE `poll_config` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `poll_votes`
+--
+
+DROP TABLE IF EXISTS `poll_votes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `poll_votes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `voter` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `candidate_id` int(10) unsigned NOT NULL,
+  `voted_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_voter` (`voter`),
+  KEY `idx_candidate` (`candidate_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='投票记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `poll_votes`
+--
+
+LOCK TABLES `poll_votes` WRITE;
+/*!40000 ALTER TABLE `poll_votes` DISABLE KEYS */;
+/*!40000 ALTER TABLE `poll_votes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `practice_logs`
+--
+
+DROP TABLE IF EXISTS `practice_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `practice_logs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL COMMENT '用户 ID',
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户名',
+  `practice_type` tinyint(4) NOT NULL COMMENT '修炼类型：1=内功，2=外功，3=轻功',
+  `exp_gain` int(11) NOT NULL COMMENT '获得的经验',
+  `neili_cost` int(11) NOT NULL COMMENT '消耗的内力',
+  `tili_cost` int(11) NOT NULL DEFAULT '5' COMMENT '消耗的体力',
+  `time_cost` int(11) NOT NULL DEFAULT '0' COMMENT '修炼耗时 (秒)',
+  `cultivation_progress` int(11) NOT NULL DEFAULT '0' COMMENT '修为进度',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_time` (`created_at`),
+  KEY `idx_type` (`practice_type`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='修炼日志';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `practice_logs`
+--
+
+LOCK TABLES `practice_logs` WRITE;
+/*!40000 ALTER TABLE `practice_logs` DISABLE KEYS */;
+INSERT INTO `practice_logs` VALUES (1,1,'站长',1,68,15,5,15,68,'2026-04-20 13:33:35'),(2,1,'站长',1,69,15,5,15,137,'2026-04-20 14:03:37');
+/*!40000 ALTER TABLE `practice_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `pregnancies`
+--
+
+DROP TABLE IF EXISTS `pregnancies`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `pregnancies` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `conceived_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='怀孕记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `pregnancies`
+--
+
+LOCK TABLES `pregnancies` WRITE;
+/*!40000 ALTER TABLE `pregnancies` DISABLE KEYS */;
+/*!40000 ALTER TABLE `pregnancies` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `quests`
+--
+
+DROP TABLE IF EXISTS `quests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `quests` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) NOT NULL COMMENT '任务名称',
+  `description` varchar(500) DEFAULT NULL COMMENT '任务描述',
+  `type` enum('main','side','daily','hidden') NOT NULL DEFAULT 'side' COMMENT '任务类型：主线/支线/日常/隐藏',
+  `difficulty` enum('easy','medium','hard','extreme') NOT NULL DEFAULT 'easy' COMMENT '难度等级',
+  `require_level` int(11) DEFAULT '1' COMMENT '等级要求',
+  `require_sect` varchar(20) DEFAULT NULL COMMENT '门派要求',
+  `require_sex` enum('male','female','any') DEFAULT 'any' COMMENT '性别要求',
+  `objective` varchar(200) DEFAULT NULL COMMENT '任务目标描述',
+  `objective_type` enum('kill','collect','talk','explore','craft','train') DEFAULT NULL COMMENT '目标类型',
+  `objective_target` varchar(50) DEFAULT NULL COMMENT '目标对象（怪物/物品名）',
+  `objective_count` int(11) DEFAULT '1' COMMENT '目标数量',
+  `reward_silver` int(11) DEFAULT '0' COMMENT '银两奖励',
+  `reward_exp` int(11) DEFAULT '0' COMMENT '经验奖励',
+  `reward_neili` int(11) DEFAULT '0' COMMENT '内力奖励',
+  `reward_item` varchar(100) DEFAULT NULL COMMENT '物品奖励',
+  `prerequisite_quest` int(11) DEFAULT NULL COMMENT '前置任务 ID',
+  `is_repeatable` tinyint(1) DEFAULT '0' COMMENT '是否可重复',
+  `repeat_interval_hours` int(11) DEFAULT '24' COMMENT '重复间隔（小时）',
+  `is_active` tinyint(1) DEFAULT '1' COMMENT '是否启用',
+  `sort_order` int(11) DEFAULT '0' COMMENT '排序顺序',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_type` (`type`),
+  KEY `idx_difficulty` (`difficulty`),
+  KEY `idx_active` (`is_active`)
+) ENGINE=InnoDB AUTO_INCREMENT=35 DEFAULT CHARSET=utf8mb4 COMMENT='任务表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `quests`
+--
+
+LOCK TABLES `quests` WRITE;
+/*!40000 ALTER TABLE `quests` DISABLE KEYS */;
+INSERT INTO `quests` VALUES (1,'初入江湖','恭喜你踏入江湖！首先熟悉一下基本操作吧。','main','easy',1,NULL,'any','在聊天室发送第一条消息','talk','聊天',1,100,50,10,NULL,NULL,0,24,1,1,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(2,'拜师学艺','想要成为武林高手，需要拜入名门正派。','main','easy',1,NULL,'any','选择一个门派加入','talk','拜师',1,200,100,20,NULL,NULL,0,24,1,2,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(3,'初涉武艺','开始修炼你的第一门武功。','main','easy',2,NULL,'any','修炼任意武功秘籍','train','秘籍',1,300,200,30,NULL,NULL,0,24,1,3,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(4,'小试牛刀','通过狩猎或战斗证明你的实力。','main','easy',3,NULL,'any','狩猎 5 只野兽','kill','野兽',5,500,300,50,NULL,NULL,0,24,1,4,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(5,'富甲一方','积累财富是每个江湖人的梦想。','main','easy',4,NULL,'any','拥有 1000 两银子','collect','银两',1000,1000,500,0,NULL,NULL,0,24,1,5,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(6,'名震江湖','提升你的等级，成为武林高手。','main','medium',5,NULL,'any','等级达到 5 级','train','等级',5,2000,1000,100,NULL,NULL,0,24,1,6,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(7,'武林新秀','继续提升实力，挑战更强的对手。','main','medium',6,NULL,'any','等级达到 6 级','train','等级',6,3000,1500,150,NULL,NULL,0,24,1,7,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(8,'门派栋梁','为门派争光，提升门派贡献。','main','medium',7,NULL,'any','等级达到 7 级','train','等级',7,5000,2000,200,NULL,NULL,0,24,1,8,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(9,'一代宗师','武功造诣已臻化境。','main','hard',8,NULL,'any','等级达到 8 级','train','等级',8,8000,3000,300,NULL,NULL,0,24,1,9,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(10,'武林至尊','登顶武林，成为天下第一。','main','extreme',10,NULL,'any','等级达到 10 级','train','等级',10,20000,10000,1000,NULL,NULL,0,24,1,10,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(11,'药材采集','帮药铺老板采集一些常用药材。','side','easy',2,NULL,'any','采集 10 份普通药材','collect','药材',10,150,80,0,'金疮药 x3',1,0,24,1,11,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(12,'铁匠的请求','铁匠需要一些矿石来打造兵器。','side','easy',3,NULL,'any','采集 5 块铁矿石','collect','铁矿石',5,200,100,0,'铁剑 x1',1,0,24,1,12,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(13,'厨艺大赛','参加一年一度的厨艺大赛。','side','medium',4,NULL,'any','制作 3 道美味佳肴','craft','菜肴',3,500,200,0,'美食礼盒 x1',NULL,0,24,1,13,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(14,'寻物启事','帮助村民寻找丢失的家传宝物。','side','medium',5,NULL,'any','找到失落的玉佩','collect','玉佩',1,800,400,50,NULL,NULL,0,24,1,14,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(15,'除暴安良','剿灭附近的土匪窝。','side','hard',6,NULL,'any','击败 20 名土匪','kill','土匪',20,1500,800,100,'侠义勋章 x1',NULL,0,24,1,15,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(16,'秘籍残卷','寻找失落的武功秘籍残卷。','side','hard',7,NULL,'any','收集 5 份残卷','collect','残卷',5,3000,1500,200,'随机秘籍 x1',NULL,0,24,1,16,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(17,'炼丹术','学习古老的炼丹术。','side','medium',5,NULL,'any','炼制 1 炉丹药','craft','丹药',1,1000,500,100,'大还丹 x1',NULL,0,24,1,17,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(18,'驯兽师','驯服一匹良驹作为坐骑。','side','hard',8,NULL,'any','驯服 1 匹宝马','collect','宝马',1,5000,2000,0,'坐骑：的卢',NULL,0,24,1,18,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(19,'晨练','每日清晨的例行练功。','daily','easy',1,NULL,'any','修炼内力','train','打坐',1,50,30,5,NULL,NULL,1,24,1,21,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(20,'打猎','狩猎周围的野生动物。','daily','easy',2,NULL,'any','猎杀 3 只野兽','kill','野兽',3,100,50,0,NULL,NULL,1,24,1,22,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(21,'采矿','开采矿脉获取矿石。','daily','easy',3,NULL,'any','开采 5 次矿脉','collect','矿石',5,150,80,0,NULL,NULL,1,24,1,23,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(22,'采药','采集山间草药。','daily','easy',2,NULL,'any','采集 10 株草药','collect','草药',10,120,60,0,NULL,NULL,1,24,1,24,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(23,'行侠仗义','在江湖上行善积德。','daily','medium',4,NULL,'any','完成 1 件善举','talk','行善',1,200,100,20,NULL,NULL,1,24,1,25,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(24,'武林切磋','与其他武者切磋武艺。','daily','medium',5,NULL,'any','切磋 3 次','train','切磋',3,300,150,30,NULL,NULL,1,24,1,26,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(25,'押镖护镖','护送商队安全到达目的地。','daily','hard',6,NULL,'any','完成 1 次押镖','explore','押镖',1,800,400,50,NULL,NULL,1,24,1,27,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(26,'门派任务','完成门派分配的任务。','daily','medium',4,NULL,'any','完成门派委托','talk','委托',1,500,250,40,NULL,NULL,1,24,1,28,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(27,'世外高人','机缘巧合下遇到隐居的武林前辈。','hidden','hard',8,NULL,'any','通过隐世山谷','explore','山谷',1,0,5000,500,'易筋经',NULL,0,24,1,31,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(28,'绝世宝剑','寻找传说中的绝世宝剑。','hidden','extreme',9,NULL,'any','找到倚天剑','collect','倚天剑',1,0,8000,800,'倚天剑',NULL,0,24,1,32,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(29,'经脉尽通','打通全身经脉，成为武学奇才。','hidden','extreme',10,NULL,'any','打通所有经脉','train','经脉',12,10000,10000,1000,'九阳真经',NULL,0,24,1,33,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(30,'六扇门密探','为六扇门执行特殊任务。','hidden','hard',7,'六扇门','any','完成秘密任务','talk','密探',1,5000,3000,300,'六扇门令牌',NULL,0,24,1,34,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(31,'少林七十二绝技','学习少林全部七十二项绝技。','hidden','extreme',10,'少林派','any','掌握所有绝技','train','绝技',72,0,50000,5000,'达摩令',NULL,0,24,1,35,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(32,'逍遥游','领悟逍遥派的终极奥义。','hidden','extreme',10,'逍遥派','any','领悟逍遥真谛','train','奥义',1,0,30000,3000,'北冥神功',NULL,0,24,1,36,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(33,'太极宗师','成为真正的太极宗师。','hidden','extreme',10,'武当派','any','阴阳合一','train','太极',1,0,35000,3500,'太极图谱',NULL,0,24,1,37,'2026-04-25 07:24:03','2026-04-25 07:24:03'),(34,'独孤求败','挑战剑魔独孤求败的剑冢。','hidden','extreme',10,'华山派','any','通过剑冢试炼','explore','剑冢',1,0,40000,4000,'玄铁重剑',NULL,0,24,1,38,'2026-04-25 07:24:03','2026-04-25 07:24:03');
+/*!40000 ALTER TABLE `quests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `random_event_logs`
+--
+
+DROP TABLE IF EXISTS `random_event_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `random_event_logs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `event_id` int(10) unsigned NOT NULL,
+  `event_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `event_type` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci NOT NULL,
+  `affected_users` text COLLATE utf8mb4_unicode_ci COMMENT '受影响的用户列表 (JSON)',
+  `triggered_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_event` (`event_id`),
+  KEY `idx_type` (`event_type`),
+  KEY `idx_triggered` (`triggered_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=59 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='随机事件触发记录表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `random_event_logs`
+--
+
+LOCK TABLES `random_event_logs` WRITE;
+/*!40000 ALTER TABLE `random_event_logs` DISABLE KEYS */;
+INSERT INTO `random_event_logs` VALUES (1,119,'普天同庆','fortune','? 普天同庆！全服玩家获得 {amount} 两银子奖励！','[]','2026-04-19 15:41:29'),(2,7,'狂风大作','weather','?️ 狂风大作，install 被风吹得晕头转向！',NULL,'2026-04-19 16:16:37'),(3,124,'天灾降临','disaster','? 天灾降临！全服玩家损失 16 点体力！ （全服生效）','[{\"user_id\":13,\"username\":\"install\",\"effect_value\":-16}]','2026-04-19 16:41:48'),(4,127,'仙山显圣','mystery','?️ 仙山显圣！全服有缘人武功提升 2 层！ （全服生效）','[{\"user_id\":13,\"username\":\"install\",\"effect_value\":2}]','2026-04-19 16:49:06'),(5,102,'神功护体','blessing','?️ 神功护体，站长 内力暴涨 166 点！',NULL,'2026-04-19 17:03:57'),(6,121,'天降祥瑞','weather','? 天降祥瑞！全服玩家体力恢复 39 点！ （全服生效）','[{\"user_id\":1,\"username\":\"站长\",\"effect_value\":39}]','2026-04-20 05:10:22'),(7,1,'福星高照','fortune','? 福星高照，站长 走了狗屎运，获得 412 两银子！',NULL,'2026-04-20 05:12:24'),(8,12,'山贼打劫','robbery','? 山贼打劫！站长 被抢走了 643 两银子！',NULL,'2026-04-20 05:15:57'),(9,6,'体力不支','disaster','? 站长 体力不支，损失 44 点体力！',NULL,'2026-04-20 05:25:11'),(10,121,'天降祥瑞','weather','? 天降祥瑞！全服玩家体力恢复 35 点！ （全服生效）','[{\"user_id\":13,\"username\":\"install\",\"effect_value\":35}]','2026-04-20 05:45:44'),(11,10,'神秘老人','mystery','? 一位神秘老人出现，给了install一本武功秘籍！',NULL,'2026-04-20 05:55:12'),(12,101,'吉星高照','fortune','✨ 吉星高照，install 捡到一袋银子，获得 253 两！',NULL,'2026-04-20 06:27:28'),(13,125,'经济危机','disaster','? 经济萧条，物价飞涨！全服玩家损失 143 两银子！',NULL,'2026-04-20 06:29:49'),(14,3,'内力大增','blessing','✨ install 偶得奇遇，内力增加 119 点！',NULL,'2026-04-20 06:35:50'),(15,112,'流星陨落','weather','☄️ 流星陨落，install 被流星碎片击中，获得神秘力量！',NULL,'2026-04-20 07:12:45'),(16,119,'普天同庆','fortune','? 普天同庆！全服玩家获得 112 两银子奖励！',NULL,'2026-04-20 12:31:14'),(17,6,'体力不支','disaster','? 站长 体力不支，损失 46 点体力！',NULL,'2026-04-20 12:35:46'),(18,2,'财神驾到','fortune','? 财神爷降临，赏赐 站长 1416 两银子！',NULL,'2026-04-21 01:46:03'),(19,4,'破财消灾','disaster','? 站长 走路摔了一跤，掉了 186 两银子！',NULL,'2026-04-21 01:49:12'),(20,7,'狂风大作','weather','?️ 狂风大作，站长 被风吹得晕头转向！',NULL,'2026-04-21 02:04:39'),(21,118,'劫富济贫','robbery','? 站长 劫富济贫，从贪官处获得 1035 两银子！',NULL,'2026-04-21 14:13:44'),(22,111,'紫气东来','weather','? 紫气东来，站长 感觉修为有所提升！',NULL,'2026-04-21 14:16:06'),(23,124,'天灾降临','disaster','? 天灾降临！全服玩家损失 18 点体力！ （全服生效）','[{\"user_id\":1,\"username\":\"站长\",\"effect_value\":-18}]','2026-04-21 14:27:13'),(24,109,'万里无云','weather','☀️ 万里无云，站长 心情舒畅，体力 +15！',NULL,'2026-04-21 15:28:51'),(25,120,'皇恩浩荡','fortune','? 皇帝大喜，赏赐全服百姓各 144 两银子！',NULL,'2026-04-21 15:45:39'),(26,113,'隐世高人','mystery','? 隐世高人传授站长绝学，武功提升 12 层！',NULL,'2026-04-21 15:50:32'),(27,107,'失财招灾','disaster','? 站长 不慎丢失钱包，损失 249 两银子！',NULL,'2026-04-21 15:59:08'),(28,124,'天灾降临','disaster','? 天灾降临！全服玩家损失 15 点体力！ （全服生效）','[{\"user_id\":1,\"username\":\"站长\",\"effect_value\":-15}]','2026-04-22 13:21:13'),(29,109,'万里无云','weather','☀️ 万里无云，install 心情舒畅，体力 +15！',NULL,'2026-04-22 13:24:25'),(30,1,'福星高照','fortune','? 福星高照，install 走了狗屎运，获得 225 两银子！',NULL,'2026-04-22 13:46:08'),(31,116,'恶霸欺市','robbery','? 恶霸欺行霸市，install 被勒索 222 两银子！',NULL,'2026-04-22 13:55:06'),(32,102,'神功护体','blessing','?️ 神功护体，install 内力暴涨 272 点！',NULL,'2026-04-22 14:26:37'),(33,10,'神秘老人','mystery','? 一位神秘老人出现，给了install一本武功秘籍！',NULL,'2026-04-22 14:28:37'),(34,107,'失财招灾','disaster','? install 不慎丢失钱包，损失 157 两银子！',NULL,'2026-04-22 14:31:15'),(35,121,'天降祥瑞','weather','? 天降祥瑞！全服玩家体力恢复 21 点！ （全服生效）','[{\"user_id\":13,\"username\":\"install\",\"effect_value\":21}]','2026-04-22 14:47:50'),(36,2,'财神驾到','fortune','? 财神爷降临，赏赐 install 825 两银子！',NULL,'2026-04-22 15:02:29'),(37,109,'万里无云','weather','☀️ 万里无云，install 心情舒畅，体力 +15！',NULL,'2026-04-22 15:37:41'),(38,6,'体力不支','disaster','? 站长 体力不支，损失 40 点体力！',NULL,'2026-04-24 05:01:33'),(39,1,'福星高照','fortune','? 福星高照，站长 走了狗屎运，获得 301 两银子！',NULL,'2026-04-24 05:09:53'),(40,102,'神功护体','blessing','?️ 神功护体，站长 内力暴涨 146 点！',NULL,'2026-04-24 05:30:43'),(41,110,'月黑风高','weather','? 月黑风高，站长 感觉有些不寻常的事情要发生...',NULL,'2026-04-24 05:43:52'),(42,116,'恶霸欺市','robbery','? 恶霸欺行霸市，站长 被勒索 409 两银子！',NULL,'2026-04-24 05:46:11'),(43,4,'破财消灾','disaster','? 站长 走路摔了一跤，掉了 313 两银子！',NULL,'2026-04-24 06:09:07'),(44,9,'电闪雷鸣','weather','⚡ 电闪雷鸣，站长 被雷劈中，获得神秘力量！',NULL,'2026-04-24 06:15:04'),(45,2,'财神驾到','fortune','? 财神爷降临，赏赐 站长 507 两银子！',NULL,'2026-04-24 06:35:31'),(46,8,'天降甘霖','weather','?️ 天降甘霖，站长 感觉神清气爽！',NULL,'2026-04-24 06:51:13'),(47,103,'灵丹妙药','blessing','? 站长 服下灵丹妙药，体力恢复 49 点！',NULL,'2026-04-24 07:12:19'),(48,126,'魔气滔天','disaster','? 魔气肆虐！全服玩家内力损失 59 点！ （全服生效）','[{\"user_id\":1,\"username\":\"站长\",\"effect_value\":-59}]','2026-04-24 07:24:54'),(49,7,'狂风大作','weather','?️ 狂风大作，站长 被风吹得晕头转向！',NULL,'2026-04-24 07:27:31'),(50,10,'神秘老人','mystery','? 一位神秘老人出现，给了站长一本武功秘籍！',NULL,'2026-04-24 07:32:13'),(51,102,'神功护体','blessing','?️ 神功护体，独角兽 内力暴涨 288 点！',NULL,'2026-04-25 08:01:07'),(52,122,'灵气涌动','weather','✨ 天地灵气涌动！全服玩家内力增加 112 点！ （全服生效）','[{\"user_id\":1,\"username\":\"独角兽\",\"effect_value\":112}]','2026-04-25 08:03:41'),(53,118,'劫富济贫','robbery','? 独角兽 劫富济贫，从贪官处获得 610 两银子！',NULL,'2026-04-25 08:12:03'),(54,105,'风寒感冒','disaster','? 站长 风寒感冒，体力损失 10 点！',NULL,'2026-04-26 14:18:51'),(55,111,'紫气东来','weather','? 紫气东来，独角兽 感觉修为有所提升！',NULL,'2026-04-26 14:32:30'),(56,117,'路见不平','robbery','? 独角兽 替天行道，从恶霸那里夺取 445 两银子！',NULL,'2026-04-26 14:34:37'),(57,4,'破财消灾','disaster','? 测试用户 走路摔了一跤，掉了 490 两银子！',NULL,'2026-04-28 03:25:08'),(58,123,'日月同辉','weather','? 日月同辉！全服玩家全属性提升 5 点！ （全服生效）','[{\"user_id\":18,\"username\":\"测试用户\",\"effect_value\":5}]','2026-04-28 03:29:46');
+/*!40000 ALTER TABLE `random_event_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `random_events`
+--
+
+DROP TABLE IF EXISTS `random_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `random_events` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `event_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '事件名称',
+  `event_type` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '事件类型：weather/fortune/disaster/blessing/mystery/robbery',
+  `message_template` text COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '消息模板',
+  `effect_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT 'none' COMMENT '效果类型：none/silver/neili/tili/wugong/all',
+  `effect_value_min` int(11) DEFAULT '0' COMMENT '效果最小值',
+  `effect_value_max` int(11) DEFAULT '0' COMMENT '效果最大值',
+  `probability` int(11) DEFAULT '100' COMMENT '触发概率（权重）',
+  `cooldown_minutes` int(11) DEFAULT '30' COMMENT '冷却时间（分钟）',
+  `min_grade` int(11) DEFAULT '1' COMMENT '最低触发等级',
+  `is_enabled` tinyint(1) DEFAULT '1' COMMENT '是否启用',
+  `is_global` tinyint(1) DEFAULT '0' COMMENT '是否全服事件',
+  `icon` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '事件图标',
+  `sort_order` int(11) DEFAULT '0' COMMENT '排序',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_event_name` (`event_name`),
+  KEY `idx_type` (`event_type`),
+  KEY `idx_enabled` (`is_enabled`)
+) ENGINE=InnoDB AUTO_INCREMENT=130 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='随机事件表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `random_events`
+--
+
+LOCK TABLES `random_events` WRITE;
+/*!40000 ALTER TABLE `random_events` DISABLE KEYS */;
+INSERT INTO `random_events` VALUES (1,'福星高照','fortune','? 福星高照，{username} 走了狗屎运，获得 {amount} 两银子！','silver',100,500,80,60,1,1,0,'⭐',0,'2026-04-19 15:25:08','2026-04-19 15:29:25'),(2,'财神驾到','fortune','? 财神爷降临，赏赐 {username} {amount} 两银子！','silver',500,2000,50,120,5,1,0,'?',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(3,'内力大增','blessing','✨ {username} 偶得奇遇，内力增加 {amount} 点！','neili',50,200,70,90,3,1,0,'?',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(4,'破财消灾','disaster','? {username} 走路摔了一跤，掉了 {amount} 两银子！','silver',-500,-100,60,60,1,1,0,'?',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(6,'体力不支','disaster','? {username} 体力不支，损失 {amount} 点体力！','tili',-50,-10,50,60,1,1,0,'?',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(7,'狂风大作','weather','?️ 狂风大作，{username} 被风吹得晕头转向！','none',0,0,90,30,1,1,0,'?️',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(8,'天降甘霖','weather','?️ 天降甘霖，{username} 感觉神清气爽！','tili',10,30,85,45,1,1,0,'?️',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(9,'电闪雷鸣','weather','⚡ 电闪雷鸣，{username} 被雷劈中，获得神秘力量！','all',1,5,30,180,10,1,0,'⚡',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(10,'神秘老人','mystery','? 一位神秘老人出现，给了{username}一本武功秘籍！','wugong',1,3,20,240,8,1,0,'?',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(11,'仙人指路','mystery','? 仙人指路，{username} 全属性提升 {amount} 点！','all',1,2,15,300,15,1,0,'?',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(12,'山贼打劫','robbery','? 山贼打劫！{username} 被抢走了 {amount} 两银子！','silver',-1000,-200,35,120,5,1,0,'?',0,'2026-04-19 15:25:08','2026-04-19 15:25:08'),(101,'吉星高照','fortune','✨ 吉星高照，{username} 捡到一袋银子，获得 {amount} 两！','silver',50,300,75,45,1,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(102,'神功护体','blessing','?️ 神功护体，{username} 内力暴涨 {amount} 点！','neili',100,300,65,80,5,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(103,'灵丹妙药','blessing','? {username} 服下灵丹妙药，体力恢复 {amount} 点！','tili',30,80,70,50,1,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(104,'武功突破','blessing','? {username} 闭关修炼，武功境界提升 {amount} 层！','wugong',2,8,15,200,10,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(105,'风寒感冒','disaster','? {username} 风寒感冒，体力损失 {amount} 点！','tili',-30,-10,55,40,1,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(106,'走火入魔','disaster','? {username} 修炼不当走火入魔，内力损失 {amount} 点！','neili',-80,-30,35,100,8,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(107,'失财招灾','disaster','? {username} 不慎丢失钱包，损失 {amount} 两银子！','silver',-300,-50,50,50,1,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(108,'修炼受阻','disaster','? {username} 修炼遇到瓶颈，武功退步 {amount} 层！','wugong',-3,-1,20,150,15,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(109,'万里无云','weather','☀️ 万里无云，{username} 心情舒畅，体力 +15！','tili',15,15,80,40,1,1,0,'☀️',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(110,'月黑风高','weather','? 月黑风高，{username} 感觉有些不寻常的事情要发生...','none',0,0,70,60,1,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(111,'紫气东来','weather','? 紫气东来，{username} 感觉修为有所提升！','all',1,3,25,180,12,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(112,'流星陨落','weather','☄️ 流星陨落，{username} 被流星碎片击中，获得神秘力量！','all',3,10,10,300,20,1,0,'☄️',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(113,'隐世高人','mystery','? 隐世高人传授{username}绝学，武功提升 {amount} 层！','wugong',5,15,8,360,15,1,0,'?️',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(114,'秘境探险','mystery','?️ {username} 误入秘境，获得宝藏 {amount} 两银子！','silver',500,1500,12,240,10,1,0,'?️',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(115,'神兽认主','mystery','? {username} 获得神兽认主，全属性大幅提升！','all',5,15,5,480,20,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(116,'恶霸欺市','robbery','? 恶霸欺行霸市，{username} 被勒索 {amount} 两银子！','silver',-500,-100,40,90,1,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(117,'路见不平','robbery','? {username} 替天行道，从恶霸那里夺取 {amount} 两银子！','silver',300,1000,30,120,8,1,0,'⚔️',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(118,'劫富济贫','robbery','? {username} 劫富济贫，从贪官处获得 {amount} 两银子！','silver',400,1200,20,180,12,1,0,'?',0,'2026-04-19 15:35:11','2026-04-19 15:35:11'),(119,'普天同庆','fortune','? 普天同庆！全服玩家获得 {amount} 两银子奖励！','silver',50,200,60,90,1,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(120,'皇恩浩荡','fortune','? 皇帝大喜，赏赐全服百姓各 {amount} 两银子！','silver',100,500,40,120,3,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(121,'天降祥瑞','weather','? 天降祥瑞！全服玩家体力恢复 {amount} 点！','tili',20,50,70,60,1,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(122,'灵气涌动','weather','✨ 天地灵气涌动！全服玩家内力增加 {amount} 点！','neili',50,150,50,90,5,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(123,'日月同辉','weather','? 日月同辉！全服玩家全属性提升 {amount} 点！','all',2,8,20,180,10,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(124,'天灾降临','disaster','? 天灾降临！全服玩家损失 {amount} 点体力！','tili',-30,-10,45,80,1,1,1,'⛈️',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(125,'经济危机','disaster','? 经济萧条，物价飞涨！全服玩家损失 {amount} 两银子！','silver',-200,-50,40,100,1,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(126,'魔气滔天','disaster','? 魔气肆虐！全服玩家内力损失 {amount} 点！','neili',-60,-20,35,120,5,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(127,'仙山显圣','mystery','?️ 仙山显圣！全服有缘人武功提升 {amount} 层！','wugong',1,5,25,240,8,1,1,'⛰️',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(128,'龙脉觉醒','mystery','? 龙脉觉醒！全服玩家获得龙气护体，全属性 +{amount}！','all',3,10,10,300,15,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38'),(129,'神鹿献瑞','mystery','? 神鹿现世！全服玩家获得祥瑞加持，运气大幅提升！','none',0,0,30,150,1,1,1,'?',0,'2026-04-19 15:40:38','2026-04-19 15:40:38');
+/*!40000 ALTER TABLE `random_events` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `riddles`
+--
+
+DROP TABLE IF EXISTS `riddles`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `riddles` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `question` varchar(200) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `answer` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='猜谜题库';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `riddles`
+--
+
+LOCK TABLES `riddles` WRITE;
+/*!40000 ALTER TABLE `riddles` DISABLE KEYS */;
+/*!40000 ALTER TABLE `riddles` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `secret_skills`
+--
+
+DROP TABLE IF EXISTS `secret_skills`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `secret_skills` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `grade` varchar(2) COLLATE utf8mb4_unicode_ci DEFAULT '丙' COMMENT '秘籍等级：甲、乙、丙',
+  `sect` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '通用' COMMENT '所属门派',
+  `type` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT '内功' COMMENT '武功类型：内功、外功、轻功、剑法、刀法、拳法、指法',
+  `effect` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT '' COMMENT '武功效果描述',
+  `require_level` int(11) DEFAULT '1' COMMENT '修炼所需最低等级',
+  `speed_bonus` int(11) NOT NULL DEFAULT '0',
+  `neili_bonus` int(11) NOT NULL DEFAULT '0',
+  `price` int(11) NOT NULL DEFAULT '0',
+  `level` int(11) NOT NULL DEFAULT '1',
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '武功描述',
+  `rarity` enum('common','uncommon','rare','epic','legendary') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'common' COMMENT '稀有度',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=42 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='藏经阁武功';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `secret_skills`
+--
+
+LOCK TABLES `secret_skills` WRITE;
+/*!40000 ALTER TABLE `secret_skills` DISABLE KEYS */;
+INSERT INTO `secret_skills` VALUES (1,'吐纳术','丙','通用','内功','',1,0,8,150,1,'入门级内功心法，可缓慢提升内力','common'),(2,'养气诀','丙','通用','内功','',2,0,15,300,2,'基础养气功夫，内力增长稳定','common'),(3,'小周天功','丙','通用','内功','',3,0,25,600,3,'运行小周天，内力循环不息','uncommon'),(4,'聚气凝元功','丙','通用','内功','',4,0,40,900,4,'聚集元气，凝练内力','uncommon'),(5,'五行吐纳法','丙','通用','内功','',5,0,60,1200,5,'按五行方位吐纳，事半功倍','rare'),(6,'草上飞','丙','通用','轻功','',1,5,0,200,1,'基础轻功，行走如风','common'),(7,'燕子三抄水','丙','通用','轻功','',2,10,0,400,2,'身轻如燕，提纵自如','common'),(8,'飞檐走壁','丙','通用','轻功','',3,15,0,700,3,'飞檐走壁如履平地','uncommon'),(9,'追风步','丙','通用','轻功','',4,22,0,1000,4,'步履生风，追击敌人','uncommon'),(10,'神行百变','丙','通用','轻功','',5,30,0,1400,5,'变化多端，神行无迹','rare'),(11,'紫霞功','乙','通用','内功','',4,0,80,2500,6,'紫气东来，霞光万道','rare'),(12,'混元功','乙','通用','内功','',5,0,120,4000,7,'混元一气，包罗万象','rare'),(13,'先天功','乙','通用','内功','',6,0,180,6000,8,'返璞归真，先天一气','epic'),(14,'九阳真经（残）','乙','通用','内功','',7,0,250,8000,9,'九阳神功残卷，至刚至阳','epic'),(15,'梯云纵','乙','武当','轻功','',4,40,0,3000,6,'武当绝学，如登云梯','rare'),(16,'凌波微步','乙','逍遥','轻功','',5,55,0,5000,7,'逍遥派绝学，步法精妙','epic'),(17,'金雁功','乙','全真','轻功','',6,35,0,3500,6,'全真教轻功，如金雁展翅','rare'),(18,'一苇渡江','乙','少林','轻功','',5,50,0,4500,7,'少林绝学，踏水而行','epic'),(19,'太极拳','乙','武当','拳掌','',4,15,30,3500,6,'以柔克刚，后发先至','rare'),(20,'南山掌法','乙','通用','拳掌','',4,20,20,2800,6,'朴实无华，威力不凡','common'),(21,'罗汉拳','乙','少林','拳掌','',5,25,35,4200,7,'少林基础拳法，刚猛有力','rare'),(22,'劈空掌','乙','桃花岛','拳掌','',6,20,50,6500,8,'隔空伤敌，威力惊人','epic'),(23,'九阳真经','甲','通用','内功','',7,0,350,15000,10,'九阳神功，百毒不侵','epic'),(24,'九阴真经','甲','通用','内功','',7,0,350,15000,10,'九阴神功，至阴至柔','epic'),(25,'易筋经','甲','少林','内功','',8,0,450,20000,11,'洗经伐髓，脱胎换骨','epic'),(26,'北冥神功','甲','逍遥','内功','',8,0,500,25000,11,'北冥有鱼，吸人内力','legendary'),(27,'乾坤大挪移','甲','明教','内功','',9,30,400,30000,12,'乾坤一气，挪移天地','legendary'),(28,'踏雪无痕','甲','通用','轻功','',7,70,0,12000,10,'踏雪无痕，轻功极致','epic'),(29,'草上飞仙','甲','通用','轻功','',7,60,0,10000,10,'草上飞行，如飞仙一般','rare'),(30,'云龙三折','甲','武当','轻功','',8,85,0,18000,11,'空中转折，变化莫测','epic'),(31,'逍遥游','甲','逍遥','轻功','',9,100,0,28000,12,'逍遥天地，无拘无束','legendary'),(32,'独孤九剑','甲','华山','剑法','',8,40,100,25000,11,'独孤求败绝学，无招胜有招','legendary'),(33,'六脉神剑','甲','大理','剑法','',9,35,300,35000,12,'六脉齐发，剑气纵横','legendary'),(34,'太极剑法','甲','武当','剑法','',7,25,80,15000,10,'太极生两仪，剑法绵密','epic'),(35,'苗家剑法','甲','通用','剑法','',7,30,60,12000,10,'苗疆剑术，诡谲多端','rare'),(36,'葵花宝典','绝','通用','内功','',10,100,800,100000,15,'欲练神功，必先自宫','legendary'),(37,'如来神掌','绝','少林','拳掌','',10,50,500,80000,14,'佛光普照，如来降世','legendary'),(38,'降龙十八掌','绝','丐帮','拳掌','',10,40,450,75000,14,'天下第一掌法，刚猛无匹','legendary'),(39,'天外飞仙','绝','通用','剑法','',10,80,400,70000,14,'剑仙从天而降，一式绝杀','legendary'),(40,'斗转星移','绝','慕容','内功','',10,60,600,90000,15,'斗转星移，借力打力','legendary'),(41,'长生诀','绝','通用','内功','',10,50,700,95000,15,'长生久视，与天地同寿','legendary');
+/*!40000 ALTER TABLE `secret_skills` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sect_applications`
+--
+
+DROP TABLE IF EXISTS `sect_applications`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sect_applications` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sect_id` int(10) unsigned NOT NULL,
+  `sect_name` varchar(30) NOT NULL,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(30) NOT NULL,
+  `message` text,
+  `status` enum('pending','approved','rejected') DEFAULT 'pending',
+  `handler_id` int(10) unsigned DEFAULT NULL,
+  `handler_username` varchar(30) DEFAULT NULL,
+  `reply` text,
+  `handled_at` datetime DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sect_id` (`sect_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_status` (`status`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sect_applications`
+--
+
+LOCK TABLES `sect_applications` WRITE;
+/*!40000 ALTER TABLE `sect_applications` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sect_applications` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sect_contributions`
+--
+
+DROP TABLE IF EXISTS `sect_contributions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sect_contributions` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sect_name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '门派名称',
+  `user_id` int(10) unsigned NOT NULL COMMENT '用户 ID',
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户名',
+  `contribution` int(11) NOT NULL DEFAULT '0' COMMENT '贡献值',
+  `reason` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '贡献原因',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sect` (`sect_name`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_time` (`created_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='门派贡献记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sect_contributions`
+--
+
+LOCK TABLES `sect_contributions` WRITE;
+/*!40000 ALTER TABLE `sect_contributions` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sect_contributions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sect_fund_logs`
+--
+
+DROP TABLE IF EXISTS `sect_fund_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sect_fund_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sect_id` int(10) unsigned NOT NULL,
+  `amount` int(11) NOT NULL,
+  `balance` int(11) DEFAULT NULL,
+  `reason` varchar(200) DEFAULT NULL,
+  `operator_id` int(10) unsigned DEFAULT NULL,
+  `operator_username` varchar(30) DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sect_id` (`sect_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sect_fund_logs`
+--
+
+LOCK TABLES `sect_fund_logs` WRITE;
+/*!40000 ALTER TABLE `sect_fund_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `sect_fund_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sect_gardens`
+--
+
+DROP TABLE IF EXISTS `sect_gardens`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sect_gardens` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sect_id` int(10) unsigned NOT NULL COMMENT '门派 ID',
+  `sect_name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '门派名称',
+  `level` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '药园等级',
+  `capacity` int(11) NOT NULL DEFAULT '20' COMMENT '最大种植位数',
+  `contribution_total` bigint(20) NOT NULL DEFAULT '0' COMMENT '累计贡献值',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_sect` (`sect_id`),
+  KEY `idx_sect_name` (`sect_name`)
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='帮派药园';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sect_gardens`
+--
+
+LOCK TABLES `sect_gardens` WRITE;
+/*!40000 ALTER TABLE `sect_gardens` DISABLE KEYS */;
+INSERT INTO `sect_gardens` VALUES (1,6,'丐帮',1,20,0,'2026-04-19 08:58:18','2026-04-19 08:58:18'),(2,5,'华山派',1,20,0,'2026-04-19 08:58:18','2026-04-19 08:58:18'),(3,8,'唐门',1,20,0,'2026-04-19 08:58:18','2026-04-19 08:58:18'),(4,2,'少林派',1,20,0,'2026-04-19 08:58:18','2026-04-19 08:58:18'),(5,3,'峨眉派',1,20,0,'2026-04-19 08:58:18','2026-04-19 08:58:18'),(6,7,'明教',1,20,0,'2026-04-19 08:58:18','2026-04-19 08:58:18'),(7,4,'武当派',1,20,0,'2026-04-19 08:58:18','2026-04-19 08:58:18'),(8,1,'逍遥派',1,20,0,'2026-04-19 08:58:18','2026-04-19 08:58:18');
+/*!40000 ALTER TABLE `sect_gardens` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sect_logs`
+--
+
+DROP TABLE IF EXISTS `sect_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sect_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sect_id` int(10) unsigned DEFAULT NULL,
+  `sect_name` varchar(30) NOT NULL,
+  `username` varchar(30) DEFAULT NULL,
+  `action` varchar(50) NOT NULL,
+  `target_username` varchar(30) DEFAULT NULL,
+  `details` text,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sect_id` (`sect_id`),
+  KEY `idx_action` (`action`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sect_logs`
+--
+
+LOCK TABLES `sect_logs` WRITE;
+/*!40000 ALTER TABLE `sect_logs` DISABLE KEYS */;
+INSERT INTO `sect_logs` VALUES (1,105,'六扇门','admin','create',NULL,'{\"leader\":\"独角兽\",\"fit_gender\":\"both\"}','2026-04-25 07:49:59'),(2,NULL,'逍遥派','独角兽','update',NULL,'{\"old\":{\"id\":1,\"name\":\"逍遥派\",\"leader\":\"站长\",\"slogan\":null,\"description\":\"笑傲江湖，逍遥自在\",\"rules\":\"逍遥派门规\",\"member_count\":0,\"fit_gender\":\"both\",\"created_at\":\"2026-04-19T07:11:48.000Z\",\"updated_at\":\"2026-04-19T07:11:48.000Z\",\"fund\":0},\"new\":{\"id\":1,\"name\":\"逍遥派\",\"leader\":\"\",\"slogan\":\"\",\"description\":\"笑傲江湖，逍遥自在\",\"rules\":\"逍遥派门规\",\"fit_gender\":\"both\"}}','2026-04-28 03:35:08');
+/*!40000 ALTER TABLE `sect_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sect_positions`
+--
+
+DROP TABLE IF EXISTS `sect_positions`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sect_positions` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `sect_id` int(10) unsigned NOT NULL,
+  `position_name` varchar(50) NOT NULL,
+  `position_rank` int(11) DEFAULT '0',
+  `description` varchar(200) DEFAULT NULL,
+  `min_grade` int(11) DEFAULT '1',
+  `min_contribution` int(11) DEFAULT '0',
+  `salary_amount` int(11) DEFAULT '0',
+  `permissions` json DEFAULT NULL,
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_sect_id` (`sect_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=76 DEFAULT CHARSET=utf8mb4;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sect_positions`
+--
+
+LOCK TABLES `sect_positions` WRITE;
+/*!40000 ALTER TABLE `sect_positions` DISABLE KEYS */;
+INSERT INTO `sect_positions` VALUES (1,6,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(2,5,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(3,8,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(4,2,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(5,3,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(6,7,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(7,4,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(8,1,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(9,6,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(10,5,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(11,8,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(12,2,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(13,3,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(14,7,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(15,4,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(16,1,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(17,6,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(18,5,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(19,8,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(20,2,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(21,3,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(22,7,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(23,4,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(24,1,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(25,6,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(26,5,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(27,8,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(28,2,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(29,3,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(30,7,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(31,4,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(32,1,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(33,6,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(34,5,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(35,8,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(36,2,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(37,3,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(38,7,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(39,4,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(40,1,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(41,6,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(42,5,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(43,8,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(44,2,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(45,3,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(46,7,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(47,4,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(48,1,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:51','2026-04-25 07:49:51'),(64,105,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:49:59','2026-04-25 07:49:59'),(65,105,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:49:59','2026-04-25 07:49:59'),(66,105,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:49:59','2026-04-25 07:49:59'),(67,105,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:49:59','2026-04-25 07:49:59'),(68,105,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:49:59','2026-04-25 07:49:59'),(69,105,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:49:59','2026-04-25 07:49:59'),(70,105,'掌门',100,'一派之主，统御全派',10,10000,5000,NULL,'2026-04-25 07:50:17','2026-04-25 07:50:17'),(71,105,'长老',80,'门派长老，协助掌门管理',8,5000,2000,NULL,'2026-04-25 07:50:17','2026-04-25 07:50:17'),(72,105,'护法',60,'门派护法，维护门派秩序',6,2000,1000,NULL,'2026-04-25 07:50:17','2026-04-25 07:50:17'),(73,105,'核心弟子',40,'门派核心成员',4,500,300,NULL,'2026-04-25 07:50:17','2026-04-25 07:50:17'),(74,105,'普通弟子',20,'门派正式成员',2,100,100,NULL,'2026-04-25 07:50:17','2026-04-25 07:50:17'),(75,105,'入门弟子',10,'刚入门的弟子',1,0,50,NULL,'2026-04-25 07:50:17','2026-04-25 07:50:17');
+/*!40000 ALTER TABLE `sect_positions` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sects`
+--
+
+DROP TABLE IF EXISTS `sects`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sects` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '门派名称',
+  `leader` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '掌门',
+  `slogan` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '口号',
+  `description` text COLLATE utf8mb4_unicode_ci COMMENT '简介',
+  `rules` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '门规',
+  `member_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '人数',
+  `fit_gender` enum('male','female','both') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'both' COMMENT '适合性别',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  `fund` int(11) DEFAULT '0',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=106 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='门派';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sects`
+--
+
+LOCK TABLES `sects` WRITE;
+/*!40000 ALTER TABLE `sects` DISABLE KEYS */;
+INSERT INTO `sects` VALUES (1,'逍遥派','','','笑傲江湖，逍遥自在','逍遥派门规',0,'both','2026-04-19 07:11:48','2026-04-28 03:35:08',0),(2,'少林派',NULL,NULL,'天下武功出少林','少林门规',0,'male','2026-04-19 07:11:48','2026-04-19 07:11:48',0),(3,'峨眉派',NULL,NULL,'峨眉天下秀','峨眉门规',0,'female','2026-04-19 07:11:48','2026-04-19 07:11:48',0),(4,'武当派',NULL,NULL,'太极生两仪','武当门规',0,'both','2026-04-19 07:11:48','2026-04-19 07:11:48',0),(5,'华山派',NULL,NULL,'华山论剑','华山门规',0,'both','2026-04-19 07:11:48','2026-04-19 07:11:48',0),(6,'丐帮',NULL,NULL,'天下第一大帮','丐帮门规',0,'both','2026-04-19 07:11:48','2026-04-19 07:11:48',0),(7,'明教',NULL,NULL,'焚我残躯，熊熊圣火','明教门规',0,'both','2026-04-19 07:11:48','2026-04-19 07:11:48',0),(8,'唐门',NULL,NULL,'暗器无双','唐门门规',0,'both','2026-04-19 07:11:48','2026-04-19 07:11:48',0),(105,'六扇门','独角兽','朝廷鹰犬，维护正义','朝廷直属的门派，维护江湖秩序','忠于朝廷，服从命令',0,'both','2026-04-25 07:49:59','2026-04-25 07:49:59',0);
+/*!40000 ALTER TABLE `sects` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `sheep_pets`
+--
+
+DROP TABLE IF EXISTS `sheep_pets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `sheep_pets` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `happiness` int(11) NOT NULL DEFAULT '0',
+  `health` int(11) NOT NULL DEFAULT '0',
+  `life` int(11) NOT NULL DEFAULT '0',
+  `milk` int(11) NOT NULL DEFAULT '0',
+  `hunger` int(11) NOT NULL DEFAULT '0',
+  `workload` int(11) NOT NULL DEFAULT '0',
+  `cleanliness` int(11) NOT NULL DEFAULT '0',
+  `purchased_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `last_fed_at` datetime DEFAULT NULL,
+  `fed_days` int(11) NOT NULL DEFAULT '0',
+  `last_login_at` date DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='宠物羊';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `sheep_pets`
+--
+
+LOCK TABLES `sheep_pets` WRITE;
+/*!40000 ALTER TABLE `sheep_pets` DISABLE KEYS */;
+INSERT INTO `sheep_pets` VALUES (1,'小羊','站长',70,95,100,0,0,0,50,'2026-04-19 09:06:40',NULL,0,NULL);
+/*!40000 ALTER TABLE `sheep_pets` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `shop_items`
+--
+
+DROP TABLE IF EXISTS `shop_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `shop_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '物品名称',
+  `type` enum('weapon','armor','medicine','poison','other') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '物品类型',
+  `attack` int(11) NOT NULL DEFAULT '0' COMMENT '攻击力加成',
+  `defense` int(11) NOT NULL DEFAULT '0' COMMENT '防御力加成',
+  `neili_bonus` int(11) NOT NULL DEFAULT '0' COMMENT '内力加成',
+  `tili_bonus` int(11) NOT NULL DEFAULT '0' COMMENT '体力加成',
+  `price` int(11) NOT NULL DEFAULT '0' COMMENT '基础价格',
+  `image_file` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '图片文件名',
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '物品描述',
+  `is_enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
+  `sort_no` int(11) NOT NULL DEFAULT '0' COMMENT '排序号',
+  `stock_quantity` int(11) NOT NULL DEFAULT '999' COMMENT '库存数量',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_shop_item` (`name`,`price`,`type`),
+  KEY `idx_type` (`type`),
+  KEY `idx_enabled` (`is_enabled`)
+) ENGINE=InnoDB AUTO_INCREMENT=50 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='商店物品';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `shop_items`
+--
+
+LOCK TABLES `shop_items` WRITE;
+/*!40000 ALTER TABLE `shop_items` DISABLE KEYS */;
+INSERT INTO `shop_items` VALUES (1,'木剑','weapon',10,0,0,0,100,'1.gif','新手木剑，攻击力 +10',1,0,998,'2026-04-19 11:09:11'),(2,'铁剑','weapon',20,0,0,0,200,'2.gif','精铁打造的剑，攻击力 +20',1,1,999,'2026-04-19 11:09:11'),(3,'钢刀','weapon',30,0,0,0,300,'3.gif','精钢打造的刀，攻击力 +30',1,2,999,'2026-04-19 11:09:11'),(4,'宝剑','weapon',50,0,5,0,550,'4.gif','削铁如泥的宝剑，攻击力 +50，内力 +5',1,3,999,'2026-04-19 11:09:11'),(5,'倚天剑','weapon',80,0,10,0,900,'5.gif','武林至宝倚天剑，攻击力 +80，内力 +10',1,4,999,'2026-04-19 11:09:11'),(6,'屠龙刀','weapon',100,0,15,0,1150,'6.gif','武林至宝屠龙刀，攻击力 +100，内力 +15',1,5,999,'2026-04-19 11:09:11'),(7,'打狗棒','weapon',60,10,5,0,750,'7.gif','丐帮镇帮之宝，攻击力 +60，防御 +10，内力 +5',1,6,999,'2026-04-19 11:09:11'),(8,'判官笔','weapon',45,5,10,0,600,'8.gif','判官笔，攻击力 +45，防御 +5，内力 +10',1,7,999,'2026-04-19 11:09:11'),(9,'布衣','armor',0,10,0,0,100,'10.gif','普通布衣，防御力 +10',1,8,999,'2026-04-19 11:09:11'),(10,'皮甲','armor',0,20,0,0,200,'11.gif','兽皮制成的甲，防御力 +20',1,9,999,'2026-04-19 11:09:11'),(11,'铁甲','armor',0,30,0,0,300,'12.gif','精铁打造的甲，防御力 +30',1,10,999,'2026-04-19 11:09:11'),(12,'金丝甲','armor',0,50,5,0,550,'13.gif','金丝编织的软甲，防御力 +50，内力 +5',1,11,999,'2026-04-19 11:09:11'),(13,'软猬甲','armor',10,60,10,0,800,'14.gif','黄蓉所穿软猬甲，防御力 +60，攻击力 +10，内力 +10',1,12,999,'2026-04-19 11:09:11'),(14,'乌蚕衣','armor',0,80,15,0,950,'15.gif','千年乌蚕丝制成，防御力 +80，内力 +15',1,13,999,'2026-04-19 11:09:11'),(15,'金创药','medicine',0,0,20,20,50,'20.gif','治疗外伤，内力 +20，体力 +20',1,14,999,'2026-04-19 11:09:11'),(16,'小还丹','medicine',0,0,50,30,100,'21.gif','少林灵药，内力 +50，体力 +30',1,15,999,'2026-04-19 11:09:11'),(17,'大还丹','medicine',0,0,100,50,200,'22.gif','极品灵药，内力 +100，体力 +50',1,16,999,'2026-04-19 11:09:11'),(18,'九转金丹','medicine',0,0,200,100,500,'23.gif','道家至宝，内力 +200，体力 +100',1,17,999,'2026-04-19 11:09:11'),(19,'人参','medicine',0,0,30,30,80,'24.gif','百年人参，内力 +30，体力 +30',1,18,999,'2026-04-19 11:09:11'),(20,'灵芝','medicine',0,0,40,40,120,'25.gif','千年灵芝，内力 +40，体力 +40',1,19,999,'2026-04-19 11:09:11'),(21,'断肠散','poison',0,0,-30,-30,150,'30.gif','剧毒之物，对敌使用可使其内力 -30，体力 -30',1,20,999,'2026-04-19 11:09:11'),(22,'化功散','poison',0,0,-50,-50,250,'31.gif','化功大法所需，对敌使用可使其内力 -50，体力 -50',1,21,999,'2026-04-19 11:09:11'),(23,'三笑散','poison',0,0,-80,-80,400,'32.gif','含笑半步颠，对敌使用可使其内力 -80，体力 -80',1,22,999,'2026-04-19 11:09:11'),(24,'十香软筋散','poison',0,0,-100,-100,500,'33.gif','西域奇毒，对敌使用可使其内力 -100，体力 -100',1,23,999,'2026-04-19 11:09:11'),(25,'测试宝物','other',5,0,0,0,200,'50.gif','测试物品',1,0,250,'2026-04-19 11:20:13');
+/*!40000 ALTER TABLE `shop_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `special_items`
+--
+
+DROP TABLE IF EXISTS `special_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `special_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `effect_type` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '特效类型',
+  `effect_value` int(11) NOT NULL DEFAULT '0',
+  `exp_required` int(11) NOT NULL DEFAULT '0',
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '无',
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='特效物品';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `special_items`
+--
+
+LOCK TABLES `special_items` WRITE;
+/*!40000 ALTER TABLE `special_items` DISABLE KEYS */;
+/*!40000 ALTER TABLE `special_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `star_pets`
+--
+
+DROP TABLE IF EXISTS `star_pets`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `star_pets` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `gender` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `hp` int(11) NOT NULL DEFAULT '500',
+  `mp` int(11) NOT NULL DEFAULT '100',
+  `attack` int(11) NOT NULL DEFAULT '0',
+  `defense` int(11) NOT NULL DEFAULT '0',
+  `max_hp` int(11) NOT NULL DEFAULT '500',
+  `max_mp` int(11) NOT NULL DEFAULT '100',
+  `max_attack` int(11) NOT NULL DEFAULT '0',
+  `max_defense` int(11) NOT NULL DEFAULT '0',
+  `level` int(11) NOT NULL DEFAULT '1',
+  `exp` int(11) NOT NULL DEFAULT '0',
+  `special_skill` varchar(30) COLLATE utf8mb4_unicode_ci DEFAULT '无',
+  `rage` int(11) NOT NULL DEFAULT '0',
+  `status` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '正常',
+  `mother` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `father` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `stamina` int(11) NOT NULL DEFAULT '0',
+  `productivity` int(11) NOT NULL DEFAULT '0',
+  `affection` int(11) NOT NULL DEFAULT '0',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='星河宠物';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `star_pets`
+--
+
+LOCK TABLES `star_pets` WRITE;
+/*!40000 ALTER TABLE `star_pets` DISABLE KEYS */;
+/*!40000 ALTER TABLE `star_pets` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `system_config`
+--
+
+DROP TABLE IF EXISTS `system_config`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_config` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '配置键名',
+  `value` text COLLATE utf8mb4_unicode_ci COMMENT '配置值',
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '说明',
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_name` (`name`)
+) ENGINE=InnoDB AUTO_INCREMENT=352 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统配置';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `system_config`
+--
+
+LOCK TABLES `system_config` WRITE;
+/*!40000 ALTER TABLE `system_config` DISABLE KEYS */;
+INSERT INTO `system_config` VALUES (1,'adminkey','xajhxp','管理员密钥','2026-04-21 04:25:31'),(2,'chatroomname','笑傲江湖','聊天室名称','2026-04-19 07:11:48'),(3,'homepageurl','http://localhost:5173','主页URL','2026-04-19 07:11:48'),(4,'opendate','2026','开站日期','2026-04-19 07:11:48'),(5,'chatroombgcolor','E2F2DB','聊天室背景色','2026-04-19 07:11:48'),(6,'chatbgcolor','4B87C3','聊天背景色','2026-04-19 07:11:48'),(7,'chatimage','','聊天背景图片','2026-04-19 07:11:48'),(8,'chatcolor','EEEEEE','聊天文字颜色','2026-04-19 07:11:48'),(9,'allowhtml','10','允许HTML等级','2026-04-19 07:11:48'),(10,'iplocktime','30','IP锁定时间(分钟)','2026-04-19 07:11:48'),(11,'level1to2','1500','1升2级经验值','2026-04-19 07:11:48'),(12,'level2to3','6000','2升3级经验值','2026-04-19 07:11:48'),(13,'level3to4','14000','3升4级经验值','2026-04-19 07:11:48'),(14,'level4to5','40000','4升5级经验值','2026-04-19 07:11:48'),(15,'maxpeople','500','最大在线人数','2026-04-19 07:11:48'),(16,'maxtimeout','100','超时分钟','2026-04-19 07:11:48'),(17,'disproxy','0','禁止代理','2026-04-19 07:11:48'),(18,'disnewuser','0','禁止注册','2026-04-19 07:11:48'),(19,'closedoor','0','关闭聊天室','2026-04-19 07:11:48'),(20,'userinto','来到了笑傲江湖','进入提示语','2026-04-19 07:11:48'),(21,'userout','离开了笑傲江湖','退出提示语','2026-04-19 07:11:48'),(22,'userdown','掉线了','掉线提示语','2026-04-19 07:11:48'),(23,'admin','站长','管理员列表','2026-04-19 07:11:48'),(24,'banner','','横幅广告','2026-04-19 07:11:48'),(25,'visitor','0','访问量','2026-04-19 07:11:48'),(26,'ver','2.0','版本号','2026-04-19 07:11:48'),(27,'pollvalue','300','投票经验值门槛','2026-04-19 07:11:48');
+/*!40000 ALTER TABLE `system_config` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `system_updates`
+--
+
+DROP TABLE IF EXISTS `system_updates`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `system_updates` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `version` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '版本号 (格式：v1.0.0)',
+  `version_code` int(10) unsigned NOT NULL COMMENT '版本号数字 (用于比较，如 10000 代表 v1.0.0)',
+  `title` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '更新标题',
+  `description` text COLLATE utf8mb4_unicode_ci COMMENT '更新描述',
+  `changes` json DEFAULT NULL COMMENT '更新内容列表 (JSON 数组)',
+  `type` enum('major','minor','patch','hotfix') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'patch' COMMENT '更新类型',
+  `priority` enum('low','normal','high','critical') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normal' COMMENT '优先级',
+  `force_update` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否强制更新 (0=否，1=是)',
+  `status` enum('draft','released','archived') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'draft' COMMENT '状态',
+  `release_date` datetime DEFAULT NULL COMMENT '发布日期',
+  `release_note` text COLLATE utf8mb4_unicode_ci COMMENT '发布说明',
+  `breaking_changes` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否有破坏性变更',
+  `affected_modules` json DEFAULT NULL COMMENT '受影响的模块列表',
+  `rollback_version` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '可回滚的版本',
+  `created_by` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '创建人',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_version` (`version`),
+  KEY `idx_version_code` (`version_code`),
+  KEY `idx_status` (`status`),
+  KEY `idx_type` (`type`),
+  KEY `idx_priority` (`priority`),
+  KEY `idx_release_date` (`release_date`)
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='系统更新日志';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `system_updates`
+--
+
+LOCK TABLES `system_updates` WRITE;
+/*!40000 ALTER TABLE `system_updates` DISABLE KEYS */;
+INSERT INTO `system_updates` VALUES (1,'v1.0.0',10000,'初始版本','系统首次发布','[\"初始化项目架构\", \"搭建基础数据库\", \"用户系统集成\", \"聊天功能实现\", \"游戏系统框架\"]','major','normal',0,'released','2026-04-24 17:10:03',NULL,0,'[\"all\"]',NULL,'system','2026-04-24 17:10:03','2026-04-24 17:10:03'),(2,'v1.1.0',10100,'管理后台增强','完善管理后台功能','[\"添加用户管理模块\", \"添加数据仪表盘\", \"优化权限控制\", \"修复已知 bug\"]','minor','normal',0,'released','2026-04-24 17:10:03',NULL,0,'[\"admin\", \"backend\"]',NULL,'admin','2026-04-24 17:10:03','2026-04-24 17:10:03'),(3,'v1.1.1',10101,'管理后台 API 修复','修复用户管理相关 API 问题','[\"添加用户更新 API 路由\", \"修复服务器状态接口映射\", \"修复 Vue Router 警告\", \"修复数据库连接问题\"]','patch','high',0,'released','2026-04-24 17:10:03',NULL,0,'[\"admin\", \"backend\", \"frontend\"]',NULL,'admin','2026-04-24 17:10:03','2026-04-24 17:10:03'),(4,'v1.0.1',10001,'系统更新功能上线','新增在线更新管理功能','[\"新增管理后台更新管理菜单\", \"新增仪表盘更新提示功能\", \"支持在线检查和安装更新\"]','minor','normal',0,'released','2026-04-25 08:23:01','第一个正式更新版本',0,NULL,NULL,NULL,'2026-04-25 08:23:01','2026-04-25 08:23:01'),(5,'v1.2.0',10200,'生产端同步更新','同步最新代码到生产端','[\"修复 API 路径问题\", \"完成在线更新系统实施\", \"修复 package.json 入口\"]','minor','high',0,'released','2026-04-26 05:14:56','生产端同步更新 v1.2.0 - 包含在线更新系统完整实施 (commit: cb8cedc)',0,NULL,NULL,'admin','2026-04-26 05:14:56','2026-04-26 05:15:47');
+/*!40000 ALTER TABLE `system_updates` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `tang_poems`
+--
+
+DROP TABLE IF EXISTS `tang_poems`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `tang_poems` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `verse` text COLLATE utf8mb4_unicode_ci COMMENT '诗句',
+  `question` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '题目',
+  `answer` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '答案',
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='唐诗题库';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `tang_poems`
+--
+
+LOCK TABLES `tang_poems` WRITE;
+/*!40000 ALTER TABLE `tang_poems` DISABLE KEYS */;
+/*!40000 ALTER TABLE `tang_poems` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `update_push_logs`
+--
+
+DROP TABLE IF EXISTS `update_push_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `update_push_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `update_id` int(10) unsigned NOT NULL COMMENT '更新 ID',
+  `version` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '版本号',
+  `environment` enum('development','staging','production') COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '环境',
+  `server_url` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '服务器地址',
+  `push_status` enum('pending','success','failed','partial') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'pending' COMMENT '推送状态',
+  `push_time` datetime DEFAULT NULL COMMENT '推送时间',
+  `acknowledge_time` datetime DEFAULT NULL COMMENT '生产端确认时间',
+  `acknowledge_by` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '确认人',
+  `rollback_status` enum('none','pending','success','failed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'none' COMMENT '回滚状态',
+  `rollback_time` datetime DEFAULT NULL COMMENT '回滚时间',
+  `error_message` text COLLATE utf8mb4_unicode_ci COMMENT '错误信息',
+  `metadata` json DEFAULT NULL COMMENT '元数据',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_update_id` (`update_id`),
+  KEY `idx_environment` (`environment`),
+  KEY `idx_push_status` (`push_status`),
+  KEY `idx_push_time` (`push_time`),
+  CONSTRAINT `fk_push_update` FOREIGN KEY (`update_id`) REFERENCES `system_updates` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='更新推送记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `update_push_logs`
+--
+
+LOCK TABLES `update_push_logs` WRITE;
+/*!40000 ALTER TABLE `update_push_logs` DISABLE KEYS */;
+INSERT INTO `update_push_logs` VALUES (1,4,'v1.0.1','production','test-server','success','2026-04-26 03:14:18','2026-04-26 03:14:18','test-server','none',NULL,NULL,NULL,'2026-04-26 03:14:18','2026-04-26 03:14:18'),(2,5,'v1.2.0','production','mpg22sol-prod','success','2026-04-26 05:29:16','2026-04-26 05:29:16','mpg22sol-prod','none',NULL,NULL,NULL,'2026-04-26 05:29:16','2026-04-26 05:29:16');
+/*!40000 ALTER TABLE `update_push_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_achievements`
+--
+
+DROP TABLE IF EXISTS `user_achievements`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_achievements` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `achievement_id` int(10) unsigned NOT NULL,
+  `progress` int(11) NOT NULL DEFAULT '0' COMMENT '当前进度',
+  `is_completed` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否完成',
+  `achieved_at` datetime DEFAULT NULL COMMENT '达成时间',
+  `claimed` tinyint(1) NOT NULL DEFAULT '0' COMMENT '奖励是否已领取',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_achievement` (`user_id`,`achievement_id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_achievement` (`achievement_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=291 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户成就';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_achievements`
+--
+
+LOCK TABLES `user_achievements` WRITE;
+/*!40000 ALTER TABLE `user_achievements` DISABLE KEYS */;
+INSERT INTO `user_achievements` VALUES (1,1,'站长',1,0,0,NULL,0,'2026-04-19 11:51:26'),(2,1,'站长',2,0,0,NULL,0,'2026-04-19 11:51:26'),(3,1,'站长',3,0,0,NULL,0,'2026-04-19 11:51:26'),(4,1,'站长',4,0,0,NULL,0,'2026-04-19 11:51:26'),(5,1,'站长',5,0,0,NULL,0,'2026-04-19 11:51:26'),(6,1,'站长',6,2,0,NULL,0,'2026-04-19 11:51:26'),(7,1,'站长',7,2,0,NULL,0,'2026-04-19 11:51:26'),(8,1,'站长',8,2,0,NULL,0,'2026-04-19 11:51:26'),(9,1,'站长',9,2,0,NULL,0,'2026-04-19 11:51:26'),(10,1,'站长',10,0,0,NULL,0,'2026-04-19 11:51:26'),(11,1,'站长',11,2,0,NULL,0,'2026-04-19 11:51:26'),(12,1,'站长',12,1,0,NULL,0,'2026-04-19 11:51:26'),(13,1,'站长',13,1,0,NULL,0,'2026-04-19 11:51:26'),(14,1,'站长',14,1,0,NULL,0,'2026-04-19 11:51:26'),(15,1,'站长',15,1,0,NULL,0,'2026-04-19 11:51:26'),(16,1,'站长',16,0,0,NULL,0,'2026-04-19 11:51:26'),(17,1,'站长',17,1,0,NULL,0,'2026-04-19 11:51:26'),(18,1,'站长',18,1,0,NULL,0,'2026-04-19 11:51:26'),(19,1,'站长',19,1,0,NULL,0,'2026-04-19 11:51:26'),(20,1,'站长',20,1,0,NULL,0,'2026-04-19 11:51:26'),(21,1,'站长',21,1,0,NULL,0,'2026-04-19 11:51:26'),(22,1,'站长',22,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(23,1,'站长',23,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(24,1,'站长',24,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(25,1,'站长',25,0,0,NULL,0,'2026-04-19 11:51:26'),(26,1,'站长',26,0,0,NULL,0,'2026-04-19 11:51:26'),(27,1,'站长',27,0,0,NULL,0,'2026-04-19 11:51:26'),(28,1,'站长',28,85,0,NULL,0,'2026-04-19 11:51:26'),(29,1,'站长',29,85,0,NULL,0,'2026-04-19 11:51:26'),(30,1,'站长',30,0,0,NULL,0,'2026-04-19 11:51:26'),(31,1,'站长',31,0,0,NULL,0,'2026-04-19 11:51:26'),(32,1,'站长',32,0,0,NULL,0,'2026-04-19 11:51:26'),(33,1,'站长',33,0,0,NULL,0,'2026-04-19 11:51:26'),(34,1,'站长',34,0,0,NULL,0,'2026-04-19 11:51:26'),(35,1,'站长',35,2,0,NULL,0,'2026-04-19 11:51:26'),(36,1,'站长',36,2,0,NULL,0,'2026-04-19 11:51:26'),(37,1,'站长',37,2,0,NULL,0,'2026-04-19 11:51:26'),(38,1,'站长',38,2,0,NULL,0,'2026-04-19 11:51:26'),(39,1,'站长',39,0,0,NULL,0,'2026-04-19 11:51:26'),(40,1,'站长',40,2,0,NULL,0,'2026-04-19 11:51:26'),(41,1,'站长',41,1,0,NULL,0,'2026-04-19 11:51:26'),(42,1,'站长',42,1,0,NULL,0,'2026-04-19 11:51:26'),(43,1,'站长',43,1,0,NULL,0,'2026-04-19 11:51:26'),(44,1,'站长',44,1,0,NULL,0,'2026-04-19 11:51:26'),(45,1,'站长',45,0,0,NULL,0,'2026-04-19 11:51:26'),(46,1,'站长',46,1,0,NULL,0,'2026-04-19 11:51:26'),(47,1,'站长',47,1,0,NULL,0,'2026-04-19 11:51:26'),(48,1,'站长',48,1,0,NULL,0,'2026-04-19 11:51:26'),(49,1,'站长',49,1,0,NULL,0,'2026-04-19 11:51:26'),(50,1,'站长',50,1,0,NULL,0,'2026-04-19 11:51:26'),(51,1,'站长',51,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(52,1,'站长',52,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(53,1,'站长',53,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(54,1,'站长',54,0,0,NULL,0,'2026-04-19 11:51:26'),(55,1,'站长',55,0,0,NULL,0,'2026-04-19 11:51:26'),(56,1,'站长',56,0,0,NULL,0,'2026-04-19 11:51:26'),(57,1,'站长',57,85,0,NULL,0,'2026-04-19 11:51:26'),(58,1,'站长',58,85,0,NULL,0,'2026-04-19 11:51:26'),(59,1,'站长',59,0,0,NULL,0,'2026-04-19 11:51:26'),(60,1,'站长',60,0,0,NULL,0,'2026-04-19 11:51:26'),(61,1,'站长',61,0,0,NULL,0,'2026-04-19 11:51:26'),(62,1,'站长',62,0,0,NULL,0,'2026-04-19 11:51:26'),(63,1,'站长',63,0,0,NULL,0,'2026-04-19 11:51:26'),(64,1,'站长',64,2,0,NULL,0,'2026-04-19 11:51:26'),(65,1,'站长',65,2,0,NULL,0,'2026-04-19 11:51:26'),(66,1,'站长',66,2,0,NULL,0,'2026-04-19 11:51:26'),(67,1,'站长',67,2,0,NULL,0,'2026-04-19 11:51:26'),(68,1,'站长',68,0,0,NULL,0,'2026-04-19 11:51:26'),(69,1,'站长',69,2,0,NULL,0,'2026-04-19 11:51:26'),(70,1,'站长',70,1,0,NULL,0,'2026-04-19 11:51:26'),(71,1,'站长',71,1,0,NULL,0,'2026-04-19 11:51:26'),(72,1,'站长',72,1,0,NULL,0,'2026-04-19 11:51:26'),(73,1,'站长',73,1,0,NULL,0,'2026-04-19 11:51:26'),(74,1,'站长',74,0,0,NULL,0,'2026-04-19 11:51:26'),(75,1,'站长',75,1,0,NULL,0,'2026-04-19 11:51:26'),(76,1,'站长',76,1,0,NULL,0,'2026-04-19 11:51:26'),(77,1,'站长',77,1,0,NULL,0,'2026-04-19 11:51:26'),(78,1,'站长',78,1,0,NULL,0,'2026-04-19 11:51:26'),(79,1,'站长',79,1,0,NULL,0,'2026-04-19 11:51:26'),(80,1,'站长',80,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(81,1,'站长',81,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(82,1,'站长',82,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(83,1,'站长',83,0,0,NULL,0,'2026-04-19 11:51:26'),(84,1,'站长',84,0,0,NULL,0,'2026-04-19 11:51:26'),(85,1,'站长',85,0,0,NULL,0,'2026-04-19 11:51:26'),(86,1,'站长',86,85,0,NULL,0,'2026-04-19 11:51:26'),(87,1,'站长',87,85,0,NULL,0,'2026-04-19 11:51:26'),(88,1,'站长',88,0,0,NULL,0,'2026-04-19 11:51:26'),(89,1,'站长',89,0,0,NULL,0,'2026-04-19 11:51:26'),(90,1,'站长',90,0,0,NULL,0,'2026-04-19 11:51:26'),(91,1,'站长',91,0,0,NULL,0,'2026-04-19 11:51:26'),(92,1,'站长',92,0,0,NULL,0,'2026-04-19 11:51:26'),(93,1,'站长',93,2,0,NULL,0,'2026-04-19 11:51:26'),(94,1,'站长',94,2,0,NULL,0,'2026-04-19 11:51:26'),(95,1,'站长',95,2,0,NULL,0,'2026-04-19 11:51:26'),(96,1,'站长',96,2,0,NULL,0,'2026-04-19 11:51:26'),(97,1,'站长',97,0,0,NULL,0,'2026-04-19 11:51:26'),(98,1,'站长',98,2,0,NULL,0,'2026-04-19 11:51:26'),(99,1,'站长',99,1,0,NULL,0,'2026-04-19 11:51:26'),(100,1,'站长',100,1,0,NULL,0,'2026-04-19 11:51:26'),(101,1,'站长',101,1,0,NULL,0,'2026-04-19 11:51:26'),(102,1,'站长',102,1,0,NULL,0,'2026-04-19 11:51:26'),(103,1,'站长',103,0,0,NULL,0,'2026-04-19 11:51:26'),(104,1,'站长',104,1,0,NULL,0,'2026-04-19 11:51:26'),(105,1,'站长',105,1,0,NULL,0,'2026-04-19 11:51:26'),(106,1,'站长',106,1,0,NULL,0,'2026-04-19 11:51:26'),(107,1,'站长',107,1,0,NULL,0,'2026-04-19 11:51:26'),(108,1,'站长',108,1,0,NULL,0,'2026-04-19 11:51:26'),(109,1,'站长',109,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(110,1,'站长',110,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(111,1,'站长',111,9934889,1,'2026-04-19 11:51:26',0,'2026-04-19 11:51:26'),(112,1,'站长',112,0,0,NULL,0,'2026-04-19 11:51:26'),(113,1,'站长',113,0,0,NULL,0,'2026-04-19 11:51:26'),(114,1,'站长',114,0,0,NULL,0,'2026-04-19 11:51:26'),(115,1,'站长',115,85,0,NULL,0,'2026-04-19 11:51:26'),(116,1,'站长',116,85,0,NULL,0,'2026-04-19 11:51:26'),(117,1,'站长',117,0,0,NULL,0,'2026-04-20 13:19:58'),(118,1,'站长',118,0,0,NULL,0,'2026-04-20 13:19:58'),(119,1,'站长',119,0,0,NULL,0,'2026-04-20 13:19:58'),(120,1,'站长',120,0,0,NULL,0,'2026-04-20 13:19:58'),(121,1,'站长',121,0,0,NULL,0,'2026-04-20 13:19:58'),(122,1,'站长',122,2,0,NULL,0,'2026-04-20 13:19:58'),(123,1,'站长',123,2,0,NULL,0,'2026-04-20 13:19:58'),(124,1,'站长',124,2,0,NULL,0,'2026-04-20 13:19:58'),(125,1,'站长',125,2,0,NULL,0,'2026-04-20 13:19:58'),(126,1,'站长',126,0,0,NULL,0,'2026-04-20 13:19:58'),(127,1,'站长',127,2,0,NULL,0,'2026-04-20 13:19:58'),(128,1,'站长',128,1,0,NULL,0,'2026-04-20 13:19:58'),(129,1,'站长',129,1,0,NULL,0,'2026-04-20 13:19:58'),(130,1,'站长',130,1,0,NULL,0,'2026-04-20 13:19:58'),(131,1,'站长',131,1,0,NULL,0,'2026-04-20 13:19:58'),(132,1,'站长',132,0,0,NULL,0,'2026-04-20 13:19:58'),(133,1,'站长',133,1,0,NULL,0,'2026-04-20 13:19:58'),(134,1,'站长',134,1,0,NULL,0,'2026-04-20 13:19:58'),(135,1,'站长',135,1,0,NULL,0,'2026-04-20 13:19:58'),(136,1,'站长',136,1,0,NULL,0,'2026-04-20 13:19:58'),(137,1,'站长',137,1,0,NULL,0,'2026-04-20 13:19:58'),(138,1,'站长',138,9934893,1,'2026-04-20 13:19:58',0,'2026-04-20 13:19:58'),(139,1,'站长',139,9934893,1,'2026-04-20 13:19:58',0,'2026-04-20 13:19:58'),(140,1,'站长',140,9934893,1,'2026-04-20 13:19:58',0,'2026-04-20 13:19:58'),(141,1,'站长',141,0,0,NULL,0,'2026-04-20 13:19:58'),(142,1,'站长',142,0,0,NULL,0,'2026-04-20 13:19:58'),(143,1,'站长',143,0,0,NULL,0,'2026-04-20 13:19:58'),(144,1,'站长',144,85,0,NULL,0,'2026-04-20 13:19:58'),(145,1,'站长',145,85,0,NULL,0,'2026-04-20 13:19:58'),(146,13,'install',1,0,0,NULL,0,'2026-04-22 14:17:10'),(147,13,'install',2,0,0,NULL,0,'2026-04-22 14:17:10'),(148,13,'install',3,0,0,NULL,0,'2026-04-22 14:17:10'),(149,13,'install',4,0,0,NULL,0,'2026-04-22 14:17:10'),(150,13,'install',5,0,0,NULL,0,'2026-04-22 14:17:10'),(151,13,'install',6,2,0,NULL,0,'2026-04-22 14:17:10'),(152,13,'install',7,2,0,NULL,0,'2026-04-22 14:17:10'),(153,13,'install',8,2,0,NULL,0,'2026-04-22 14:17:10'),(154,13,'install',9,2,0,NULL,0,'2026-04-22 14:17:10'),(155,13,'install',10,0,0,NULL,0,'2026-04-22 14:17:10'),(156,13,'install',11,2,0,NULL,0,'2026-04-22 14:17:10'),(157,13,'install',12,0,0,NULL,0,'2026-04-22 14:17:10'),(158,13,'install',13,0,0,NULL,0,'2026-04-22 14:17:10'),(159,13,'install',14,0,0,NULL,0,'2026-04-22 14:17:10'),(160,13,'install',15,0,0,NULL,0,'2026-04-22 14:17:10'),(161,13,'install',16,0,0,NULL,0,'2026-04-22 14:17:10'),(162,13,'install',17,0,0,NULL,0,'2026-04-22 14:17:10'),(163,13,'install',18,0,0,NULL,0,'2026-04-22 14:17:10'),(164,13,'install',19,0,0,NULL,0,'2026-04-22 14:17:10'),(165,13,'install',20,0,0,NULL,0,'2026-04-22 14:17:10'),(166,13,'install',21,0,0,NULL,0,'2026-04-22 14:17:10'),(167,13,'install',22,106,0,NULL,0,'2026-04-22 14:17:10'),(168,13,'install',23,106,0,NULL,0,'2026-04-22 14:17:10'),(169,13,'install',24,106,0,NULL,0,'2026-04-22 14:17:10'),(170,13,'install',25,0,0,NULL,0,'2026-04-22 14:17:10'),(171,13,'install',26,0,0,NULL,0,'2026-04-22 14:17:10'),(172,13,'install',27,0,0,NULL,0,'2026-04-22 14:17:10'),(173,13,'install',28,100,0,NULL,0,'2026-04-22 14:17:10'),(174,13,'install',29,100,0,NULL,0,'2026-04-22 14:17:10'),(175,13,'install',30,0,0,NULL,0,'2026-04-22 14:17:10'),(176,13,'install',31,0,0,NULL,0,'2026-04-22 14:17:10'),(177,13,'install',32,0,0,NULL,0,'2026-04-22 14:17:10'),(178,13,'install',33,0,0,NULL,0,'2026-04-22 14:17:10'),(179,13,'install',34,0,0,NULL,0,'2026-04-22 14:17:10'),(180,13,'install',35,2,0,NULL,0,'2026-04-22 14:17:10'),(181,13,'install',36,2,0,NULL,0,'2026-04-22 14:17:10'),(182,13,'install',37,2,0,NULL,0,'2026-04-22 14:17:10'),(183,13,'install',38,2,0,NULL,0,'2026-04-22 14:17:10'),(184,13,'install',39,0,0,NULL,0,'2026-04-22 14:17:10'),(185,13,'install',40,2,0,NULL,0,'2026-04-22 14:17:10'),(186,13,'install',41,0,0,NULL,0,'2026-04-22 14:17:10'),(187,13,'install',42,0,0,NULL,0,'2026-04-22 14:17:10'),(188,13,'install',43,0,0,NULL,0,'2026-04-22 14:17:10'),(189,13,'install',44,0,0,NULL,0,'2026-04-22 14:17:10'),(190,13,'install',45,0,0,NULL,0,'2026-04-22 14:17:10'),(191,13,'install',46,0,0,NULL,0,'2026-04-22 14:17:10'),(192,13,'install',47,0,0,NULL,0,'2026-04-22 14:17:10'),(193,13,'install',48,0,0,NULL,0,'2026-04-22 14:17:10'),(194,13,'install',49,0,0,NULL,0,'2026-04-22 14:17:10'),(195,13,'install',50,0,0,NULL,0,'2026-04-22 14:17:10'),(196,13,'install',51,106,0,NULL,0,'2026-04-22 14:17:10'),(197,13,'install',52,106,0,NULL,0,'2026-04-22 14:17:10'),(198,13,'install',53,106,0,NULL,0,'2026-04-22 14:17:10'),(199,13,'install',54,0,0,NULL,0,'2026-04-22 14:17:10'),(200,13,'install',55,0,0,NULL,0,'2026-04-22 14:17:10'),(201,13,'install',56,0,0,NULL,0,'2026-04-22 14:17:10'),(202,13,'install',57,100,0,NULL,0,'2026-04-22 14:17:10'),(203,13,'install',58,100,0,NULL,0,'2026-04-22 14:17:10'),(204,13,'install',59,0,0,NULL,0,'2026-04-22 14:17:10'),(205,13,'install',60,0,0,NULL,0,'2026-04-22 14:17:10'),(206,13,'install',61,0,0,NULL,0,'2026-04-22 14:17:10'),(207,13,'install',62,0,0,NULL,0,'2026-04-22 14:17:10'),(208,13,'install',63,0,0,NULL,0,'2026-04-22 14:17:10'),(209,13,'install',64,2,0,NULL,0,'2026-04-22 14:17:10'),(210,13,'install',65,2,0,NULL,0,'2026-04-22 14:17:10'),(211,13,'install',66,2,0,NULL,0,'2026-04-22 14:17:10'),(212,13,'install',67,2,0,NULL,0,'2026-04-22 14:17:10'),(213,13,'install',68,0,0,NULL,0,'2026-04-22 14:17:10'),(214,13,'install',69,2,0,NULL,0,'2026-04-22 14:17:10'),(215,13,'install',70,0,0,NULL,0,'2026-04-22 14:17:10'),(216,13,'install',71,0,0,NULL,0,'2026-04-22 14:17:10'),(217,13,'install',72,0,0,NULL,0,'2026-04-22 14:17:10'),(218,13,'install',73,0,0,NULL,0,'2026-04-22 14:17:10'),(219,13,'install',74,0,0,NULL,0,'2026-04-22 14:17:10'),(220,13,'install',75,0,0,NULL,0,'2026-04-22 14:17:10'),(221,13,'install',76,0,0,NULL,0,'2026-04-22 14:17:10'),(222,13,'install',77,0,0,NULL,0,'2026-04-22 14:17:10'),(223,13,'install',78,0,0,NULL,0,'2026-04-22 14:17:10'),(224,13,'install',79,0,0,NULL,0,'2026-04-22 14:17:10'),(225,13,'install',80,106,0,NULL,0,'2026-04-22 14:17:10'),(226,13,'install',81,106,0,NULL,0,'2026-04-22 14:17:10'),(227,13,'install',82,106,0,NULL,0,'2026-04-22 14:17:10'),(228,13,'install',83,0,0,NULL,0,'2026-04-22 14:17:10'),(229,13,'install',84,0,0,NULL,0,'2026-04-22 14:17:10'),(230,13,'install',85,0,0,NULL,0,'2026-04-22 14:17:10'),(231,13,'install',86,100,0,NULL,0,'2026-04-22 14:17:10'),(232,13,'install',87,100,0,NULL,0,'2026-04-22 14:17:10'),(233,13,'install',88,0,0,NULL,0,'2026-04-22 14:17:10'),(234,13,'install',89,0,0,NULL,0,'2026-04-22 14:17:10'),(235,13,'install',90,0,0,NULL,0,'2026-04-22 14:17:10'),(236,13,'install',91,0,0,NULL,0,'2026-04-22 14:17:10'),(237,13,'install',92,0,0,NULL,0,'2026-04-22 14:17:10'),(238,13,'install',93,2,0,NULL,0,'2026-04-22 14:17:10'),(239,13,'install',94,2,0,NULL,0,'2026-04-22 14:17:10'),(240,13,'install',95,2,0,NULL,0,'2026-04-22 14:17:10'),(241,13,'install',96,2,0,NULL,0,'2026-04-22 14:17:10'),(242,13,'install',97,0,0,NULL,0,'2026-04-22 14:17:10'),(243,13,'install',98,2,0,NULL,0,'2026-04-22 14:17:10'),(244,13,'install',99,0,0,NULL,0,'2026-04-22 14:17:10'),(245,13,'install',100,0,0,NULL,0,'2026-04-22 14:17:10'),(246,13,'install',101,0,0,NULL,0,'2026-04-22 14:17:10'),(247,13,'install',102,0,0,NULL,0,'2026-04-22 14:17:10'),(248,13,'install',103,0,0,NULL,0,'2026-04-22 14:17:10'),(249,13,'install',104,0,0,NULL,0,'2026-04-22 14:17:10'),(250,13,'install',105,0,0,NULL,0,'2026-04-22 14:17:10'),(251,13,'install',106,0,0,NULL,0,'2026-04-22 14:17:10'),(252,13,'install',107,0,0,NULL,0,'2026-04-22 14:17:10'),(253,13,'install',108,0,0,NULL,0,'2026-04-22 14:17:10'),(254,13,'install',109,106,0,NULL,0,'2026-04-22 14:17:10'),(255,13,'install',110,106,0,NULL,0,'2026-04-22 14:17:10'),(256,13,'install',111,106,0,NULL,0,'2026-04-22 14:17:10'),(257,13,'install',112,0,0,NULL,0,'2026-04-22 14:17:10'),(258,13,'install',113,0,0,NULL,0,'2026-04-22 14:17:10'),(259,13,'install',114,0,0,NULL,0,'2026-04-22 14:17:10'),(260,13,'install',115,100,0,NULL,0,'2026-04-22 14:17:10'),(261,13,'install',116,100,0,NULL,0,'2026-04-22 14:17:10'),(262,13,'install',117,0,0,NULL,0,'2026-04-22 14:17:10'),(263,13,'install',118,0,0,NULL,0,'2026-04-22 14:17:10'),(264,13,'install',119,0,0,NULL,0,'2026-04-22 14:17:10'),(265,13,'install',120,0,0,NULL,0,'2026-04-22 14:17:10'),(266,13,'install',121,0,0,NULL,0,'2026-04-22 14:17:10'),(267,13,'install',122,2,0,NULL,0,'2026-04-22 14:17:10'),(268,13,'install',123,2,0,NULL,0,'2026-04-22 14:17:10'),(269,13,'install',124,2,0,NULL,0,'2026-04-22 14:17:10'),(270,13,'install',125,2,0,NULL,0,'2026-04-22 14:17:10'),(271,13,'install',126,0,0,NULL,0,'2026-04-22 14:17:10'),(272,13,'install',127,2,0,NULL,0,'2026-04-22 14:17:10'),(273,13,'install',128,0,0,NULL,0,'2026-04-22 14:17:10'),(274,13,'install',129,0,0,NULL,0,'2026-04-22 14:17:10'),(275,13,'install',130,0,0,NULL,0,'2026-04-22 14:17:10'),(276,13,'install',131,0,0,NULL,0,'2026-04-22 14:17:10'),(277,13,'install',132,0,0,NULL,0,'2026-04-22 14:17:10'),(278,13,'install',133,0,0,NULL,0,'2026-04-22 14:17:10'),(279,13,'install',134,0,0,NULL,0,'2026-04-22 14:17:10'),(280,13,'install',135,0,0,NULL,0,'2026-04-22 14:17:10'),(281,13,'install',136,0,0,NULL,0,'2026-04-22 14:17:10'),(282,13,'install',137,0,0,NULL,0,'2026-04-22 14:17:10'),(283,13,'install',138,106,0,NULL,0,'2026-04-22 14:17:10'),(284,13,'install',139,106,0,NULL,0,'2026-04-22 14:17:10'),(285,13,'install',140,106,0,NULL,0,'2026-04-22 14:17:10'),(286,13,'install',141,0,0,NULL,0,'2026-04-22 14:17:10'),(287,13,'install',142,0,0,NULL,0,'2026-04-22 14:17:10'),(288,13,'install',143,0,0,NULL,0,'2026-04-22 14:17:10'),(289,13,'install',144,100,0,NULL,0,'2026-04-22 14:17:10'),(290,13,'install',145,100,0,NULL,0,'2026-04-22 14:17:10');
+/*!40000 ALTER TABLE `user_achievements` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_cards`
+--
+
+DROP TABLE IF EXISTS `user_cards`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_cards` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `card_name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quantity` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '面值(上限99)',
+  `description` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='卡片持有';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_cards`
+--
+
+LOCK TABLES `user_cards` WRITE;
+/*!40000 ALTER TABLE `user_cards` DISABLE KEYS */;
+INSERT INTO `user_cards` VALUES (1,'变性卡','站长',1,'变换性别(需未婚)');
+/*!40000 ALTER TABLE `user_cards` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_diner_items`
+--
+
+DROP TABLE IF EXISTS `user_diner_items`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_diner_items` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `category` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `power` int(11) NOT NULL DEFAULT '0',
+  `stamina` int(11) NOT NULL DEFAULT '0',
+  `level_req` int(11) NOT NULL DEFAULT '0',
+  `quantity` int(11) NOT NULL DEFAULT '0',
+  `price` int(11) NOT NULL DEFAULT '0',
+  `purchased_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户酒菜';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_diner_items`
+--
+
+LOCK TABLES `user_diner_items` WRITE;
+/*!40000 ALTER TABLE `user_diner_items` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_diner_items` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_event_logs`
+--
+
+DROP TABLE IF EXISTS `user_event_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_event_logs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `event_id` int(10) unsigned NOT NULL,
+  `event_type` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `event_name` varchar(100) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `effect_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `effect_value` int(11) DEFAULT '0',
+  `created_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_event` (`event_id`),
+  KEY `idx_created` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户事件记录表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_event_logs`
+--
+
+LOCK TABLES `user_event_logs` WRITE;
+/*!40000 ALTER TABLE `user_event_logs` DISABLE KEYS */;
+INSERT INTO `user_event_logs` VALUES (1,1,1,'fortune','福星高照','silver',334,'2026-04-19 15:28:49'),(2,1,1,'fortune','福星高照','silver',434,'2026-04-19 15:29:31'),(3,1,119,'fortune','普天同庆','silver',66,'2026-04-19 15:40:54');
+/*!40000 ALTER TABLE `user_event_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_fortunes`
+--
+
+DROP TABLE IF EXISTS `user_fortunes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_fortunes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fortune_type` enum('great_luck','medium_luck','small_luck','small_misfortune','misfortune') COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fortune_title` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `fortune_desc` text COLLATE utf8mb4_unicode_ci,
+  `fortune_date` date NOT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_date` (`username`,`fortune_date`),
+  KEY `idx_user` (`user_id`)
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户运势';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_fortunes`
+--
+
+LOCK TABLES `user_fortunes` WRITE;
+/*!40000 ALTER TABLE `user_fortunes` DISABLE KEYS */;
+INSERT INTO `user_fortunes` VALUES (1,1,'站长','small_misfortune','小凶','今天可能会遇到一些挫折，但不要气馁！保持冷静，困难终将过去！','2026-04-19','2026-04-19 08:00:55'),(2,1,'站长','small_luck','小吉','运势还算不错！虽然不能贪心，但只要脚踏实地，会有小收获！','2026-04-20','2026-04-20 13:38:07'),(3,1,'独角兽','great_luck','大吉','时运亨通，万事顺利！今天做什么都会成功，不妨大胆尝试新的挑战！','2026-04-25','2026-04-25 09:22:18');
+/*!40000 ALTER TABLE `user_fortunes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_insurances`
+--
+
+DROP TABLE IF EXISTS `user_insurances`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_insurances` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `insurance_name` varchar(30) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `owner` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `duration_days` int(11) NOT NULL DEFAULT '0',
+  `expires_at` datetime NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `idx_owner` (`owner`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户保险';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_insurances`
+--
+
+LOCK TABLES `user_insurances` WRITE;
+/*!40000 ALTER TABLE `user_insurances` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_insurances` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_ip_logs`
+--
+
+DROP TABLE IF EXISTS `user_ip_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_ip_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `username` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `ip_address` varchar(45) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT 'IP 地址',
+  `ip_type` enum('register','login','logout') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'login' COMMENT 'IP 类型',
+  `user_agent` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '浏览器信息',
+  `login_status` enum('success','failed') COLLATE utf8mb4_unicode_ci DEFAULT 'success' COMMENT '登录状态',
+  `reason` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '失败原因',
+  `country` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '国家',
+  `region` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '省份',
+  `city` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '城市',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '记录时间',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_ip_address` (`ip_address`),
+  KEY `idx_created_at` (`created_at`),
+  KEY `idx_username` (`username`),
+  KEY `idx_login_status` (`login_status`),
+  CONSTRAINT `user_ip_logs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `users` (`id`) ON DELETE CASCADE
+) ENGINE=InnoDB AUTO_INCREMENT=87 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户 IP 记录历史表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_ip_logs`
+--
+
+LOCK TABLES `user_ip_logs` WRITE;
+/*!40000 ALTER TABLE `user_ip_logs` DISABLE KEYS */;
+INSERT INTO `user_ip_logs` VALUES (1,1,NULL,'125.82.71.102','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-20 07:57:58'),(2,1,NULL,'125.82.71.102','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-20 08:18:56'),(3,13,NULL,'125.82.71.102','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-20 09:00:47'),(4,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:20:38'),(5,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:31:05'),(6,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:31:14'),(7,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:31:23'),(8,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:31:35'),(9,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:31:41'),(10,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:31:41'),(11,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:32:07'),(12,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:32:12'),(13,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:32:23'),(14,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:32:27'),(15,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:32:40'),(16,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:33:35'),(17,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-20 13:33:40'),(18,1,NULL,'125.82.71.109','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-21 01:41:54'),(19,1,NULL,'125.82.71.109','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-21 01:54:52'),(20,1,NULL,'125.82.71.109','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-21 02:25:48'),(21,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-21 02:59:32'),(22,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-21 02:59:34'),(23,1,NULL,'125.82.71.109','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/145.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-21 04:05:58'),(24,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-21 09:26:59'),(25,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-21 09:28:05'),(26,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-21 09:28:34'),(27,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-21 09:28:45'),(28,1,NULL,'::ffff:127.0.0.1','login','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-21 09:31:40'),(29,1,NULL,'183.228.206.237','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-21 15:20:51'),(30,1,NULL,'183.228.206.237','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-21 15:31:16'),(31,1,NULL,'183.228.206.237','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-21 15:43:38'),(32,1,NULL,'183.228.206.237','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-21 15:48:28'),(33,13,NULL,'125.82.71.109','login','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-22 09:18:07'),(34,1,'站长','125.82.71.109','login','','success',NULL,'','','','2026-04-22 09:38:28'),(35,1,'站长','125.82.71.109','login','','success',NULL,'','','','2026-04-22 09:38:51'),(36,1,'站长','::ffff:127.0.0.1','login','','failed','密码错误','','','','2026-04-22 09:39:26'),(39,1,'站长','125.82.71.109','login','','success',NULL,'','','','2026-04-22 09:40:32'),(45,13,'install','183.228.206.237','login','','success',NULL,'','','','2026-04-22 13:21:33'),(46,1,'站长','183.228.206.237','login','','success',NULL,'','','','2026-04-22 16:02:39'),(47,1,'站长','183.228.206.237','login','','success',NULL,'','','','2026-04-24 16:10:12'),(48,NULL,'test','::ffff:127.0.0.1','login','','failed','用户不存在',NULL,NULL,NULL,'2026-04-24 16:30:23'),(49,1,'站长','183.228.206.237','login','','success',NULL,'','','','2026-04-24 16:48:10'),(50,1,'站长','125.82.66.31','login','','success',NULL,'','','','2026-04-25 02:53:39'),(51,1,'站长','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 03:10:53'),(52,1,'站长','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 03:11:11'),(53,1,'独角兽','125.82.66.31','login','','success',NULL,'','','','2026-04-25 03:34:30'),(54,1,'独角兽','125.82.66.31','login','','success',NULL,'','','','2026-04-25 04:01:35'),(55,1,'独角兽','125.82.66.31','login','','success',NULL,'','','','2026-04-25 04:02:10'),(56,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:04:41'),(57,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:05:13'),(58,1,'独角兽','125.82.66.31','login','','success',NULL,'','','','2026-04-25 04:07:25'),(59,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:08:05'),(60,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:08:49'),(61,1,'独角兽','125.82.66.31','login','','success',NULL,'','','','2026-04-25 04:14:31'),(62,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:24:10'),(63,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:26:58'),(64,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:27:15'),(65,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:32:03'),(66,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 04:32:16'),(67,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 07:18:07'),(68,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 07:21:50'),(69,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 07:21:54'),(70,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 07:21:58'),(71,1,'独角兽','::ffff:127.0.0.1','login','','success',NULL,'','','','2026-04-25 07:23:35'),(72,1,'独角兽','125.82.66.31','login','','success',NULL,'','','','2026-04-25 08:12:12'),(73,16,NULL,'127.0.0.1','register','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-25 14:09:30'),(74,17,NULL,'127.0.0.1','register','curl/7.88.1','success',NULL,NULL,NULL,NULL,'2026-04-25 14:09:34'),(75,18,NULL,'125.82.66.31','register','Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/132.0.0.0 Safari/537.36','success',NULL,NULL,NULL,NULL,'2026-04-25 14:10:55'),(76,18,'测试用户','125.82.66.31','login','','success',NULL,'','','','2026-04-25 14:10:55'),(77,1,'独角兽','113.248.202.196','login','','success',NULL,'','','','2026-04-26 12:55:40'),(78,1,'独角兽','183.228.206.237','login','','success',NULL,'','','','2026-04-26 14:20:14'),(79,1,'独角兽','183.228.206.237','login','','success',NULL,'','','','2026-04-26 17:36:07'),(80,18,'测试用户','125.82.70.106','login','','success',NULL,'','','','2026-04-28 03:22:15'),(81,1,'独角兽','125.82.70.106','login','','failed','密码错误','','','','2026-04-28 03:33:16'),(82,1,'独角兽','125.82.70.106','login','','success',NULL,'','','','2026-04-28 03:33:19'),(83,NULL,'啊啊','125.82.70.106','login','','failed','用户不存在',NULL,NULL,NULL,'2026-04-28 03:33:50'),(84,NULL,'啊啊','125.82.70.106','login','','failed','用户不存在',NULL,NULL,NULL,'2026-04-28 03:33:52'),(85,NULL,'啊啊','125.82.70.106','login','','failed','用户不存在',NULL,NULL,NULL,'2026-04-28 03:33:57'),(86,1,'独角兽','125.82.70.106','login','','success',NULL,'','','','2026-04-28 03:34:04');
+/*!40000 ALTER TABLE `user_ip_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_level_config`
+--
+
+DROP TABLE IF EXISTS `user_level_config`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_level_config` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `level` tinyint(3) unsigned NOT NULL COMMENT '等级 (1-10)',
+  `required_exp` bigint(20) NOT NULL COMMENT '升级所需经验',
+  `max_daily_chat_exp` int(11) NOT NULL DEFAULT '500' COMMENT '每日聊天经验上限',
+  `chat_exp_per_minute` int(11) NOT NULL DEFAULT '1' COMMENT '每分钟聊天获得经验',
+  `can_be_admin` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否可担任管理员',
+  `min_register_days` int(11) NOT NULL DEFAULT '0' COMMENT '最少注册天数要求',
+  `min_total_exp` bigint(20) NOT NULL DEFAULT '0' COMMENT '最少总经验要求',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_level` (`level`)
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户等级配置';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_level_config`
+--
+
+LOCK TABLES `user_level_config` WRITE;
+/*!40000 ALTER TABLE `user_level_config` DISABLE KEYS */;
+INSERT INTO `user_level_config` VALUES (1,1,0,100,1,0,0,0,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(2,2,1000,200,2,0,0,0,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(3,3,3000,300,3,0,1,1000,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(4,4,6000,400,4,0,3,3000,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(5,5,10000,500,5,1,7,6000,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(6,6,15000,600,6,1,15,10000,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(7,7,25000,700,7,1,30,15000,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(8,8,40000,800,8,1,60,25000,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(9,9,60000,900,9,1,90,40000,'2026-04-26 13:31:18','2026-04-26 13:31:18'),(10,10,100000,1000,10,1,180,60000,'2026-04-26 13:31:18','2026-04-26 13:31:18');
+/*!40000 ALTER TABLE `user_level_config` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_quests`
+--
+
+DROP TABLE IF EXISTS `user_quests`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_quests` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `quest_id` int(10) unsigned NOT NULL,
+  `status` enum('available','in_progress','completed','claimed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'available',
+  `progress` int(11) NOT NULL DEFAULT '0' COMMENT '当前进度',
+  `completed_count` int(11) NOT NULL DEFAULT '0' COMMENT '完成次数 (日常任务)',
+  `last_completed_date` date DEFAULT NULL COMMENT '最后完成日期',
+  `completed_at` datetime DEFAULT NULL,
+  `claimed_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_user_quest` (`user_id`,`quest_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_quest` (`quest_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户任务进度';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_quests`
+--
+
+LOCK TABLES `user_quests` WRITE;
+/*!40000 ALTER TABLE `user_quests` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_quests` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_random_events`
+--
+
+DROP TABLE IF EXISTS `user_random_events`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_random_events` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `event_id` int(10) unsigned NOT NULL,
+  `effect_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `effect_value` int(11) DEFAULT '0',
+  `triggered_at` datetime DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user` (`user_id`),
+  KEY `idx_event` (`event_id`),
+  KEY `idx_triggered` (`triggered_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=44 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户随机事件记录表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_random_events`
+--
+
+LOCK TABLES `user_random_events` WRITE;
+/*!40000 ALTER TABLE `user_random_events` DISABLE KEYS */;
+INSERT INTO `user_random_events` VALUES (1,1,'站长',102,'neili',166,'2026-04-19 17:03:57'),(2,1,'站长',1,'silver',412,'2026-04-20 05:12:24'),(3,1,'站长',12,'silver',-643,'2026-04-20 05:15:57'),(4,1,'站长',6,'tili',-44,'2026-04-20 05:25:11'),(5,13,'install',10,'wugong',3,'2026-04-20 05:55:12'),(6,13,'install',101,'silver',253,'2026-04-20 06:27:28'),(7,13,'install',125,'silver',-143,'2026-04-20 06:29:49'),(8,13,'install',3,'neili',119,'2026-04-20 06:35:50'),(9,13,'install',112,'all',3,'2026-04-20 07:12:45'),(10,1,'站长',119,'silver',112,'2026-04-20 12:31:14'),(11,1,'站长',6,'tili',-46,'2026-04-20 12:35:46'),(12,1,'站长',2,'silver',1416,'2026-04-21 01:46:03'),(13,1,'站长',4,'silver',-186,'2026-04-21 01:49:12'),(14,1,'站长',118,'silver',1035,'2026-04-21 14:13:44'),(15,1,'站长',111,'all',1,'2026-04-21 14:16:06'),(16,1,'站长',109,'tili',15,'2026-04-21 15:28:51'),(17,1,'站长',120,'silver',144,'2026-04-21 15:45:39'),(18,1,'站长',113,'wugong',12,'2026-04-21 15:50:32'),(19,1,'站长',107,'silver',-249,'2026-04-21 15:59:08'),(20,13,'install',109,'tili',15,'2026-04-22 13:24:25'),(21,13,'install',1,'silver',225,'2026-04-22 13:46:08'),(22,13,'install',116,'silver',-222,'2026-04-22 13:55:06'),(23,13,'install',102,'neili',272,'2026-04-22 14:26:37'),(24,13,'install',10,'wugong',3,'2026-04-22 14:28:37'),(25,13,'install',107,'silver',-157,'2026-04-22 14:31:15'),(26,13,'install',2,'silver',825,'2026-04-22 15:02:29'),(27,13,'install',109,'tili',15,'2026-04-22 15:37:41'),(28,1,'站长',6,'tili',-40,'2026-04-24 05:01:33'),(29,1,'站长',1,'silver',301,'2026-04-24 05:09:53'),(30,1,'站长',102,'neili',146,'2026-04-24 05:30:43'),(31,1,'站长',116,'silver',-409,'2026-04-24 05:46:11'),(32,1,'站长',4,'silver',-313,'2026-04-24 06:09:07'),(33,1,'站长',9,'all',2,'2026-04-24 06:15:04'),(34,1,'站长',2,'silver',507,'2026-04-24 06:35:31'),(35,1,'站长',8,'tili',26,'2026-04-24 06:51:13'),(36,1,'站长',103,'tili',49,'2026-04-24 07:12:19'),(37,1,'站长',10,'wugong',2,'2026-04-24 07:32:13'),(38,1,'独角兽',102,'neili',288,'2026-04-25 08:01:07'),(39,1,'独角兽',118,'silver',610,'2026-04-25 08:12:03'),(40,1,'站长',105,'tili',-10,'2026-04-26 14:18:51'),(41,1,'独角兽',111,'all',3,'2026-04-26 14:32:30'),(42,1,'独角兽',117,'silver',445,'2026-04-26 14:34:37'),(43,18,'测试用户',4,'silver',-490,'2026-04-28 03:25:08');
+/*!40000 ALTER TABLE `user_random_events` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `user_work_logs`
+--
+
+DROP TABLE IF EXISTS `user_work_logs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `user_work_logs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `job_id` int(10) unsigned NOT NULL,
+  `job_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `reward` int(11) NOT NULL DEFAULT '0' COMMENT '获得奖励',
+  `stamina_cost` int(11) NOT NULL DEFAULT '0' COMMENT '消耗体力',
+  `worked_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  KEY `idx_user_time` (`user_id`,`worked_at`),
+  KEY `idx_job_time` (`job_id`,`worked_at`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='打工记录';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `user_work_logs`
+--
+
+LOCK TABLES `user_work_logs` WRITE;
+/*!40000 ALTER TABLE `user_work_logs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `user_work_logs` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `users`
+--
+
+DROP TABLE IF EXISTS `users`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `users` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '用户名(原姓名)',
+  `password` varchar(255) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '密码(bcrypt哈希)',
+  `force_password_change` tinyint(1) DEFAULT '0' COMMENT '强制修改密码标志',
+  `password_answer` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '密保答案',
+  `gender` enum('male','female') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'male' COMMENT '性别',
+  `referrer` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '介绍人',
+  `email` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '信箱',
+  `avatar` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT '1.gif' COMMENT '头像文件名',
+  `status` enum('normal','jailed','banned','dead','inn','sleeping','poisoned') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'normal' COMMENT '状态',
+  `room_id` tinyint(3) unsigned NOT NULL DEFAULT '0' COMMENT '当前房间编号',
+  `neili` int(11) NOT NULL DEFAULT '0' COMMENT '内力(MP)',
+  `max_neili` int(10) unsigned NOT NULL DEFAULT '100' COMMENT '最大内力',
+  `speed` int(10) unsigned NOT NULL DEFAULT '10' COMMENT '轻功速度',
+  `wugong` int(11) NOT NULL DEFAULT '0' COMMENT '武功值',
+  `tili` int(11) NOT NULL DEFAULT '30' COMMENT '体力',
+  `attack` int(11) NOT NULL DEFAULT '10' COMMENT '攻击',
+  `defense` int(11) NOT NULL DEFAULT '10' COMMENT '防御',
+  `charm` int(11) NOT NULL DEFAULT '100' COMMENT '魅力',
+  `attack_power` int(11) NOT NULL DEFAULT '100' COMMENT '战斗攻击力',
+  `spouse` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '无' COMMENT '配偶',
+  `is_vip` tinyint(1) NOT NULL DEFAULT '0' COMMENT '是否会员',
+  `silver` bigint(20) NOT NULL DEFAULT '0' COMMENT '银两',
+  `exp` bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT '经验值',
+  `sect` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '无' COMMENT '门派',
+  `faction` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '无' COMMENT '帮派',
+  `sect_title` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT '无' COMMENT '门派身份(掌门/弟子等)',
+  `sect_position` varchar(50) COLLATE utf8mb4_unicode_ci DEFAULT '无',
+  `sect_contribution` int(11) DEFAULT '0',
+  `salary_time` datetime DEFAULT NULL COMMENT '领薪时间(原金钱)',
+  `deposit` bigint(20) NOT NULL DEFAULT '0' COMMENT '存款',
+  `grade` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '等级1-10',
+  `login_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '登录次数',
+  `registered_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP COMMENT '注册时间',
+  `register_ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '注册 IP',
+  `last_login_at` datetime DEFAULT NULL COMMENT '最后登录时间',
+  `last_login_ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '最后登录 IP',
+  `last_kick_at` datetime DEFAULT NULL COMMENT '最后被踢时间',
+  `total_exp` bigint(20) NOT NULL DEFAULT '0' COMMENT '总经验值',
+  `month_value` bigint(20) NOT NULL DEFAULT '0',
+  `last_practice_at` datetime DEFAULT NULL COMMENT '最后修炼时间',
+  `practice_count_today` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '今日修炼次数',
+  `practice_exp_total` bigint(20) unsigned NOT NULL DEFAULT '0' COMMENT '修炼累计经验',
+  `chat_minutes_today` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '今日聊天分钟数',
+  `chat_minutes_total` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '累计聊天分钟数',
+  `last_chat_time` datetime DEFAULT NULL COMMENT '最后聊天时间',
+  `monthly_exp` bigint(20) NOT NULL DEFAULT '0' COMMENT '月度经验值',
+  `all_value` bigint(20) NOT NULL DEFAULT '0',
+  `join_sect_at` datetime DEFAULT NULL COMMENT '入派时间',
+  `jailed_at` datetime DEFAULT NULL COMMENT '入监日期',
+  `job` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '职业',
+  `bath_date` date DEFAULT NULL COMMENT '最后洗澡日期',
+  `master` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '师父',
+  `noodle_count` int(10) unsigned NOT NULL DEFAULT '0' COMMENT '吃面数',
+  `pet_name` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '宠物名称',
+  `vip_expires_at` datetime DEFAULT NULL COMMENT '会员到期时间',
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `uk_username` (`username`),
+  KEY `idx_status` (`status`),
+  KEY `idx_sect` (`sect`),
+  KEY `idx_grade` (`grade`),
+  KEY `idx_all_value` (`total_exp`),
+  KEY `idx_last_login` (`last_login_at`),
+  KEY `idx_month_value` (`monthly_exp`),
+  KEY `idx_total_exp` (`total_exp`),
+  KEY `idx_monthly_exp` (`monthly_exp`)
+) ENGINE=InnoDB AUTO_INCREMENT=19 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='用户表';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `users`
+--
+
+LOCK TABLES `users` WRITE;
+/*!40000 ALTER TABLE `users` DISABLE KEYS */;
+INSERT INTO `users` VALUES (1,'独角兽','$2a$10$KSpt.hn8WSs3HrEhRBal3OP1w0npd/dPoJLYDc6JBTDrlUa.ITzPi',0,NULL,'male',NULL,NULL,'1.gif','normal',1,102,102,10,6,100,20,10,999,100,'无',0,9938380,180,'六扇门','六扇门','掌门','无',0,NULL,0,10,74,'2026-04-19 07:11:48',NULL,'2026-04-28 03:34:04','125.82.70.106',NULL,100729,15,'2026-04-20 14:03:37',3,173,2,2,'2026-04-28 11:55:46',25,100719,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,'2026-04-19 07:11:48','2026-04-28 11:55:46'),(13,'install','$2a$10$VxlDEl2z5.wtEAAqSb7LM.XD/6Y0XJyL.uHwsypUgGK6..QSRoxPe',0,NULL,'male',NULL,NULL,'1.gif','normal',0,372,100,10,0,151,10,10,100,100,'无',0,924,0,'无','无','无','无',0,NULL,0,3,5,'2026-04-19 16:09:57','183.228.206.48','2026-04-22 13:21:33','183.228.206.237',NULL,1,1,NULL,0,0,0,0,NULL,1,1,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,'2026-04-19 16:09:57','2026-04-26 14:50:17'),(16,'江湖大侠','$2a$10$ZSDV6N4A20OaH1vUDPM5Ze0lQlZsVYaaphBi7G6nE3VbsholESEUe',0,NULL,'male',NULL,NULL,'1.gif','normal',0,0,100,10,0,30,10,10,100,100,'无',0,0,0,'无','无','无','无',0,NULL,0,1,0,'2026-04-25 14:09:30','127.0.0.1',NULL,NULL,NULL,0,0,NULL,0,0,0,0,NULL,0,0,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,'2026-04-25 14:09:30','2026-04-25 14:09:30'),(17,'东方不败','$2a$10$G6GNcnn9lNqco5i05SauDeKDiG..pu6qdrVhUu692uUXq.FLe3Isq',0,NULL,'female',NULL,NULL,'1.gif','normal',0,0,100,10,0,30,10,10,100,100,'无',0,0,0,'无','无','无','无',0,NULL,0,1,0,'2026-04-25 14:09:34','127.0.0.1',NULL,NULL,NULL,0,0,NULL,0,0,0,0,NULL,0,0,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,'2026-04-25 14:09:34','2026-04-25 14:09:34'),(18,'测试用户','$2a$10$spxPjn3gFxYz/ApmiiLgM.OD.9zKTqWWJz1TI2Wfd.nbnxhG6WVx.',0,NULL,'male',NULL,NULL,'1.gif','normal',0,105,100,10,0,105,10,10,100,100,'无',0,-485,0,'无','江湖浪子','无','无',0,NULL,0,1,2,'2026-04-25 14:10:55','125.82.66.31','2026-04-28 03:22:15','125.82.70.106',NULL,0,0,NULL,0,0,0,0,NULL,0,0,NULL,NULL,NULL,NULL,NULL,0,NULL,NULL,'2026-04-25 14:10:55','2026-04-28 05:03:52');
+/*!40000 ALTER TABLE `users` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `wishes`
+--
+
+DROP TABLE IF EXISTS `wishes`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `wishes` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `user_id` int(10) unsigned DEFAULT NULL,
+  `name` varchar(20) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `username` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `gender` varchar(10) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `email` varchar(60) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `homepage` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `wish_type` varchar(20) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '爱情/学业/健康/家庭/事业/前途/财运/生活',
+  `address` varchar(100) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `content` text COLLATE utf8mb4_unicode_ci,
+  `is_public` tinyint(1) DEFAULT '1',
+  `reply` text COLLATE utf8mb4_unicode_ci,
+  `reply_at` datetime DEFAULT NULL,
+  `ip` varchar(45) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `view_count` int(10) unsigned NOT NULL DEFAULT '0',
+  PRIMARY KEY (`id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_is_public` (`is_public`)
+) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='许愿墙';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `wishes`
+--
+
+LOCK TABLES `wishes` WRITE;
+/*!40000 ALTER TABLE `wishes` DISABLE KEYS */;
+INSERT INTO `wishes` VALUES (1,NULL,'站长','站长','male',NULL,NULL,NULL,NULL,'111',1,NULL,NULL,'::ffff:127.0.0.1','2026-04-19 08:09:05',0);
+/*!40000 ALTER TABLE `wishes` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `work_jobs`
+--
+
+DROP TABLE IF EXISTS `work_jobs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8 */;
+CREATE TABLE `work_jobs` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `job_name` varchar(50) COLLATE utf8mb4_unicode_ci NOT NULL COMMENT '工作名称',
+  `job_desc` varchar(200) COLLATE utf8mb4_unicode_ci DEFAULT NULL COMMENT '工作描述',
+  `reward_min` int(11) NOT NULL DEFAULT '0' COMMENT '最低奖励',
+  `reward_max` int(11) NOT NULL DEFAULT '0' COMMENT '最高奖励',
+  `stamina_cost` int(11) NOT NULL DEFAULT '0' COMMENT '体力消耗',
+  `cooldown_minutes` int(11) NOT NULL DEFAULT '0' COMMENT '冷却时间 (分钟)',
+  `max_daily_times` int(11) NOT NULL DEFAULT '0' COMMENT '每日次数限制 (0=不限)',
+  `min_grade` tinyint(3) unsigned NOT NULL DEFAULT '1' COMMENT '最低等级要求',
+  `is_enabled` tinyint(1) NOT NULL DEFAULT '1' COMMENT '是否启用',
+  `sort_no` int(11) NOT NULL DEFAULT '0' COMMENT '排序号',
+  PRIMARY KEY (`id`),
+  KEY `idx_enabled` (`is_enabled`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='打工工作';
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Dumping data for table `work_jobs`
+--
+
+LOCK TABLES `work_jobs` WRITE;
+/*!40000 ALTER TABLE `work_jobs` DISABLE KEYS */;
+/*!40000 ALTER TABLE `work_jobs` ENABLE KEYS */;
+UNLOCK TABLES;
+/*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
+
+/*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
+/*!40014 SET FOREIGN_KEY_CHECKS=@OLD_FOREIGN_KEY_CHECKS */;
+/*!40014 SET UNIQUE_CHECKS=@OLD_UNIQUE_CHECKS */;
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
+/*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
+
+-- Dump completed on 2026-04-29  1:43:44

@@ -7,6 +7,7 @@ import App from './App.vue'
 import './styles/main.css'
 import './styles/nav.css'
 import './styles/mobile.css'
+import './assets/styles/game-animations.css'
 
 const app = createApp(App)
 app.use(createPinia())

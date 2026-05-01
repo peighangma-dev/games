@@ -734,9 +734,9 @@ class UserController {
         });
       }
 
-      // 软删除：设置状态为 dead
+      // 软删除：设置状态为 dead，用户名改为 deleted_{id} 格式
       await db.execute(
-        "UPDATE users SET status = 'dead', username = CONCAT(username, '_deleted_', id, '_', UNIX_TIMESTAMP()) WHERE id = ?",
+        "UPDATE users SET status = 'dead', username = CONCAT('deleted_', id) WHERE id = ?",
         [id]
       );
 

@@ -2,7 +2,9 @@
 
 ## 项目概述
 
-Vue 3 + Express + MySQL + Socket.IO 的 MUD 风格武侠聊天室系统，含管理后台、游戏系统、经济系统。
+Vue 3 + Express + MySQL 5.7 + Socket.IO 的 MUD 风格武侠聊天室系统，含管理后台、游戏系统、经济系统。
+
+**重要**：MySQL 5.7 兼容，避免使用 MySQL 8.0+ 特有语法。
 
 ## 快速启动
 
@@ -13,7 +15,7 @@ npm run dev
 ```
 - 端口：`3001`，绑定 `0.0.0.0`
 - 依赖：MySQL 5.7+、Redis（可选）
-- 入口：`src/server.js`（注意：`package.json` 中 `dev` 脚本指向不存在的 `index.js`）
+- 入口：`src/server.js`
 
 ### 前端
 ```bash
@@ -21,16 +23,23 @@ cd /workspace/jhchat/frontend
 npm run dev
 ```
 - 端口：`5173`
-- 反向代理：`/api`、`/uploads`、`/socket.io` → `localhost:3001`
+- 反向代理：`/api`、`/uploads`、`/socket.io`、`/assets` → `localhost:3001`
 - 允许主机：`*.monkeycode-ai.online`
 
-### 数据库初始化
+### 数据库初始化（首次启动必做）
 ```bash
 cd /workspace/jhchat/backend
-node src/scripts/init-db.js        # 创建表结构
-node src/scripts/seed.js           # 填充初始数据（41 武功秘籍、34 任务）
-node scripts/create-admin-action-logs-table.js  # 管理员日志表
+npm run init-db        # 创建表结构
+npm run seed           # 填充初始数据（41 武功秘籍、34 任务）
+npm run migrate        # 创建管理员日志表
 ```
+
+### 环境变量
+后端需要 `.env` 文件配置：
+- `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`
+- `FRONTEND_URL`（默认 `http://localhost:5173`）
+- `JWT_SECRET`
+- `PORT`（默认 3001）
 
 ## 项目结构
 
@@ -42,7 +51,7 @@ node scripts/create-admin-action-logs-table.js  # 管理员日志表
 │   │   ├── routes/          # admin.js 集中管理后台路由
 │   │   ├── middleware/      # adminAuth.js 权限验证
 │   │   ├── socket/          # Socket.IO 事件 + 随机事件定时器
-│   │   └── server.js        # 服务器入口（189 行）
+│   │   └── server.js        # 服务器入口（191 行）
 │   ├── migrations/          # 数据库迁移脚本
 │   ├── uploads/avatars/     # 头像上传目录
 │   └── logs/                # Winston 日志
@@ -50,9 +59,10 @@ node scripts/create-admin-action-logs-table.js  # 管理员日志表
 │   ├── src/views/admin/     # 管理后台页面
 │   ├── src/stores/          # Pinia 状态管理
 │   └── electron/            # Electron 桌面端
-└── .monkeycode/
-    ├── docs/                # ADMIN_MANUAL.md, ADMIN_API_REFERENCE.md
-    └── specs/*/             # 功能规格（requirements.md + design.md）
+├── .monkeycode/
+│   ├── docs/                # ADMIN_MANUAL.md, ADMIN_API_REFERENCE.md
+│   └── specs/*/             # 功能规格（requirements.md + design.md）
+└── database/                # 数据库备份和 SQL 脚本
 ```
 
 ## 管理员权限系统
@@ -75,6 +85,16 @@ npm run lint      # ESLint 检查
 npm run lint:fix  # 自动修复
 npm run format    # Prettier 格式化
 npm run check     # lint + format
+npm run init-db   # 初始化数据库表
+npm run seed      # 填充初始数据
+npm run migrate   # 运行数据库迁移
+```
+
+### 前端
+```bash
+npm run dev       # 启动开发服务器
+npm run build     # 生产构建
+npm run preview   # 预览生产构建
 ```
 
 ### 代码风格
@@ -91,6 +111,7 @@ npm run check     # lint + format
 4. **修改后需重启**：后端修改代码后必须重启 `npm run dev`
 5. **中文用户名验证**：使用 `/^[\u4e00-\u9fff]+$/` 正则
 6. **性别字段**：数据库期望 `male/female` 而非中文
+7. **vite.config.js 已配置** `allowedHosts: ['.monkeycode-ai.online']`，无需重复添加
 
 ## 重要文档
 
@@ -137,3 +158,13 @@ npm run check     # lint + format
 - 避免使用 MySQL 8.0+ 特有语法
 - 确保 `uploads/avatars/` 目录可写
 - 后端环境变量 `HOST=0.0.0.0` 支持外网访问
+- 生产端路径：`/www/wwwroot/jhchat`（Git 同步目标）
+
+## API 路由验证（2026-04-30）
+
+- ✅ 27 个路由文件全部正常（309 个端点）
+- ✅ 24 个控制器全部正常
+- ✅ 4 个中间件全部正常
+- ✅ 7 个工具模块全部正常
+- ✅ 前端反向代理配置正确
+- ✅ HTTP 测试通过（ping, server-info, health）

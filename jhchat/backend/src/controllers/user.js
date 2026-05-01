@@ -80,3 +80,23 @@ exports.getUser = async (req, res) => {
     res.status(500).json({ success: false, message: '查询失败' });
   }
 };
+
+exports.syncBubbleExp = async (req, res) => {
+  try {
+    await db.execute(
+      'UPDATE online_users SET last_active_at = NOW() WHERE user_id = ?',
+      [req.user.id]
+    );
+    
+    res.json({
+      success: true,
+      message: '经验同步成功'
+    });
+  } catch (err) {
+    console.error('syncBubbleExp error:', err.message);
+    res.status(500).json({ 
+      success: false, 
+      message: '同步失败：' + err.message 
+    });
+  }
+};

@@ -1,37 +1,92 @@
 import { io } from 'socket.io-client'
 
-let socket = null
+class SocketManager {
+  constructor() {
+    this.socket = null
+    this.heartbeatTimer = null
+    this.heartbeatInterval = 30000
+    this.reconnectAttempts = 0
+    this.maxReconnectAttempts = 5
+  }
 
-export function connectSocket(token) {
-  if (socket?.connected) return socket
+  connect(token) {
+    if (this.socket?.connected) {
+      console.log('[Socket] 已连接，跳过')
+      return this.socket
+    }
 
-  socket = io({
-    auth: { token },
-    transports: ['websocket', 'polling']
-  })
+    this.socket = io({
+      auth: { token },
+      transports: ['websocket', 'polling'],
+      reconnection: true,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      reconnectionAttempts: this.maxReconnectAttempts
+    })
 
-  socket.on('connect', () => {
-    console.log('Socket已连接')
-  })
+    this.setupEventListeners()
+    this.startHeartbeat()
+    return this.socket
+  }
 
-  socket.on('disconnect', () => {
-    console.log('Socket已断开')
-  })
+  setupEventListeners() {
+    this.socket.on('connect', () => {
+      console.log('[Socket] 已连接')
+      this.reconnectAttempts = 0
+    })
 
-  socket.on('connect_error', (err) => {
-    console.error('Socket连接错误:', err.message)
-  })
+    this.socket.on('disconnect', (reason) => {
+      console.log('[Socket] 断开:', reason)
+      this.stopHeartbeat()
+    })
 
-  return socket
-}
+    this.socket.on('connect_error', (err) => {
+      console.error('[Socket] 连接错误:', err.message)
+      this.reconnectAttempts++
+      if (this.reconnectAttempts >= this.maxReconnectAttempts) {
+        console.error('[Socket] 重连次数超限')
+      }
+    })
 
-export function getSocket() {
-  return socket
-}
+    this.socket.on('heartbeat:ack', () => {
+      console.debug('[Socket] 心跳响应')
+    })
+  }
 
-export function disconnectSocket() {
-  if (socket) {
-    socket.disconnect()
-    socket = null
+  startHeartbeat() {
+    this.stopHeartbeat()
+    this.heartbeatTimer = setInterval(() => {
+      if (this.socket?.connected) {
+        this.socket.emit('heartbeat:ping', {
+          timestamp: Date.now()
+        })
+      }
+    }, this.heartbeatInterval)
+  }
+
+  stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer)
+      this.heartbeatTimer = null
+    }
+  }
+
+  disconnect() {
+    this.stopHeartbeat()
+    if (this.socket) {
+      this.socket.disconnect()
+      this.socket = null
+    }
+  }
+
+  getSocket() {
+    return this.socket
+  }
+
+  isConnected() {
+    return this.socket?.connected
   }
 }
+
+const socketManager = new SocketManager()
+export default socketManager

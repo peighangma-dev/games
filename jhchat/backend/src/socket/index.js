@@ -352,33 +352,137 @@ module.exports = function(io) {
     });
 
     socket.on('disconnect', async () => {
-      try {
-        const [onlineUser] = await db.execute(
-          'SELECT room_id FROM online_users WHERE user_id = ?', [userId]
-        );
-        if (onlineUser.length > 0) {
-          const roomId = onlineUser[0].room_id;
-          await db.execute('DELETE FROM online_users WHERE user_id = ?', [userId]);
-          await sendSystemMessage(io, roomId, `<b>${username}</b> 离开了笑傲江湖`);
+      console.log('[Socket] 用户断开连接:', username)
+    });
 
-          const [online] = await db.execute(
-            'SELECT o.user_id, o.username, o.gender, o.sect, o.avatar, u.grade FROM online_users o LEFT JOIN users u ON o.user_id = u.id WHERE o.room_id = ? ORDER BY o.username',
-            [roomId]
-          );
-          io.to(`room_${roomId}`).emit('room:onlineUpdate', { roomId, users: online });
-        }
+    socket.on('heartbeat:ping', async (data) => {
+      try {
+        await db.execute(
+          'UPDATE online_users SET last_active_at = NOW() WHERE user_id = ?',
+          [userId]
+        )
+        
+        socket.emit('heartbeat:ack', {
+          timestamp: Date.now(),
+          status: 'ok'
+        })
       } catch (err) {
-        console.error('disconnect错误:', err);
+        console.error('[心跳] 处理失败:', err)
       }
     });
   });
+
+  startHeartbeatCleanupScheduler(io);
+  startBubbleExpScheduler(io);
 };
 
 module.exports.broadcastMessage = broadcastMessage;
 module.exports.sendSystemMessage = sendSystemMessage;
+module.exports.startRandomEventScheduler = startRandomEventScheduler;
+module.exports.startHeartbeatCleanupScheduler = startHeartbeatCleanupScheduler;
+module.exports.startBubbleExpScheduler = startBubbleExpScheduler;
 
-// 随机事件定时器 - 每 2-5 分钟随机触发一次
-const randomEventCtrl = require('../controllers/randomEvent');
+function startHeartbeatCleanupScheduler(io) {
+  const CLEANUP_INTERVAL = 60000;
+  const TIMEOUT_THRESHOLD = 300000;
+
+  setInterval(async () => {
+    try {
+      const thresholdTime = new Date(Date.now() - TIMEOUT_THRESHOLD);
+      
+      const [expiredUsers] = await db.execute(
+        `SELECT user_id, username FROM online_users 
+         WHERE last_active_at < ?`,
+        [thresholdTime]
+      );
+      
+      for (const user of expiredUsers) {
+        console.log(`[心跳清理] 用户 ${user.username} 超时，移除在线状态`);
+        
+        await db.execute(
+          'DELETE FROM online_users WHERE user_id = ?',
+          [user.user_id]
+        );
+        
+        const [online] = await db.execute(
+          `SELECT o.user_id, o.username, o.gender, o.sect, o.avatar, u.grade 
+           FROM online_users o 
+           LEFT JOIN users u ON o.user_id = u.id 
+           WHERE o.room_id = 1 
+           ORDER BY o.username`
+        );
+        io.to('room_1').emit('room:onlineUpdate', { roomId: 1, users: online });
+      }
+      
+      if (expiredUsers.length > 0) {
+        console.log(`[心跳清理] 本次清理 ${expiredUsers.length} 个超时用户`);
+      }
+    } catch (err) {
+      console.error('[心跳清理] 执行失败:', err);
+    }
+  }, CLEANUP_INTERVAL);
+  
+  console.log('[心跳清理] 定时器已启动');
+}
+
+function startBubbleExpScheduler(io) {
+  const BUBBLE_INTERVAL = 60000;
+
+  setInterval(async () => {
+    try {
+      const [onlineUsers] = await db.execute(
+        `SELECT o.user_id, o.username, o.grade,
+                u.total_exp, u.monthly_exp,
+                u.chat_minutes_today,
+                lc.chat_exp_per_minute, lc.max_daily_chat_exp
+         FROM online_users o
+         LEFT JOIN users u ON o.user_id = u.id
+         LEFT JOIN user_level_config lc ON u.grade = lc.level
+         WHERE o.last_active_at > DATE_SUB(NOW(), INTERVAL 5 MINUTE)`
+      );
+      
+      let totalExpGained = 0;
+      
+      for (const user of onlineUsers) {
+        const todayExp = user.chat_minutes_today * user.chat_exp_per_minute;
+        const remainingDailyLimit = user.max_daily_chat_exp - todayExp;
+        
+        if (remainingDailyLimit <= 0) {
+          continue;
+        }
+        
+        const expGain = Math.min(user.chat_exp_per_minute, remainingDailyLimit);
+        
+        await db.execute(
+          `UPDATE users 
+           SET chat_minutes_today = chat_minutes_today + 1,
+               chat_minutes_total = chat_minutes_total + 1,
+               total_exp = total_exp + ?,
+               monthly_exp = monthly_exp + ?
+           WHERE id = ?`,
+          [expGain, expGain, user.user_id]
+        );
+        
+        await db.execute(
+          `INSERT INTO chat_exp_logs 
+           (user_id, username, exp_gain, chat_minutes, is_daily_limit, created_at)
+           VALUES (?, ?, ?, 1, 0, NOW())`,
+          [user.user_id, user.username, expGain]
+        );
+        
+        totalExpGained += expGain;
+      }
+      
+      if (totalExpGained > 0) {
+        console.log(`[泡点] 本次为 ${onlineUsers.length} 个用户增加经验，总计 +${totalExpGained} 点`);
+      }
+    } catch (err) {
+      console.error('[泡点] 定时器执行失败:', err);
+    }
+  }, BUBBLE_INTERVAL);
+  
+  console.log('[泡点] 定时器已启动');
+}
 
 function scheduleNextRandomEvent(io) {
   const delay = Math.floor(Math.random() * 180000) + 120000; // 2-5 分钟随机
