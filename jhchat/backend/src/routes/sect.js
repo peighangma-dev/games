@@ -11,6 +11,7 @@ router.post('/skills/learn', auth, sectCtrl.learnSkill);
 router.get('/tasks', auth, sectCtrl.getTasks);
 router.post('/tasks/complete', auth, sectCtrl.completeTask);
 router.get('/warehouse', auth, sectCtrl.getWarehouse);
+router.get('/positions', auth, sectCtrl.getPositions);
 router.post('/donate', auth, sectCtrl.donate);
 router.get('/leaderboard', auth, sectCtrl.leaderboard);
 router.post('/checkin', auth, sectCtrl.checkIn);

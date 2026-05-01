@@ -98,8 +98,8 @@
             <h3 class="card-title">💰 俸禄</h3>
             <div class="salary-row">
               <span>今日俸禄：<strong class="highlight">{{ mySectInfo?.salary?.amount || 0 }}</strong> 两</span>
-              <button v-if="mySectInfo?.salary?.canClaim" class="btn btn-success" @click="claimSalary">领取</button>
-              <button v-else class="btn btn-disabled" disabled>已领</button>
+              <button v-if="mySectInfo?.salary?.canClaim" class="btn btn-success btn-sm" @click="claimSalary">领取</button>
+              <button v-else class="btn btn-disabled btn-sm" disabled>今日已领取</button>
             </div>
           </div>
           
@@ -305,6 +305,32 @@
           <div class="modal-actions"><button class="btn" @click="showDissolveConfirm = false">取消</button><button class="btn btn-danger" @click="dissolveSect" :disabled="dissolveConfirm !== mySectInfo?.sect?.name">确认解散</button></div>
         </div>
       </div>
+
+      <!-- 弹窗：职位 -->
+      <div v-if="showPositionModal" class="modal" @click.self="showPositionModal = false">
+        <div class="modal-content modal-lg">
+          <h3>🎖️ 门派职位</h3>
+          <div v-if="loadingPositions" class="loading">加载中...</div>
+          <div v-else class="position-list">
+            <div v-for="p in positions" :key="p.id" class="position-item" :class="{ current: p.position_name === mySectInfo?.sect?.title }">
+              <div class="position-header">
+                <span class="position-name">{{ p.position_name }}</span>
+                <span v-if="p.position_name === mySectInfo?.sect?.title" class="badge-success">现任</span>
+              </div>
+              <div class="position-info">
+                <div class="info-row">品阶：{{ p.position_rank }}</div>
+                <div class="info-row">等级：{{ p.min_grade }}级+</div>
+                <div class="info-row">贡献：{{ p.min_contribution }}+</div>
+                <div class="info-row">俸禄：{{ p.salary_amount }}两/日</div>
+              </div>
+              <div v-if="p.description" class="position-desc">{{ p.description }}</div>
+            </div>
+          </div>
+          <div class="modal-actions">
+            <button class="btn" @click="showPositionModal = false">关闭</button>
+          </div>
+        </div>
+      </div>
     </div>
   </PageLayout>
 </template>
@@ -346,6 +372,11 @@ const abdicateTarget = ref('')
 const showDissolveConfirm = ref(false)
 const dissolving = ref(false)
 const dissolveConfirm = ref('')
+
+// 职位管理
+const showPositionModal = ref(false)
+const loadingPositions = ref(false)
+const positions = ref([])
 
 // 新功能数据
 const myContribution = ref(0)
@@ -445,10 +476,12 @@ async function leaveSect() {
 async function claimSalary() {
   const res = await api.post('/sect/checkin')
   if (res.success) {
-    alert(`✅ 领取 ${res.data.amount} 两`)
+    alert(`✅ 领取 ${res.data.amount} 两成功`)
     await userStore.fetchProfile()
     loadMySectInfo()
-  } else alert(res.message || '领取失败')
+  } else {
+    alert(res.message || '领取失败')
+  }
 }
 
 // 贡献
@@ -618,6 +651,27 @@ watch(activeTab, (newTab) => {
   if (newTab === 'members') loadMembers()
   if (newTab === 'practice') userStore.fetchProfile()
 })
+
+// 职位管理
+async function loadPositions() {
+  if (!userSect.value || userSect.value === '无') return
+  loadingPositions.value = true
+  try {
+    const res = await api.get(`/admin/sects/positions`)
+    if (res.success) {
+      positions.value = res.data || []
+    }
+  } catch (e) {
+    console.error('加载职位失败', e)
+  } finally {
+    loadingPositions.value = false
+  }
+}
+
+// Watch position modal
+watch(showPositionModal, (val) => {
+  if (val) loadPositions()
+})
 </script>
 
 <style scoped>
@@ -752,12 +806,23 @@ watch(activeTab, (newTab) => {
 /* 弹窗 */
 .modal { position: fixed; inset: 0; background: rgba(0,0,0,0.7); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal-content { background: linear-gradient(135deg, #1a1a2e, #16213e); border: 1px solid #4B87C3; border-radius: 12px; padding: 24px; width: 90%; max-width: 400px; }
+.modal-content.modal-lg { max-width: 600px; }
 .modal-content h3 { color: #7eb8da; margin: 0 0 20px 0; text-align: center; }
 .form-group { margin-bottom: 16px; }
 .form-group label { display: block; color: #aaa; font-size: 13px; margin-bottom: 6px; }
 .input { width: 100%; padding: 8px 12px; background: rgba(0,0,0,0.3); border: 1px solid #3a4a5a; border-radius: 4px; color: #eee; }
 .hint { background: rgba(255, 193, 7, 0.1); border: 1px solid rgba(255, 193, 7, 0.3); padding: 12px; border-radius: 6px; text-align: center; color: #ffc107; font-size: 13px; margin-bottom: 16px; }
 .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px; }
+
+/* 职位列表 */
+.position-list { display: flex; flex-direction: column; gap: 12px; max-height: 400px; overflow-y: auto; }
+.position-item { padding: 12px; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px solid rgba(75, 135, 195, 0.1); }
+.position-item.current { border-color: #2ecc71; background: rgba(46, 204, 113, 0.1); }
+.position-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
+.position-name { color: #7eb8da; font-weight: 500; font-size: 15px; }
+.position-info { display: grid; grid-template-columns: repeat(2, 1fr); gap: 6px; margin-bottom: 8px; }
+.position-info .info-row { color: #aaa; font-size: 12px; }
+.position-desc { color: #888; font-size: 12px; line-height: 1.4; border-top: 1px solid rgba(255,255,255,0.1); padding-top: 8px; }
 
 /* 动画 */
 @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }

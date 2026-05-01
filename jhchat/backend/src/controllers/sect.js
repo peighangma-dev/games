@@ -954,3 +954,34 @@ exports.leaderboard = async (req, res) => {
     res.status(500).json({ success: false, message: '查询排行榜失败' });
   }
 };
+
+// 获取本门派职位列表
+exports.getPositions = async (req, res) => {
+  try {
+    const userSect = req.user.sect || '无';
+    
+    if (userSect === '无' || !userSect) {
+      return res.json({ success: true, data: [] });
+    }
+    
+    // 获取门派 ID
+    const [sects] = await db.execute('SELECT id FROM sects WHERE name = ?', [userSect]);
+    if (sects.length === 0) {
+      return res.json({ success: true, data: [] });
+    }
+    
+    const sectId = sects[0].id;
+    
+    // 获取职位列表
+    const [positions] = await db.execute(`
+      SELECT * FROM sect_positions 
+      WHERE sect_id = ? 
+      ORDER BY position_rank DESC
+    `, [sectId]);
+    
+    res.json({ success: true, data: positions || [] });
+  } catch (err) {
+    console.error('获取门派职位失败:', err);
+    res.status(500).json({ success: false, message: '获取门派职位失败' });
+  }
+};
