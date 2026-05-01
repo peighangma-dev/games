@@ -536,8 +536,9 @@ exports.practice = async (req, res) => {
       }
     }
     
-    // 消耗体力
-    if (req.user.tili < 20) {
+    // 从数据库获取最新体力值（防止并发请求导致体力为负）
+    const [users] = await db.execute('SELECT tili FROM users WHERE id = ?', [req.user.id]);
+    if (users.length === 0 || users[0].tili < 20) {
       return res.status(400).json({ success: false, message: '体力不足 20 点' });
     }
     
@@ -561,11 +562,15 @@ exports.practice = async (req, res) => {
         return res.status(400).json({ success: false, message: '无效的修炼类型' });
     }
     
-    // 更新用户经验
-    await db.execute(
-      'UPDATE users SET total_exp = total_exp + ?, monthly_exp = monthly_exp + ?, exp = exp + ?, tili = tili - 20, last_practice_at = NOW(), practice_count_today = practice_count_today + 1 WHERE id = ?',
+    // 原子性更新：使用 WHERE 条件确保体力不会扣成负数
+    const [result] = await db.execute(
+      'UPDATE users SET total_exp = total_exp + ?, monthly_exp = monthly_exp + ?, exp = exp + ?, tili = tili - 20, last_practice_at = NOW(), practice_count_today = practice_count_today + 1 WHERE id = ? AND tili >= 20',
       [expGain, expGain, expGain, req.user.id]
     );
+    
+    if (result.affectedRows === 0) {
+      return res.status(400).json({ success: false, message: '体力不足 20 点' });
+    }
     
     // 记录贡献
     const contribution = Math.floor(expGain / 10);

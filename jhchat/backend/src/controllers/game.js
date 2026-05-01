@@ -649,29 +649,15 @@ exports.fishReel = async (req, res) => {
 
 exports.hunt = async (req, res) => {
   try {
+    // 先查询最新体力
     const [users] = await db.execute('SELECT id, tili, silver, total_exp FROM users WHERE id = ?', [req.user.id]);
     if (users[0].tili < 10) return res.status(400).json({ success: false, message: '体力不足' });
     
-    // 获取用户打猎统计和 Buff
-    const [stats] = await db.execute(
-      'SELECT total_games FROM game_statistics WHERE user_id = ?',
-      [req.user.id]
-    );
-    const totalHunts = stats.length > 0 ? stats[0].total_games : 0;
-    
-    // 猎户等级（基于打猎次数）
-    const hunterLevel = Math.floor(totalHunts / 30) + 1; // 每 30 次升一级
-    const skillBonus = Math.min(hunterLevel * 0.03, 0.15); // 每级 +3% 幸运，最高 +15%
-    
-    // 获取幸运 Buff
-    const [bonuses] = await db.execute(
-      "SELECT SUM(bonus_value) as total FROM game_bonuses WHERE user_id = ? AND bonus_type = 'charm' AND expires_at > NOW()",
-      [req.user.id]
-    );
-    const luckBonus = bonuses[0]?.total || 0;
-    const luckMultiplier = 1 + Math.min((skillBonus + luckBonus / 1000), 0.3);
-    
-    await db.execute('UPDATE users SET tili = tili - 10 WHERE id = ?', [req.user.id]);
+    // 原子性扣体力：确保不会扣成负数
+    const [updateResult] = await db.execute('UPDATE users SET tili = tili - 10 WHERE id = ? AND tili >= 10', [req.user.id]);
+    if (updateResult.affectedRows === 0) {
+      return res.status(400).json({ success: false, message: '体力不足' });
+    }
     
     // 扩展猎物列表
     const animals = [
