@@ -658,23 +658,28 @@ watch(activeTab, (newTab) => {
 
 // 职位管理
 async function loadPositions() {
-  if (!userSect.value || userSect.value === '无') return
+  if (!userSect.value || userSect.value === '无') {
+    positions.value = []
+    loadingPositions.value = false
+    return
+  }
   loadingPositions.value = true
   try {
-    const res = await api.get(`/admin/sects/positions`)
+    const res = await api.get('/sect/positions')
     if (res.success) {
       positions.value = res.data || []
     }
   } catch (e) {
     console.error('加载职位失败', e)
+    positions.value = []
   } finally {
     loadingPositions.value = false
   }
 }
 
 // Watch position modal
-watch(showPositionModal, (val) => {
-  if (val) loadPositions()
+watch(showPositionModal, async (val) => {
+  if (val) await loadPositions()
 })
 </script>
 
