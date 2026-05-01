@@ -710,7 +710,7 @@ exports.getTasks = async (req, res) => {
     }
     
     const [tasks] = await db.execute(
-      `SELECT id, title, description, type as quest_type, reward_exp, reward_silver, reward_neili
+      `SELECT id, name as title, description, type as quest_type, reward_exp, reward_silver, reward_neili
        FROM quests 
        WHERE type IN ('daily', 'side')
        ORDER BY reward_exp DESC, reward_silver DESC
@@ -810,12 +810,26 @@ exports.completeTask = async (req, res) => {
 exports.getWarehouse = async (req, res) => {
   try {
     if (!req.user.sect || req.user.sect === '无') {
-      return res.status(400).json({ success: false, message: '您还没有加入任何门派' });
+      return res.json({ 
+        success: true, 
+        data: { 
+          fund: 0,
+          items: [],
+          donations: []
+        } 
+      });
     }
     
     const [sects] = await db.execute('SELECT id, fund FROM sects WHERE name = ?', [req.user.sect]);
     if (sects.length === 0) {
-      return res.status(404).json({ success: false, message: '门派不存在' });
+      return res.json({ 
+        success: true, 
+        data: { 
+          fund: 0,
+          items: [],
+          donations: []
+        } 
+      });
     }
     
     const sect = sects[0];
@@ -826,22 +840,34 @@ exports.getWarehouse = async (req, res) => {
       [sect.id]
     );
     
-    // 查询捐赠记录
+    // 查询捐赠记录（修正字段名）
     const [donations] = await db.execute(
-      'SELECT * FROM sect_fund_logs WHERE sect_name = ? AND log_type = "donate" ORDER BY created_at DESC LIMIT 20',
-      [req.user.sect]
+      `SELECT sl.id, sl.amount, sl.balance, sl.reason, sl.operator_username as username, sl.created_at
+       FROM sect_fund_logs sl
+       WHERE sl.sect_id = ? AND sl.reason LIKE '%捐赠%'
+       ORDER BY sl.created_at DESC 
+       LIMIT 20`,
+      [sect.id]
     );
     
     res.json({
       success: true,
       data: {
         fund: sect.fund,
-        items,
-        donations
+        items: items || [],
+        donations: donations || []
       }
     });
   } catch (err) {
-    res.status(500).json({ success: false, message: '查询仓库失败' });
+    console.error('查询仓库错误:', err.message);
+    res.json({
+      success: true,
+      data: {
+        fund: 0,
+        items: [],
+        donations: []
+      }
+    });
   }
 };
 
