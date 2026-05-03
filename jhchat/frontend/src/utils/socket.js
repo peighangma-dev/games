@@ -21,7 +21,9 @@ class SocketManager {
       reconnection: true,
       reconnectionDelay: 1000,
       reconnectionDelayMax: 5000,
-      reconnectionAttempts: this.maxReconnectAttempts
+      reconnectionAttempts: this.maxReconnectAttempts,
+      randomizationFactor: 0.5,
+      timeout: 20000
     })
 
     this.setupEventListeners()
@@ -33,11 +35,15 @@ class SocketManager {
     this.socket.on('connect', () => {
       console.log('[Socket] 已连接')
       this.reconnectAttempts = 0
+      // 触发重连成功事件
+      window.dispatchEvent(new CustomEvent('socket:reconnected'))
     })
 
     this.socket.on('disconnect', (reason) => {
       console.log('[Socket] 断开:', reason)
       this.stopHeartbeat()
+      // 触发断开事件
+      window.dispatchEvent(new CustomEvent('socket:disconnected', { detail: { reason } }))
     })
 
     this.socket.on('connect_error', (err) => {
@@ -45,7 +51,20 @@ class SocketManager {
       this.reconnectAttempts++
       if (this.reconnectAttempts >= this.maxReconnectAttempts) {
         console.error('[Socket] 重连次数超限')
+        window.dispatchEvent(new CustomEvent('socket:reconnect_failed'))
       }
+      // 触发错误事件
+      window.dispatchEvent(new CustomEvent('socket:error', { detail: { error: err } }))
+    })
+
+    this.socket.on('reconnect', (attemptNumber) => {
+      console.log('[Socket] 重连成功，尝试次数:', attemptNumber)
+      window.dispatchEvent(new CustomEvent('socket:reconnected'))
+    })
+
+    this.socket.on('reconnect_attempt', (attemptNumber) => {
+      console.log('[Socket] 尝试重连:', attemptNumber)
+      window.dispatchEvent(new CustomEvent('socket:reconnecting', { detail: { attemptNumber } }))
     })
 
     this.socket.on('heartbeat:ack', () => {

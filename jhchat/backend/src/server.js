@@ -192,9 +192,7 @@ require('./socket')(io);
 // 启动随机事件定时器（心跳清理和泡点经验在 socket 初始化时自动启动）
 startRandomEventScheduler(io);
 
-module.exports = { app, server, io };
-
-// 健康检查端点
+// 健康检查端点（必须在 module.exports 之前定义）
 app.get('/api/health', (req, res) => {
   res.json({
     success: true,
@@ -205,3 +203,5 @@ app.get('/api/health', (req, res) => {
     }
   })
 })
+
+module.exports = { app, server, io };
