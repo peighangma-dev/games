@@ -120,6 +120,10 @@ const questRoutes = require('./routes/quest');
 const gardenRoutes = require('./routes/garden');
 const gameBonusRoutes = require('./routes/gameBonus');
 
+// 统一响应格式中间件
+const responseFormatter = require('./middleware/responseFormatter');
+app.use('/api', responseFormatter);
+
 // 注册 API 路由
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
@@ -189,3 +193,15 @@ require('./socket')(io);
 startRandomEventScheduler(io);
 
 module.exports = { app, server, io };
+
+// 健康检查端点
+app.get('/api/health', (req, res) => {
+  res.json({
+    success: true,
+    data: {
+      status: 'healthy',
+      uptime: process.uptime(),
+      timestamp: new Date().toISOString()
+    }
+  })
+})
