@@ -1,9 +1,9 @@
 const express = require('express');
 const router = express.Router();
-const itemCtrl = require('../controllers/item');
+const shopCtrl = require('../controllers/shop');
 const { auth } = require('../middleware/auth');
 
-router.get('/items', auth, itemCtrl.getShopItems);
-router.post('/buy', auth, itemCtrl.buyFromShop);
+router.get('/items', auth, shopCtrl.getShopItems);
+router.post('/buy', auth, shopCtrl.buyFromShop);
 
 module.exports = router;

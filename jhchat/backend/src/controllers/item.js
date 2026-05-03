@@ -422,7 +422,7 @@ exports.work = async (req, res) => {
 exports.getShopItems = async (req, res) => {
   try {
     const [items] = await db.execute(
-      `SELECT * FROM shop_items 
+      `SELECT id, name, type, price, category FROM shop_items 
        WHERE is_enabled = 1 AND stock_quantity > 0
        ORDER BY sort_no, price DESC`
     );
@@ -437,7 +437,7 @@ exports.buyFromShop = async (req, res) => {
   try {
     const { itemName, price } = req.body;
     const [items] = await db.execute(
-      `SELECT * FROM shop_items 
+      `SELECT id, name, type, price, category FROM shop_items 
        WHERE name = ? AND is_enabled = 1 AND stock_quantity > 0
        LIMIT 1`,
       [itemName]

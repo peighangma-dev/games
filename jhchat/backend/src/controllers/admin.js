@@ -23,7 +23,7 @@ exports.getUsers = async (req, res) => {
 
 exports.getUserDetail = async (req, res) => {
   try {
-    const [users] = await db.execute('SELECT * FROM users WHERE id = ?', [req.params.id]);
+    const [users] = await db.execute('SELECT id, username, total_exp, monthly_exp, silver, tili, level, sect, grade FROM users WHERE id = ?', [req.params.id]);
     if (users.length === 0) return res.status(404).json({ success: false, message: '用户不存在' });
     res.json({ success: true, data: users[0] });
   } catch (err) {
@@ -573,7 +573,7 @@ exports.changePassword = async (req, res) => {
 exports.getShopItems = async (req, res) => {
   try {
     const [items] = await db.execute(
-      'SELECT * FROM shop_items ORDER BY sort_no, id'
+      'SELECT id, name, type, price, category FROM shop_items ORDER BY sort_no, id'
     );
     res.json({ success: true, data: items });
   } catch (err) {
@@ -638,7 +638,7 @@ exports.updateShopItem = async (req, res) => {
 // 删除商店物品
 exports.deleteShopItem = async (req, res) => {
   try {
-    const [items] = await db.execute('SELECT * FROM shop_items WHERE id = ?', [req.params.id]);
+    const [items] = await db.execute('SELECT id, name, type, price, category FROM shop_items WHERE id = ?', [req.params.id]);
     if (items.length === 0) return res.status(404).json({ success: false, message: '物品不存在' });
     
     const item = items[0];

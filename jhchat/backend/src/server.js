@@ -10,6 +10,7 @@ const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
 const rateLimit = require('express-rate-limit');
+const { apiLimiter } = require('./middleware/rateLimiter');
 
 const app = express();
 const server = http.createServer(app);
@@ -122,6 +123,7 @@ const gameBonusRoutes = require('./routes/gameBonus');
 
 // 统一响应格式中间件
 const responseFormatter = require('./middleware/responseFormatter');
+app.use('/api', apiLimiter);
 app.use('/api', responseFormatter);
 
 // 注册 API 路由

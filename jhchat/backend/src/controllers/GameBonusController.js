@@ -139,7 +139,7 @@ class GameBonusController {
       
       // 获取用户基础属性
       const [users] = await db.execute(
-        'SELECT * FROM users WHERE id = ?',
+        'SELECT id, username, total_exp, monthly_exp, silver, tili, level, sect, grade FROM users WHERE id = ?',
         [userId]
       );
       

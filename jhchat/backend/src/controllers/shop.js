@@ -4,7 +4,7 @@ const db = require('../utils/database');
 exports.getShopItems = async (req, res) => {
   try {
     const [items] = await db.execute(
-      'SELECT * FROM shop_items WHERE is_available = 1 ORDER BY category, price'
+      'SELECT id, name, type, price, category FROM shop_items WHERE is_available = 1 ORDER BY category, price'
     );
     
     res.json({
@@ -34,7 +34,7 @@ exports.buyFromShop = async (req, res) => {
     
     // 查询物品信息
     const [items] = await db.execute(
-      'SELECT * FROM shop_items WHERE id = ? AND is_available = 1',
+      'SELECT id, name, type, price, category FROM shop_items WHERE id = ? AND is_available = 1',
       [itemId]
     );
     
