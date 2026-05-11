@@ -11,7 +11,9 @@ const loginLimiter = rateLimit({
   },
   standardHeaders: true,
   legacyHeaders: false,
-  keyGenerator: (req) => req.ip
+  validate: {
+    ip: true
+  }
 });
 
 // 注册限制
@@ -22,6 +24,9 @@ const registerLimiter = rateLimit({
     success: false,
     message: '注册次数过多，请稍后再试',
     code: 'TOO_MANY_REQUESTS'
+  },
+  validate: {
+    ip: true
   }
 });
 
@@ -33,6 +38,9 @@ const chatLimiter = rateLimit({
     success: false,
     message: '发言太频繁了，请稍后再试',
     code: 'CHAT_LIMIT_EXCEEDED'
+  },
+  validate: {
+    ip: true
   }
 });
 
@@ -44,6 +52,9 @@ const apiLimiter = rateLimit({
     success: false,
     message: '请求过于频繁',
     code: 'RATE_LIMIT_EXCEEDED'
+  },
+  validate: {
+    ip: true
   }
 });
 

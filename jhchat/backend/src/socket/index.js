@@ -1,6 +1,7 @@
 const db = require('../config/db');
 const { getRandomWelcomeMessage } = require('../utils/welcomeMessages');
 
+const randomEventCtrl = require('../controllers/randomEvent');
 let lastLineNo = {};
 
 async function getNextLineNo(roomId) {

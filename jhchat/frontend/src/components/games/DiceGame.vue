@@ -2,16 +2,25 @@
   <div class="dice-game">
     <!-- 骰盅区域 -->
     <div class="dice-bowl" @click="!isRolling && rollDice">
+      <!-- 骰子轨迹效果 -->
+      <div class="dice-trail" v-if="isRolling">
+        <div class="trail-particle" v-for="i in 6" :key="i" :style="trailStyle(i)"></div>
+      </div>
+      
       <div class="bowl-inner">
         <transition-group name="dice-shake">
           <div
             v-for="(die, index) in dice"
             :key="index"
             class="die"
-            :class="{ 'rolling': isRolling }"
-            :style="{ transform: getDieTransform(index) }"
+            :class="{ 
+              'rolling': isRolling,
+              'die-result': !isRolling && gameResult !== null,
+              'die-win': !isRolling && gameResult === 'win'
+            }"
+            :style="getDieStyle(index)"
           >
-            <div class="die-face">
+            <div class="die-face" :style="getDieFaceStyle(die.value)">
               <div
                 v-for="pip in getPips(die.value)"
                 :key="pip"
@@ -27,6 +36,9 @@
           <p>摇晃中...</p>
         </div>
       </div>
+      
+      <!-- 结果光效 -->
+      <div class="result-glow" :class="resultGlowClass" v-if="gameResult !== null"></div>
     </div>
     
     <!-- 下注区域 -->
@@ -214,6 +226,12 @@ const resultTitle = computed(() => {
   return '🤝 平局'
 })
 
+const resultGlowClass = computed(() => {
+  if (gameResult.value === 'win') return 'glow-win'
+  if (gameResult.value === 'lose') return 'glow-lose'
+  return ''
+})
+
 const resultText = computed(() => {
   if (total.value <= 10) return '开小'
   return '开大'
@@ -251,6 +269,52 @@ function getDieTransform(index) {
     `rotateX(${Math.random() * 720}deg) rotateY(${Math.random() * 720}deg)`
   ]
   return rotations[index]
+}
+
+function getDieStyle(index) {
+  const baseScale = 0.7 // 稍微缩小以适应容器
+  if (isRolling.value) {
+    return {
+      transform: getDieTransform(index),
+      filter: 'blur(1px)'
+    }
+  }
+  // 结果展示时的扇形排列
+  const spreadAngle = (index - 1) * 15 // 每个骰子间隔 15 度
+  const radian = (spreadAngle * Math.PI) / 180
+  const offsetX = Math.sin(radian) * 30
+  const rotateZ = spreadAngle
+  return {
+    transform: `translateX(${offsetX}px) rotateZ(${rotateZ}deg) scale(${baseScale})`,
+    filter: 'none'
+  }
+}
+
+function getDieFaceStyle(value) {
+  const faceColors = {
+    1: 'radial-gradient(circle at 30% 30%, #fff 0%, #e0e0e0 100%)',
+    2: 'radial-gradient(circle at 30% 30%, #fff 0%, #d0d0d0 100%)',
+    3: 'radial-gradient(circle at 30% 30%, #fff 0%, #c0c0c0 100%)',
+    4: 'radial-gradient(circle at 30% 30%, #fff 0%, #b0b0b0 100%)',
+    5: 'radial-gradient(circle at 30% 30%, #fff 0%, #a0a0a0 100%)',
+    6: 'radial-gradient(circle at 30% 30%, #fff 0%, #909090 100%)'
+  }
+  return {
+    background: faceColors[value] || faceColors[1]
+  }
+}
+
+function trailStyle(index) {
+  const angle = (index / 6) * Math.PI * 2
+  const radius = 50 + Math.random() * 20
+  const x = Math.cos(angle) * radius
+  const y = Math.sin(angle) * radius
+  const delay = index * 0.1
+  return {
+    transform: `translate(${x}px, ${y}px)`,
+    animationDelay: `${delay}s`,
+    opacity: 0.3 + Math.random() * 0.4
+  }
 }
 
 function selectOption(option) {
@@ -297,15 +361,18 @@ async function rollDice() {
       isBaozi.value = data.d1 === data.d2 && data.d2 === data.d3
       won.value = data.won
       winAmount.value = data.amount || 0
+      
+      // 等待骰子停止动画
+      await new Promise(resolve => setTimeout(resolve, 300))
+      
+      isRolling.value = false
       gameResult.value = data.won ? 'win' : 'lose'
       
-      // 更新用户银两
+      // 更新用户余额
       await userStore.fetchProfile()
-    } else {
-      gameResult.value = 'error'
     }
   } catch (error) {
-    gameResult.value = 'error'
+    console.error('掷骰子失败:', error)
   } finally {
     isRolling.value = false
   }
@@ -388,6 +455,37 @@ function resetGame() {
   75% { transform: translateX(-10px) rotateX(-30deg); }
 }
 
+/* 结果展示时的骰子 */
+.die-result {
+  animation: die-land 0.5s ease forwards;
+}
+
+@keyframes die-land {
+  0% {
+    transform: scale(1.2) rotateY(180deg);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1) rotateY(0deg);
+    opacity: 1;
+  }
+}
+
+.die-win {
+  animation: die-win-pulse 0.6s infinite;
+}
+
+@keyframes die-win-pulse {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(255, 215, 0, 0.6);
+    filter: brightness(1.1);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(255, 215, 0, 1);
+    filter: brightness(1.2);
+  }
+}
+
 .die-face {
   width: 100%;
   height: 100%;
@@ -423,6 +521,61 @@ function resetGame() {
   justify-content: center;
   color: #fff;
   border-radius: 100px;
+  z-index: 10;
+}
+
+/* 骰子轨迹效果 */
+.dice-trail {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 200px;
+  height: 200px;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.trail-particle {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  background: radial-gradient(circle, rgba(255,215,0,0.8) 0%, transparent 70%);
+  border-radius: 50%;
+  animation: trail-fade 1.5s infinite;
+}
+
+@keyframes trail-fade {
+  0% { opacity: 0; transform: scale(0.5); }
+  50% { opacity: 0.6; transform: scale(1); }
+  100% { opacity: 0; transform: scale(1.5); }
+}
+
+/* 结果光效 */
+.result-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 100px;
+  pointer-events: none;
+  z-index: 1;
+  animation: glow-fade 2s ease forwards;
+}
+
+.result-glow.glow-win {
+  background: radial-gradient(circle, rgba(34, 197, 94, 0.4) 0%, transparent 70%);
+}
+
+.result-glow.glow-lose {
+  background: radial-gradient(circle, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+}
+
+@keyframes glow-fade {
+  0% { opacity: 0; }
+  50% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
 .shake-icon {

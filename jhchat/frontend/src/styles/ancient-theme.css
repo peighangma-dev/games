@@ -1,0 +1,229 @@
+/**
+ * 古风配色方案 - 江湖聊天室
+ * 基于 ASP 版本经典配色现代化重构
+ */
+
+:root {
+  /* ===== 核心配色 - ASP 经典还原 ===== */
+  --jh-black: #000000;           /* 纯黑背景 - 江湖深邃 */
+  --jh-yellow: #FFFF22;          /* 明黄文字 - 皇权富贵 */
+  --jh-red-brown: #8A2D00;       /* 红棕按钮 - 朱门宫墙 */
+  --jh-white: #FFFFFF;           /* 纯白文字 - 水墨留白 */
+  --jh-green: #5FFF5F;           /* 亮绿链接 - 柳色青青 */
+  --jh-purple: #660099;          /* 紫金边饰 - 紫气东来 */
+  --jh-blue: #553AEB;            /* 靛蓝已访问 - 青花瓷韵 */
+  --jh-orange: #FF8000;          /* 橙红激活 - 落日余晖 */
+  
+  /* ===== 现代化扩展配色 ===== */
+  /* 背景层次 */
+  --bg-primary: #0a0a0a;         /* 主背景 */
+  --bg-secondary: #1a1a1a;       /* 次级背景 */
+  --bg-tertiary: #2a2a2a;        /* 第三层背景 */
+  --bg-deep: #0d0d15;            /* 深蓝黑背景 */
+  
+  /* 古风渐变 */
+  --gradient-night: linear-gradient(180deg, #000000 0%, #1a1a2e 100%);
+  --gradient-sunset: linear-gradient(180deg, #2c1810 0%, #8A2D00 100%);
+  --gradient-jade: linear-gradient(135deg, #1a4a2e 0%, #2E8B57 100%);
+  --gradient-gold: linear-gradient(135deg, #FFD700 0%, #B8860B 100%);
+  
+  /* 文字层次 */
+  --text-primary: #FFFF22;       /* 主文字 - 明黄 */
+  --text-secondary: #E0E0E0;     /* 次级文字 - 浅灰 */
+  --text-muted: #888888;         /* 弱化文字 - 中灰 */
+  --text-accent: #00FF00;        /* 强调文字 - 亮绿 */
+  
+  /* 边框与分割 */
+  --border-light: rgba(255, 255, 255, 0.1);
+  --border-gold: rgba(255, 215, 0, 0.3);
+  --border-red: rgba(138, 45, 0, 0.5);
+  
+  /* 状态色 */
+  --success: #4ade80;            /* 成功 - 玉色 */
+  --warning: #fbbf24;            /* 警告 - 金色 */
+  --error: #f87171;              /* 错误 - 朱红 */
+  --info: #60a5fa;               /* 信息 - 天青 */
+  
+  /* 光影效果 */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.5);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.6);
+  --shadow-lg: 0 10px 40px rgba(0, 0, 0, 0.7);
+  --shadow-gold: 0 0 20px rgba(255, 215, 0, 0.3);
+  --shadow-red: 0 0 20px rgba(138, 45, 0, 0.4);
+  
+  /* 圆角 */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 20px;
+  --radius-full: 9999px;
+  
+  /* 过渡 */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  
+  /* 字体 */
+  --font-family: 'Noto Sans SC', 'Microsoft YaHei', 'SimHei', sans-serif;
+  --font-mono: 'Courier New', monospace;
+}
+
+/* ===== 全局应用 ===== */
+body {
+  background: var(--jh-black);
+  color: var(--jh-yellow);
+  font-family: var(--font-family);
+}
+
+/* 古风按钮样式 */
+.btn-ancient {
+  background: linear-gradient(135deg, var(--jh-red-brown) 0%, #5c1e00 100%);
+  color: var(--jh-white);
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  padding: 10px 24px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-md);
+}
+
+.btn-ancient:hover {
+  background: linear-gradient(135deg, #a53500 0%, var(--jh-red-brown) 100%);
+  border-color: var(--jh-yellow);
+  box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+  transform: translateY(-2px);
+}
+
+.btn-ancient:active {
+  transform: translateY(0);
+  box-shadow: var(--shadow-sm);
+}
+
+.btn-ancient:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* 古风输入框 */
+.input-ancient {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-light);
+  color: var(--jh-yellow);
+  padding: 10px 16px;
+  border-radius: var(--radius-md);
+  font-family: var(--font-family);
+  font-size: 14px;
+  transition: all var(--transition-base);
+}
+
+.input-ancient:focus {
+  outline: none;
+  border-color: var(--jh-yellow);
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: 0 0 10px rgba(255, 255, 226, 0.2);
+}
+
+.input-ancient::placeholder {
+  color: var(--text-muted);
+}
+
+/* 古风卡片 */
+.card-ancient {
+  background: var(--gradient-night);
+  border: 1px solid var(--border-light);
+  border-radius: var(--radius-lg);
+  padding: 20px;
+  box-shadow: var(--shadow-lg);
+}
+
+.card-ancient-header {
+  border-bottom: 1px solid var(--border-light);
+  padding-bottom: 12px;
+  margin-bottom: 16px;
+  color: var(--jh-yellow);
+  font-size: 18px;
+  font-weight: bold;
+}
+
+/* 古风链接 */
+.link-ancient {
+  color: var(--jh-green);
+  text-decoration: none;
+  transition: all var(--transition-fast);
+}
+
+.link-ancient:hover {
+  color: var(--jh-yellow);
+  text-shadow: 0 0 10px rgba(255, 255, 226, 0.5);
+}
+
+.link-ancient:visited {
+  color: var(--jh-blue);
+}
+
+/* 等级标签 */
+.badge-ancient {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: bold;
+  background: linear-gradient(135deg, var(--jh-red-brown) 0%, #5c1e00 100%);
+  color: var(--jh-white);
+  border: 1px solid rgba(255, 215, 0, 0.3);
+}
+
+.badge-ancient.gold {
+  background: var(--gradient-gold);
+  color: var(--jh-black);
+}
+
+.badge-ancient.jade {
+  background: var(--gradient-jade);
+  color: var(--jh-white);
+}
+
+/* 分割线 */
+.divider-ancient {
+  height: 1px;
+  background: linear-gradient(90deg, 
+    transparent 0%, 
+    var(--border-light) 50%, 
+    transparent 100%
+  );
+  margin: 20px 0;
+}
+
+/* 滚动条（古美化） */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--jh-red-brown);
+  border-radius: var(--radius-full);
+  border: 2px solid var(--bg-deep);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a53500;
+}
+
+/* 选中文言 */
+::selection {
+  background: var(--jh-red-brown);
+  color: var(--jh-yellow);
+}
+
+::-moz-selection {
+  background: var(--jh-red-brown);
+  color: var(--jh-yellow);
+}

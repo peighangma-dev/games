@@ -1,8 +1,5 @@
 <template>
   <div id="app">
-    <!-- Socket 状态监控 -->
-    <SocketStatus />
-    
     <!-- 全局错误边界 -->
     <ErrorHandler>
       <router-view />
@@ -13,7 +10,6 @@
 <script setup>
 import { onMounted } from 'vue'
 import { useUserStore } from './stores/user'
-import SocketStatus from './components/SocketStatus.vue'
 import ErrorHandler from './components/ErrorHandler.vue'
 
 const userStore = useUserStore()

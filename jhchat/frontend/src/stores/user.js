@@ -98,6 +98,36 @@ export const useUserStore = defineStore('user', {
       if (res.success) this.onlineUsers = res.data
     },
     
+    async restoreSession() {
+      const token = localStorage.getItem('token')
+      const user = localStorage.getItem('user')
+      
+      if (!token || !user) return false
+      
+      try {
+        // 验证 token 是否有效
+        const res = await api.get('/users/me')
+        if (res.success) {
+          this.user = res.data
+          this.profile = res.data
+          localStorage.setItem('user', JSON.stringify(res.data))
+          
+          // 重新连接 Socket
+          socketManager.connect(token)
+          this.startBubbleExpAutoSave()
+          
+          return true
+        }
+      } catch (e) {
+        console.error('[恢复会话] 验证失败:', e)
+        // Token 失效，清除本地存储
+        localStorage.removeItem('token')
+        localStorage.removeItem('user')
+      }
+      
+      return false
+    },
+    
     async syncUserInfo() {
       try {
         const res = await api.get('/users/me')

@@ -2,10 +2,16 @@
   <div class="blackjack-game">
     <!-- 牌桌区域 -->
     <div class="table-area">
+      <!-- 牌堆 -->
+      <div class="deck-pile">
+        <img src="/assets/cards/card-back.svg" class="deck-card" alt="deck" />
+        <div class="deck-glow" v-if="isDealing"></div>
+      </div>
+      
       <!-- 庄家区域 -->
       <div class="dealer-area">
         <div class="player-info">
-          <div class="avatar dealer-avatar">🤖</div>
+          <div class="avatar dealer-avatar" :class="{ 'dealer-glow': isDealerTurn }">🤖</div>
           <span class="player-name">庄家</span>
         </div>
         
@@ -19,7 +25,7 @@
               <img
                 :src="getCardImage(card)"
                 class="playing-card"
-                :class="{ 'card-hidden': card.hidden }"
+                :class="{ 'card-hidden': card.hidden, 'card-fly-in': card.isNew }"
                 alt="card"
               />
             </div>
@@ -31,7 +37,7 @@
             >
               <img
                 src="/assets/cards/card-back.svg"
-                class="playing-card"
+                class="playing-card card-flip"
                 alt="hidden card"
               />
             </div>
@@ -49,6 +55,12 @@
         <div class="pot-display" v-if="bet > 0">
           <span class="chip-icon">💰</span>
           <span class="pot-amount">{{ bet }} 两</span>
+        </div>
+        
+        <!-- 手势提示动画 -->
+        <div class="gesture-hint" :class="currentGesture" v-if="showGesture">
+          <span class="gesture-icon">{{ gestureIcon }}</span>
+          <span class="gesture-text">{{ gestureText }}</span>
         </div>
         
         <div class="game-message" :class="messageType">
@@ -94,7 +106,7 @@
       <!-- 玩家区域 -->
       <div class="player-area">
         <div class="player-info">
-          <div class="avatar player-avatar">
+          <div class="avatar player-avatar" :class="{ 'player-glow': isPlayerTurn }">
             {{ userStore.user?.avatar || '👤' }}
           </div>
           <span class="player-name">{{ userStore.user?.username || '玩家' }}</span>
@@ -111,6 +123,7 @@
               <img
                 :src="getCardImage(card)"
                 class="playing-card"
+                :class="{ 'card-fly-in': card.isNew }"
                 alt="card"
               />
             </div>
@@ -197,6 +210,15 @@ const isProcessing = ref(false)
 const message = ref('请下注开始游戏')
 const messageType = ref('info')
 
+// 动画状态
+const isDealing = ref(false)
+const isPlayerTurn = ref(false)
+const isDealerTurn = ref(false)
+const showGesture = ref(false)
+const currentGesture = ref('')
+const gestureIcon = ref('')
+const gestureText = ref('')
+
 // 下注相关
 const bet = ref(0)
 const customBet = ref(0)
@@ -273,6 +295,7 @@ function betAll() {
 async function placeBet() {
   try {
     isProcessing.value = true
+    isDealing.value = true
     message.value = '发牌中...'
     messageType.value = 'info'
     
@@ -282,17 +305,41 @@ async function placeBet() {
     
     if (res.data.success) {
       const data = res.data.data
-      dealerCards.value = parseDealerCards(data.dealerCards)
-      playerCards.value = parsePlayerCards(data.playerCards)
+      // 添加动画标记
+      dealerCards.value = parseDealerCards(data.dealerCards).map((card, idx) => ({
+        ...card,
+        isNew: true,
+        delay: idx * 0.2
+      }))
+      playerCards.value = parsePlayerCards(data.playerCards).map((card, idx) => ({
+        ...card,
+        isNew: true,
+        delay: idx * 0.2
+      }))
       dealerPoints.value = data.dealerPoints
       playerPoints.value = data.playerPoints
       bet.value = betAmount
       
+      // 发牌动画完成后移除标记
+      setTimeout(() => {
+        isDealing.value = false
+        dealerCards.value = dealerCards.value.map(card => ({ ...card, isNew: false }))
+        playerCards.value = playerCards.value.map(card => ({ ...card, isNew: false }))
+        isPlayerTurn.value = true
+      }, 1000)
+      
       // 检查 Blackjack
       if (data.result === 'blackjack') {
+        showGesture.value = true
+        currentGesture.value = 'win'
+        gestureIcon.value = '🎉'
+        gestureText.value = 'Blackjack!'
+        setTimeout(() => { showGesture.value = false }, 2000)
+        
         message.value = `Blackjack! 赢得 ${data.winAmount} 两！`
         messageType.value = 'win'
         gamePhase.value = 'result'
+        isPlayerTurn.value = false
         await userStore.fetchProfile()
       } else {
         gamePhase.value = 'playing'
@@ -308,25 +355,50 @@ async function placeBet() {
     messageType.value = 'error'
   } finally {
     isProcessing.value = false
+    isDealing.value = false
   }
 }
 
 async function hit() {
   try {
     isProcessing.value = true
+    showGesture.value = true
+    currentGesture.value = 'hit'
+    gestureIcon.value = '👐'
+    gestureText.value = '要牌!'
     message.value = '要牌中...'
     
     const res = await api.post('/game/blackjack/hit')
     
     if (res.data.success) {
       const data = res.data.data
-      playerCards.value = parsePlayerCards(data.playerCards)
+      // 添加新牌动画
+      const newCards = parsePlayerCards(data.playerCards)
+      const lastCard = newCards[newCards.length - 1]
+      playerCards.value = newCards.map((card, idx) => ({
+        ...card,
+        isNew: idx === newCards.length - 1,
+        delay: 0
+      }))
       playerPoints.value = data.playerPoints
       
+      // 动画完成后移除标记
+      setTimeout(() => {
+        showGesture.value = false
+        playerCards.value = playerCards.value.map(card => ({ ...card, isNew: false }))
+      }, 800)
+      
       if (data.result === 'bust') {
+        showGesture.value = true
+        currentGesture.value = 'lose'
+        gestureIcon.value = '💥'
+        gestureText.value = '爆牌!'
+        setTimeout(() => { showGesture.value = false }, 1500)
+        
         message.value = `爆牌！失去 ${data.loss} 两`
         messageType.value = 'lose'
         gamePhase.value = 'result'
+        isPlayerTurn.value = false
         await userStore.fetchProfile()
       } else {
         message.value = '继续要牌还是停牌？'
@@ -343,16 +415,51 @@ async function hit() {
 async function stand() {
   try {
     isProcessing.value = true
+    isPlayerTurn.value = false
+    isDealerTurn.value = true
+    showGesture.value = true
+    currentGesture.value = 'stand'
+    gestureIcon.value = '🛑'
+    gestureText.value = '停牌!'
     message.value = '庄家要牌中...'
     
     const res = await api.post('/game/blackjack/stand')
     
     if (res.data.success) {
       const data = res.data.data
-      dealerCards.value = parseDealerCards(data.dealerCards)
+      // 显示庄家所有牌
+      dealerCards.value = parseDealerCards(data.dealerCards).map((card, idx) => ({
+        ...card,
+        isNew: idx >= dealerCards.value.length,
+        delay: 0
+      }))
       dealerPoints.value = data.dealerPoints
       
+      // 翻开隐藏牌的动画
+      setTimeout(() => {
+        isDealerTurn.value = false
+      }, 600)
+      
       gamePhase.value = 'result'
+      
+      // 根据结果显示手势
+      if (data.result === 'win') {
+        showGesture.value = true
+        currentGesture.value = 'win'
+        gestureIcon.value = '🏆'
+        gestureText.value = '胜利!'
+      } else if (data.result === 'lose') {
+        showGesture.value = true
+        currentGesture.value = 'lose'
+        gestureIcon.value = '😢'
+        gestureText.value = '失败!'
+      } else {
+        showGesture.value = true
+        currentGesture.value = 'draw'
+        gestureIcon.value = '🤝'
+        gestureText.value = '平局!'
+      }
+      setTimeout(() => { showGesture.value = false }, 2000)
       
       switch (data.result) {
         case 'win':
@@ -393,6 +500,9 @@ async function resetGame() {
   playerPoints.value = 0
   message.value = '请下注开始游戏'
   messageType.value = 'info'
+  isPlayerTurn.value = false
+  isDealerTurn.value = false
+  isDealing.value = false
 }
 
 // 辅助函数：解析牌面数据
@@ -435,6 +545,40 @@ function parseCard(cardStr) {
   box-shadow: 0 0 30px rgba(0, 0, 0, 0.5);
 }
 
+/* 牌堆 */
+.deck-pile {
+  position: absolute;
+  top: 50%;
+  left: 20px;
+  transform: translateY(-50%);
+  width: 70px;
+  height: 100px;
+  perspective: 1000px;
+}
+
+.deck-card {
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
+}
+
+.deck-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 8px;
+  background: radial-gradient(circle, rgba(255,215,0,0.6) 0%, transparent 70%);
+  animation: glow-pulse 0.5s infinite;
+}
+
+@keyframes glow-pulse {
+  0%, 100% { opacity: 0.5; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+
 /* 玩家/庄家区域 */
 .dealer-area,
 .player-area {
@@ -461,6 +605,27 @@ function parseCard(cardStr) {
   justify-content: center;
   font-size: 28px;
   border: 3px solid #ffd700;
+  transition: all 0.3s ease;
+}
+
+.dealer-glow {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.8);
+  animation: dealer-pulse 1s infinite;
+}
+
+@keyframes dealer-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(239, 68, 68, 0.8); }
+  50% { box-shadow: 0 0 40px rgba(239, 68, 68, 1); }
+}
+
+.player-glow {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.8);
+  animation: player-pulse 1s infinite;
+}
+
+@keyframes player-pulse {
+  0%, 100% { box-shadow: 0 0 20px rgba(34, 197, 94, 0.8); }
+  50% { box-shadow: 0 0 40px rgba(34, 197, 94, 1); }
 }
 
 .player-name {
@@ -500,6 +665,41 @@ function parseCard(cardStr) {
   object-fit: contain;
   border-radius: 8px;
   transition: transform 0.3s ease;
+  box-shadow: 2px 2px 8px rgba(0,0,0,0.3);
+}
+
+/* 飞入动画 */
+.card-fly-in {
+  animation: card-fly-in 0.5s ease forwards;
+}
+
+@keyframes card-fly-in {
+  0% {
+    opacity: 0;
+    transform: translate(-200px, -100px) rotate(-30deg) scale(0.5);
+  }
+  60% {
+    transform: translate(20px, 10px) rotate(5deg) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(0, 0) rotate(0deg) scale(1);
+  }
+}
+
+/* 翻牌动画 */
+.card-flip {
+  animation: card-flip 0.6s ease forwards;
+  transform-style: preserve-3d;
+}
+
+@keyframes card-flip {
+  0% {
+    transform: rotateY(180deg);
+  }
+  100% {
+    transform: rotateY(0deg);
+  }
 }
 
 .card-hidden {
@@ -553,6 +753,78 @@ function parseCard(cardStr) {
 @keyframes pulse {
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
+}
+
+/* 手势提示 */
+.gesture-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 32px;
+  border-radius: 20px;
+  font-size: 24px;
+  font-weight: bold;
+  animation: gesture-pop 0.4s ease forwards;
+}
+
+@keyframes gesture-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.5) translateY(20px);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.gesture-hint.hit {
+  background: rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+  border: 2px solid #22c55e;
+}
+
+.gesture-hint.stand {
+  background: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  border: 2px solid #ef4444;
+}
+
+.gesture-hint.win {
+  background: rgba(251, 191, 36, 0.3);
+  color: #fbbf24;
+  border: 2px solid #f59e0b;
+}
+
+.gesture-hint.lose {
+  background: rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  border: 2px solid #ef4444;
+}
+
+.gesture-hint.draw {
+  background: rgba(59, 130, 246, 0.3);
+  color: #60a5fa;
+  border: 2px solid #3b82f6;
+}
+
+.gesture-icon {
+  font-size: 48px;
+  animation: icon-bounce 0.6s infinite;
+}
+
+@keyframes icon-bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.gesture-text {
+  font-size: 20px;
+  white-space: nowrap;
 }
 
 .game-message.win {
@@ -757,18 +1029,28 @@ function parseCard(cardStr) {
 }
 
 /* 卡牌动画 */
-.card-deal-enter-from,
-.card-deal-leave-to {
+.card-deal-enter-from {
   opacity: 0;
-  transform: translateY(-50px) rotate(-10deg);
+  transform: translate(-200px, -100px) rotate(-30deg);
 }
 
 .card-deal-enter-active {
-  transition: all 0.5s ease;
+  transition: all 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.card-deal-enter-to {
+  opacity: 1;
+  transform: translate(0, 0) rotate(0deg);
 }
 
 .card-deal-leave-active {
   transition: all 0.3s ease;
+  position: absolute;
+}
+
+.card-deal-leave-to {
+  opacity: 0;
+  transform: scale(0.8);
 }
 
 /* 移动端适配 */

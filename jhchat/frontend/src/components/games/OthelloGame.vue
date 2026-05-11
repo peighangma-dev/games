@@ -20,21 +20,32 @@
       </div>
     </div>
 
-    <!-- 棋盘 -->
-    <div class="board-container">
-      <div class="board">
-        <div 
-          v-for="(cell, index) in board" 
-          :key="index"
-          class="cell"
-          :class="{ 'valid-move': isValidMove(index), 'last-move': lastMove === index }"
-          @click="placePiece(index)"
-        >
-          <div v-if="cell" class="piece" :class="[cell, 'piece-animate']"></div>
-          <div v-if="isValidMove(index)" class="valid-marker"></div>
+      <!-- 棋盘 -->
+      <div class="board-container">
+        <div class="board">
+          <div 
+            v-for="(cell, index) in board" 
+            :key="index"
+            class="cell"
+            :class="{ 
+              'valid-move': isValidMove(index), 
+              'last-move': lastMove === index,
+              'flip-animation': flippingCells.includes(index)
+            }"
+            @click="placePiece(index)"
+          >
+            <transition name="piece-flip">
+              <div v-if="cell" class="piece" :class="[cell, 'piece-animate']"></div>
+            </transition>
+            <div v-if="isValidMove(index)" class="valid-marker"></div>
+          </div>
         </div>
       </div>
-    </div>
+      
+      <!-- 翻转提示 -->
+      <div v-if="showFlipHint" class="flip-hint">
+        <span>棋子翻转中...</span>
+      </div>
 
     <!-- 游戏信息 -->
     <div class="game-info">
@@ -67,6 +78,8 @@ const whiteCount = ref(2)
 const lastMove = ref(null)
 const winner = ref(null)
 const showWinAnimation = ref(false)
+const flippingCells = ref([])
+const showFlipHint = ref(false)
 
 // 初始化棋盘
 function initBoard() {
@@ -135,6 +148,8 @@ function flipPieces(index) {
   const col = index % BOARD_SIZE
   const directions = [[0, 1], [0, -1], [1, 0], [-1, 0], [1, 1], [1, -1], [-1, 1], [-1, -1]]
   
+  const allFlipped = []
+  
   for (const [dr, dc] of directions) {
     let r = row + dr
     let c = col + dc
@@ -146,12 +161,25 @@ function flipPieces(index) {
       if (board.value[idx] === 'white') {
         toFlip.push(idx)
       } else {
-        toFlip.forEach(i => board.value[i] = 'black')
+        if (toFlip.length > 0) {
+          allFlipped.push(...toFlip)
+          toFlip.forEach(i => board.value[i] = 'black')
+        }
         break
       }
       r += dr
       c += dc
     }
+  }
+  
+  // 播放翻转动画
+  if (allFlipped.length > 0) {
+    flippingCells.value = allFlipped
+    showFlipHint.value = true
+    setTimeout(() => {
+      flippingCells.value = []
+      showFlipHint.value = false
+    }, 600)
   }
 }
 
@@ -319,6 +347,77 @@ onMounted(() => {
 
 .cell.valid-move {
   background: #4a8024;
+}
+
+.cell.valid-move::after {
+  content: '';
+  width: 15px;
+  height: 15px;
+  background: rgba(126, 184, 218, 0.5);
+  border-radius: 50%;
+}
+
+.cell.last-move {
+  box-shadow: 0 0 15px rgba(255, 215, 0, 0.6);
+  border: 2px solid rgba(255, 215, 0, 0.3);
+}
+
+.cell.flip-animation .piece {
+  animation: pieceFlip 0.6s ease-in-out;
+}
+
+@keyframes pieceFlip {
+  0% { transform: rotateX(0deg); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(180deg); }
+}
+
+.piece {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+  transition: transform 0.3s;
+}
+
+.piece.black {
+  background: radial-gradient(circle at 30% 30%, #555, #000);
+}
+
+.piece.white {
+  background: radial-gradient(circle at 30% 30%, #fff, #ccc);
+}
+
+.piece-animate {
+  animation: piecePlace 0.3s ease-out;
+}
+
+@keyframes piecePlace {
+  0% { transform: scale(1.3); }
+  100% { transform: scale(1); }
+}
+
+.valid-marker {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  background: rgba(126, 184, 218, 0.3);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+/* 翻转提示 */
+.flip-hint {
+  text-align: center;
+  padding: 10px;
+  color: #ffd700;
+  font-size: 16px;
+  animation: hintFade 1s infinite;
+}
+
+@keyframes hintFade {
+  0%, 100% { opacity: 0.5; }
+  50% { opacity: 1; }
 }
 
 .valid-marker {

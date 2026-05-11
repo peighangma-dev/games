@@ -3,9 +3,48 @@
     <div class="game-content">
       <!-- 下注区域 -->
       <div class="bet-section">
-        <div class="current-card" :class="cardClass">
-          <div class="card-value">{{ currentCard.value }}</div>
-          <div class="card-suit">{{ currentCard.suit }}</div>
+        <!-- 卡牌区域 -->
+        <div class="cards-area">
+          <div class="card-container">
+            <div class="card-label">当前牌</div>
+            <div class="current-card" :class="cardClass" @click="flipCard">
+              <div class="card-inner" :class="{ 'is-flipping': isFlipping }">
+                <div class="card-front">
+                  <div class="card-back-face">?</div>
+                </div>
+                <div class="card-back">
+                  <div class="card-value">{{ currentCard.value }}</div>
+                  <div class="card-suit">{{ currentCard.suit }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="card-arrow" v-if="gameState === 'guessing'">
+            <span>→</span>
+          </div>
+          
+          <div class="card-container" v-if="gameState === 'guessing' || gameState === 'result'">
+            <div class="card-label">下一张</div>
+            <div class="current-card next-card" :class="nextCardClass">
+              <div class="card-inner" :class="{ 'reveal': gameState === 'result' }">
+                <div class="card-front">
+                  <div class="card-back-face">?</div>
+                </div>
+                <div class="card-back">
+                  <div class="card-value">{{ nextCard.value }}</div>
+                  <div class="card-suit">{{ nextCard.suit }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <!-- 连击显示 -->
+        <div class="streak-display" v-if="streak >= 2">
+          <span class="streak-fire">🔥</span>
+          <span class="streak-count">{{ streak }}连赢!</span>
+          <span class="streak-fire">🔥</span>
         </div>
         
         <div class="bet-controls">
@@ -93,6 +132,8 @@ const resultAmount = ref(0)
 const streak = ref(0)
 const todayProfit = ref(0)
 const showWinAnimation = ref(false)
+const isFlipping = ref(false)
+const showStreakAnimation = ref(false)
 
 const cardSuites = ['♠', '♥', '♣', '♦']
 const cardValues = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K']
@@ -111,6 +152,13 @@ function getCardValue(card) {
 
 const cardClass = computed(() => {
   if (currentCard.value.suit === '♥' || currentCard.value.suit === '♦') {
+    return 'card-red'
+  }
+  return 'card-black'
+})
+
+const nextCardClass = computed(() => {
+  if (nextCard.value.suit === '♥' || nextCard.value.suit === '♦') {
     return 'card-red'
   }
   return 'card-black'
@@ -138,6 +186,14 @@ function setBet(amount) {
   }
 }
 
+function flipCard() {
+  if (gameState.value !== 'guessing') return
+  isFlipping.value = true
+  setTimeout(() => {
+    isFlipping.value = false
+  }, 600)
+}
+
 function makeGuess(guess = null) {
   if (gameState.value === 'betting') {
     // 开始游戏，生成新卡片
@@ -145,35 +201,49 @@ function makeGuess(guess = null) {
     nextCard.value = randomCard()
     gameState.value = 'guessing'
     result.value = null
+    isFlipping.value = false
   } else {
     // 猜测大小
+    isFlipping.value = true
+    
     const currentValue = getCardValue(currentCard.value)
     const nextValue = getCardValue(nextCard.value)
     
     const isWin = (guess === 'high' && nextValue >= currentValue) || 
                   (guess === 'low' && nextValue <= currentValue)
     
-    if (isWin) {
-      const winAmount = betAmount.value * 2
-      result.value = `猜${guess === 'high' ? '大' : '小'}赢了！`
-      resultAmount.value = `+${winAmount}两`
-      todayProfit.value += winAmount
-      streak.value++
-      showWinAnimation.value = true
-      setTimeout(() => showWinAnimation.value = false, 2000)
-    } else {
-      result.value = `猜${guess === 'high' ? '大' : '小'}错了！`
-      resultAmount.value = `-${betAmount.value}两`
-      todayProfit.value -= betAmount.value
-      streak.value = 0
-    }
-    
-    gameState.value = 'result'
     setTimeout(() => {
-      gameState.value = 'betting'
-      result.value = null
-      resultAmount.value = 0
-    }, 2000)
+      isFlipping.value = false
+      
+      if (isWin) {
+        const winAmount = betAmount.value * 2
+        result.value = `猜${guess === 'high' ? '大' : '小'}赢了！`
+        resultAmount.value = `+${winAmount}两`
+        todayProfit.value += winAmount
+        streak.value++
+        
+        // 连击动画
+        if (streak.value >= 2) {
+          showStreakAnimation.value = true
+          setTimeout(() => showStreakAnimation.value = false, 1500)
+        }
+        
+        showWinAnimation.value = true
+        setTimeout(() => showWinAnimation.value = false, 2000)
+      } else {
+        result.value = `猜${guess === 'high' ? '大' : '小'}错了！`
+        resultAmount.value = `-${betAmount.value}两`
+        todayProfit.value -= betAmount.value
+        streak.value = 0
+      }
+      
+      gameState.value = 'result'
+      setTimeout(() => {
+        gameState.value = 'betting'
+        result.value = null
+        resultAmount.value = 0
+      }, 2000)
+    }, 300)
   }
 }
 
@@ -205,28 +275,125 @@ onMounted(() => {
   border: 2px solid rgba(126, 184, 218, 0.3);
   border-radius: 20px;
   padding: 40px;
-  max-width: 500px;
+  max-width: 600px;
   width: 100%;
+}
+
+/* 卡牌区域 */
+.cards-area {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 30px;
+  margin-bottom: 30px;
+}
+
+.card-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.card-label {
+  color: #888;
+  font-size: 14px;
+}
+
+.card-arrow {
+  font-size: 40px;
+  color: #7eb8da;
+  animation: arrowPulse 1.5s infinite;
+}
+
+@keyframes arrowPulse {
+  0%, 100% { opacity: 0.5; transform: translateX(0); }
+  50% { opacity: 1; transform: translateX(5px); }
+}
+
+/* 连击显示 */
+.streak-display {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, rgba(255, 140, 0, 0.3), rgba(255, 69, 0, 0.3));
+  border: 2px solid rgba(255, 215, 0, 0.5);
+  border-radius: 20px;
+  animation: streakGlow 0.8s infinite;
+}
+
+@keyframes streakGlow {
+  0%, 100% { box-shadow: 0 0 10px rgba(255, 215, 0, 0.3); }
+  50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+}
+
+.streak-fire {
+  font-size: 24px;
+  animation: fireFlicker 0.5s infinite;
+}
+
+@keyframes fireFlicker {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+.streak-count {
+  color: #ffd700;
+  font-size: 20px;
+  font-weight: bold;
 }
 
 .current-card {
   width: 150px;
   height: 220px;
-  background: #fff;
-  border-radius: 15px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  margin: 0 auto 30px;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
-  transition: transform 0.3s, box-shadow 0.3s;
-  animation: cardFloat 3s ease-in-out infinite;
+  perspective: 1000px;
+  cursor: pointer;
 }
 
-@keyframes cardFloat {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  text-align: center;
+  transition: transform 0.6s;
+  transform-style: preserve-3d;
+}
+
+.card-inner.is-flipping,
+.card-inner.reveal {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  border-radius: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+}
+
+.card-front {
+  background: linear-gradient(135deg, #2c3e50, #34495e);
+}
+
+.card-back-face {
+  font-size: 72px;
+  color: rgba(255, 255, 255, 0.3);
+  font-weight: bold;
+}
+
+.card-back {
+  background: #fff;
+  transform: rotateY(180deg);
 }
 
 .card-red { color: #e74c3c; }

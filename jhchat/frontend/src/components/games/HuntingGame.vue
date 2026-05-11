@@ -25,6 +25,18 @@
 
       <!-- 弓箭效果 -->
       <div v-if="showArrow" class="arrow" :style="arrowStyle"></div>
+      
+      <!-- 射击特效 -->
+      <div v-if="showShootEffect" class="shoot-effect" :style="shootEffectStyle">
+        <div class="effect-ring"></div>
+        <div class="effect-dust"></div>
+      </div>
+      
+      <!-- 命中特效 -->
+      <div v-if="showHitEffect" class="hit-effect" :style="hitEffectStyle">
+        <span class="hit-damage">+{{ hitDamage }}</span>
+        <div class="hit-particles"></div>
+      </div>
 
       <!--  HUD -->
       <div class="hud">
@@ -56,6 +68,11 @@ const accuracy = ref(100)
 const huntResult = ref(null)
 const showArrow = ref(false)
 const arrowStyle = ref({})
+const showShootEffect = ref(false)
+const shootEffectStyle = ref({})
+const showHitEffect = ref(false)
+const hitEffectStyle = ref({})
+const hitDamage = ref(0)
 
 const animalTypes = [
   { type: 'rabbit', icon: '🐇', points: 10, hp: 1, speed: 'fast' },
@@ -94,14 +111,47 @@ function animalStyle(animal) {
 
 function huntAnimal(animal) {
   shotCount++
+  
+  // 射箭动画
+  showArrow.value = true
+  arrowStyle.value = {
+    left: '50%',
+    top: '80%',
+    transform: `rotate(${Math.atan2(animal.y - 80, animal.x - 50) * 180 / Math.PI}deg)`
+  }
+  
+  // 射击特效
+  showShootEffect.value = true
+  shootEffectStyle.value = {
+    left: '50%',
+    top: '80%'
+  }
+  
+  setTimeout(() => {
+    showArrow.value = false
+    showShootEffect.value = false
+  }, 200)
+  
   animal.clicked = true
   animal.hp--
   
+  // 命中特效
   if (animal.hp <= 0) {
     hitCount++
     accuracy.value = Math.round(hitCount / shotCount * 100)
     score.value += animal.points
     huntResult.value = `+${animal.points}分`
+    hitDamage.value = animal.points
+    
+    // 命中特效
+    showHitEffect.value = true
+    hitEffectStyle.value = {
+      left: animal.x + '%',
+      top: animal.y + '%'
+    }
+    setTimeout(() => {
+      showHitEffect.value = false
+    }, 500)
     
     // 移除动物
     setTimeout(() => {

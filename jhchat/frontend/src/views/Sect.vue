@@ -300,7 +300,6 @@
             </div>
           </div>
         </div>
-      </div>
 
       <!-- 弹窗：创建门派 -->
       <div v-if="showCreateModal" class="modal" @click.self="showCreateModal = false">
@@ -402,7 +401,6 @@
           </div>
         </div>
       </div>
-    </div>
   </PageLayout>
 </template>
 

@@ -1,4 +1,4 @@
-const db = require('../utils/database');
+const db = require('../utils/dbPool');
 
 // 获取商店物品列表
 exports.getShopItems = async (req, res) => {

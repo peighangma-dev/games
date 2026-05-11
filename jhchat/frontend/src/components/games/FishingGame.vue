@@ -27,11 +27,14 @@
       <div
         v-if="isFishing"
         class="bobber"
-        :class="{ 'biting': isBiting, 'pulled': isPulled }"
+        :class="{ 'biting': isBiting, 'pulled': isPulled, 'casting': isCasting }"
         :style="bobberStyle"
       >
         <div class="bobber-float"></div>
         <div class="bobber-line"></div>
+        <div class="cast-trail" v-if="isCasting">
+          <div class="trail-dot" v-for="i in 5" :key="i" :style="trailDotStyle(i)"></div>
+        </div>
       </div>
       
       <!-- 鱼跃出效果 -->
@@ -143,7 +146,9 @@ const userStore = useUserStore()
 
 // 游戏状态
 const isFishing = ref(false)
-const isProcessing = ref(false)
+const isBiting = ref(false)
+const isPulled = ref(false)
+const isCasting = ref(false)
 const waitingForBite = ref(false)
 const fishingStartTime = ref(null)
 const elapsedTime = ref(0)
@@ -202,6 +207,11 @@ const bobberStyle = computed(() => {
 async function startFishing() {
   try {
     isProcessing.value = true
+    isCasting.value = true
+    
+    // 抛竿动画
+    await new Promise(resolve => setTimeout(resolve, 500))
+    isCasting.value = false
     
     const res = await api.post('/game/fish/start')
     
@@ -240,20 +250,26 @@ async function startFishing() {
     }
   } finally {
     isProcessing.value = false
+    isCasting.value = false
   }
 }
 
 async function reelIn() {
+  isProcessing.value = true
+  isPulled.value = true
+  
+  // 收竿动画
+  await new Promise(resolve => setTimeout(resolve, 300))
+  
   try {
-    isProcessing.value = true
-    
     const res = await api.post('/game/fish/reel')
     
     if (res.data.success) {
       const data = res.data.data
       catchResult.value = {
-        name: data.catch,
-        value: data.value,
+        name: data.catch || '未知',
+        value: data.value || 0,
+        rarity: getFishRarity(data.catch),
         message: getFishMessage(data.catch)
       }
       
@@ -277,6 +293,7 @@ async function reelIn() {
     }
   } finally {
     isProcessing.value = false
+    isPulled.value = false
     stopFishing()
   }
 }
